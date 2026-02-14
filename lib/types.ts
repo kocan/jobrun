@@ -9,7 +9,7 @@ export interface Vertical {
   id: VerticalId;
   name: string;
   icon: string;
-  defaultServices: PriceBookService[];
+  defaultServices: DefaultServiceTemplate[];
   terminology?: {
     job?: string;
     customer?: string;
@@ -66,10 +66,25 @@ export interface LineItem {
 }
 
 export interface PriceBookService {
-  id?: string;
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  estimatedDuration: number; // minutes
+  category: string;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Minimal shape used in vertical default configs (before hydration) */
+export interface DefaultServiceTemplate {
   name: string;
   price: number;
   description?: string;
+  category?: string;
+  estimatedDuration?: number;
 }
 
 export type EstimateStatus = 'draft' | 'sent' | 'viewed' | 'accepted' | 'declined' | 'expired';

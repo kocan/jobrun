@@ -1,4 +1,16 @@
-import { Vertical } from '../lib/types';
+import { DefaultServiceTemplate, VerticalId } from '../lib/types';
+
+export interface Vertical {
+  id: VerticalId;
+  name: string;
+  icon: string;
+  defaultServices: DefaultServiceTemplate[];
+  terminology?: {
+    job?: string;
+    customer?: string;
+    estimate?: string;
+  };
+}
 
 export const verticals: Vertical[] = [
   {

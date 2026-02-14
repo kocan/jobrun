@@ -1,10 +1,13 @@
 import { View, Text, TextInput, ScrollView, Pressable, Alert, StyleSheet, KeyboardAvoidingView, Platform, Modal, FlatList } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useState, useEffect, useMemo } from 'react';
+import * as Crypto from 'expo-crypto';
 import { useJobs } from '../../contexts/JobContext';
 import { useCustomers } from '../../contexts/CustomerContext';
-import { Job, JobStatus } from '../../lib/types';
+import { usePriceBook } from '../../contexts/PriceBookContext';
+import { Job, JobStatus, LineItem } from '../../lib/types';
 import { isValidStatusTransition } from '../../lib/storage/jobs';
+import { calculateTotal } from '../../lib/storage/priceBook';
 
 const STATUS_OPTIONS: JobStatus[] = ['scheduled', 'in-progress', 'completed', 'cancelled'];
 const STATUS_LABELS: Record<JobStatus, string> = {
@@ -29,7 +32,7 @@ type FormData = {
   scheduledTime: string;
   estimatedDuration: string;
   notes: string;
-  totalAmount: string;
+  lineItems: LineItem[];
 };
 
 const emptyForm: FormData = {
@@ -41,7 +44,7 @@ const emptyForm: FormData = {
   scheduledTime: '09:00',
   estimatedDuration: '60',
   notes: '',
-  totalAmount: '0',
+  lineItems: [],
 };
 
 export default function JobDetailScreen() {
@@ -49,6 +52,8 @@ export default function JobDetailScreen() {
   const router = useRouter();
   const { getJobById, addJob, updateJob, deleteJob } = useJobs();
   const { customers, getCustomerById } = useCustomers();
+  const { getActiveServices } = usePriceBook();
+  const [servicePickerVisible, setServicePickerVisible] = useState(false);
 
   const isNew = id === 'new';
   const [editing, setEditing] = useState(isNew);
@@ -72,7 +77,7 @@ export default function JobDetailScreen() {
           scheduledTime: job.scheduledTime || '',
           estimatedDuration: String(job.estimatedDuration || 60),
           notes: job.notes || '',
-          totalAmount: String(job.total || 0),
+          lineItems: job.lineItems || [],
         });
       }
     }
@@ -82,6 +87,44 @@ export default function JobDetailScreen() {
     () => form.customerId ? getCustomerById(form.customerId) : undefined,
     [form.customerId, getCustomerById]
   );
+
+  const lineItemTotal = useMemo(
+    () => calculateTotal(form.lineItems.map((li) => ({ price: li.unitPrice, quantity: li.quantity }))),
+    [form.lineItems]
+  );
+
+  const activeServices = useMemo(() => getActiveServices(), [getActiveServices]);
+
+  const addLineItemFromService = (serviceId: string) => {
+    const svc = activeServices.find((s) => s.id === serviceId);
+    if (!svc) return;
+    const li: LineItem = {
+      id: Crypto.randomUUID(),
+      serviceId: svc.id,
+      name: svc.name,
+      description: svc.description,
+      quantity: 1,
+      unitPrice: svc.price,
+      total: svc.price,
+    };
+    setForm((f) => ({ ...f, lineItems: [...f.lineItems, li] }));
+  };
+
+  const updateLineItem = (liId: string, updates: Partial<LineItem>) => {
+    setForm((f) => ({
+      ...f,
+      lineItems: f.lineItems.map((li) => {
+        if (li.id !== liId) return li;
+        const updated = { ...li, ...updates };
+        updated.total = Math.round(updated.unitPrice * updated.quantity * 100) / 100;
+        return updated;
+      }),
+    }));
+  };
+
+  const removeLineItem = (liId: string) => {
+    setForm((f) => ({ ...f, lineItems: f.lineItems.filter((li) => li.id !== liId) }));
+  };
 
   const filteredCustomers = useMemo(() => {
     if (!customerSearch.trim()) return customers;
@@ -110,8 +153,8 @@ export default function JobDetailScreen() {
       scheduledTime: form.scheduledTime || undefined,
       estimatedDuration: parseInt(form.estimatedDuration) || 60,
       notes: form.notes.trim() || undefined,
-      lineItems: [],
-      total: parseFloat(form.totalAmount) || 0,
+      lineItems: form.lineItems,
+      total: lineItemTotal,
       photos: [],
     };
 
@@ -205,12 +248,47 @@ export default function JobDetailScreen() {
               <Field label="Date (YYYY-MM-DD)" value={form.scheduledDate} onChange={setField('scheduledDate')} />
               <Field label="Time (HH:MM)" value={form.scheduledTime} onChange={setField('scheduledTime')} />
               <Field label="Duration (minutes)" value={form.estimatedDuration} onChange={setField('estimatedDuration')} keyboardType="number-pad" />
-              <Field label="Total Amount ($)" value={form.totalAmount} onChange={setField('totalAmount')} keyboardType="numeric" />
-
-              {/* Line Items Placeholder */}
+              {/* Line Items */}
               <View style={styles.field}>
                 <Text style={styles.label}>Line Items</Text>
-                <Text style={styles.placeholder}>Line items will be available when Price Book is connected (Issue #5)</Text>
+                {form.lineItems.map((li) => (
+                  <View key={li.id} style={styles.lineItemRow}>
+                    <View style={styles.lineItemInfo}>
+                      <Text style={styles.lineItemName}>{li.name}</Text>
+                      <View style={styles.lineItemControls}>
+                        <Text style={styles.lineItemLabel}>Qty:</Text>
+                        <TextInput
+                          style={styles.lineItemQtyInput}
+                          value={String(li.quantity)}
+                          onChangeText={(v) => updateLineItem(li.id, { quantity: parseInt(v) || 1 })}
+                          keyboardType="number-pad"
+                        />
+                        <Text style={styles.lineItemLabel}>@ $</Text>
+                        <TextInput
+                          style={styles.lineItemPriceInput}
+                          value={String(li.unitPrice)}
+                          onChangeText={(v) => updateLineItem(li.id, { unitPrice: parseFloat(v) || 0 })}
+                          keyboardType="numeric"
+                        />
+                      </View>
+                    </View>
+                    <View style={styles.lineItemRight}>
+                      <Text style={styles.lineItemTotal}>${(li.unitPrice * li.quantity).toFixed(2)}</Text>
+                      <Pressable onPress={() => removeLineItem(li.id)}>
+                        <Text style={styles.lineItemRemove}>✕</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                ))}
+                <Pressable style={styles.addServiceBtn} onPress={() => setServicePickerVisible(true)}>
+                  <Text style={styles.addServiceBtnText}>+ Add Service</Text>
+                </Pressable>
+                {form.lineItems.length > 0 && (
+                  <View style={styles.totalRow}>
+                    <Text style={styles.totalLabel}>Total</Text>
+                    <Text style={styles.totalValue}>${lineItemTotal.toFixed(2)}</Text>
+                  </View>
+                )}
               </View>
 
               <Field label="Notes" value={form.notes} onChange={setField('notes')} multiline />
@@ -240,7 +318,7 @@ export default function JobDetailScreen() {
               <InfoRow label="Date" value={form.scheduledDate} />
               <InfoRow label="Time" value={form.scheduledTime} />
               <InfoRow label="Duration" value={form.estimatedDuration ? `${form.estimatedDuration} min` : undefined} />
-              <InfoRow label="Amount" value={form.totalAmount !== '0' ? `$${parseFloat(form.totalAmount).toFixed(2)}` : undefined} />
+              <InfoRow label="Total" value={lineItemTotal > 0 ? `$${lineItemTotal.toFixed(2)}` : undefined} />
               <InfoRow label="Description" value={form.description} />
               <InfoRow label="Notes" value={form.notes} />
 
@@ -309,6 +387,36 @@ export default function JobDetailScreen() {
               </Pressable>
             )}
             ListEmptyComponent={<Text style={styles.emptyText}>No customers found</Text>}
+          />
+        </View>
+      </Modal>
+
+      {/* Service Picker Modal */}
+      <Modal visible={servicePickerVisible} animationType="slide" presentationStyle="pageSheet">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Pressable onPress={() => setServicePickerVisible(false)}>
+              <Text style={styles.headerBtn}>Close</Text>
+            </Pressable>
+            <Text style={styles.modalTitle}>Add Service</Text>
+            <View style={{ width: 50 }} />
+          </View>
+          <FlatList
+            data={activeServices}
+            keyExtractor={(s) => s.id}
+            renderItem={({ item }) => (
+              <Pressable
+                style={styles.customerRow}
+                onPress={() => {
+                  addLineItemFromService(item.id);
+                  setServicePickerVisible(false);
+                }}
+              >
+                <Text style={styles.customerRowName}>{item.name}</Text>
+                <Text style={styles.customerRowPhone}>${item.price.toFixed(2)} · {item.estimatedDuration}min</Text>
+              </Pressable>
+            )}
+            ListEmptyComponent={<Text style={styles.emptyText}>No active services. Add some in Price Book.</Text>}
           />
         </View>
       </Modal>
@@ -400,4 +508,34 @@ const styles = StyleSheet.create({
   customerRowName: { fontSize: 17, color: '#111' },
   customerRowPhone: { fontSize: 14, color: '#666', marginTop: 2 },
   emptyText: { textAlign: 'center', padding: 24, color: '#999', fontSize: 16 },
+  lineItemRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB',
+  },
+  lineItemInfo: { flex: 1 },
+  lineItemName: { fontSize: 16, color: '#111', fontWeight: '500' },
+  lineItemControls: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
+  lineItemLabel: { fontSize: 14, color: '#666', marginRight: 4 },
+  lineItemQtyInput: {
+    borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 6,
+    paddingHorizontal: 8, paddingVertical: 4, width: 48, fontSize: 14, textAlign: 'center', marginRight: 8,
+  },
+  lineItemPriceInput: {
+    borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 6,
+    paddingHorizontal: 8, paddingVertical: 4, width: 72, fontSize: 14, textAlign: 'right',
+  },
+  lineItemRight: { alignItems: 'flex-end', marginLeft: 12 },
+  lineItemTotal: { fontSize: 16, fontWeight: '600', color: '#111' },
+  lineItemRemove: { fontSize: 18, color: '#EF4444', marginTop: 4, padding: 4 },
+  addServiceBtn: {
+    paddingVertical: 12, alignItems: 'center', borderWidth: 1, borderColor: '#EA580C',
+    borderRadius: 8, borderStyle: 'dashed', marginTop: 8,
+  },
+  addServiceBtnText: { color: '#EA580C', fontSize: 16, fontWeight: '600' },
+  totalRow: {
+    flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, marginTop: 8,
+    borderTopWidth: 2, borderTopColor: '#111',
+  },
+  totalLabel: { fontSize: 18, fontWeight: '700', color: '#111' },
+  totalValue: { fontSize: 18, fontWeight: '700', color: '#111' },
 });
