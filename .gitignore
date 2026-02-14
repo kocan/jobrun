@@ -1,0 +1,25 @@
+node_modules/
+.expo/
+dist/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+.env
+.env.local
+.env.*.local
+
+# Web
+web/node_modules/
+web/.next/
+web/out/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
