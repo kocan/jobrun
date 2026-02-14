@@ -22,6 +22,8 @@ export interface ShareableEstimateData {
   ex: string;
   /** created at (YYYY-MM-DD) */
   dt: string;
+  /** business name */
+  bn?: string;
 }
 
 export const SHARE_BASE_URL = 'https://jobrun.app';
@@ -29,6 +31,7 @@ export const SHARE_BASE_URL = 'https://jobrun.app';
 export function buildShareableData(
   estimate: Estimate,
   customerName: string,
+  businessName?: string,
 ): ShareableEstimateData {
   return {
     n: estimate.id.substring(0, 8).toUpperCase(),
@@ -41,6 +44,7 @@ export function buildShareableData(
     no: estimate.notes || undefined,
     ex: estimate.expiresAt.split('T')[0],
     dt: estimate.createdAt.split('T')[0],
+    bn: businessName || undefined,
   };
 }
 
@@ -61,14 +65,14 @@ export function decodeEstimateData(encoded: string): ShareableEstimateData | nul
   }
 }
 
-export function buildShareUrl(estimate: Estimate, customerName: string): string {
-  const data = buildShareableData(estimate, customerName);
+export function buildShareUrl(estimate: Estimate, customerName: string, businessName?: string): string {
+  const data = buildShareableData(estimate, customerName, businessName);
   const encoded = encodeEstimateData(data);
   return `${SHARE_BASE_URL}/view/estimate/${estimate.id.substring(0, 8)}?d=${encoded}`;
 }
 
 export function buildShareMessage(estimate: Estimate, customerName: string, businessName: string = 'our company'): string {
-  const url = buildShareUrl(estimate, customerName);
+  const url = buildShareUrl(estimate, customerName, businessName !== 'our company' ? businessName : undefined);
   return `Here's your estimate from ${businessName}: ${url}`;
 }
 

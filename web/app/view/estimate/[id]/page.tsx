@@ -14,6 +14,7 @@ interface ShareableEstimateData {
   no?: string;
   ex: string;
   dt: string;
+  bn?: string;
 }
 
 function decodeEstimateData(encoded: string): ShareableEstimateData | null {
@@ -63,6 +64,7 @@ export default function CustomerEstimateView() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden print:shadow-none print:border-none">
           {/* Business Header */}
           <div className="bg-gradient-to-r from-orange-600 to-orange-500 px-6 py-8 text-white print:bg-orange-600">
+            {data.bn && <p className="text-lg font-semibold mb-2">{data.bn}</p>}
             <div className="flex items-center gap-3 mb-1">
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center text-xl">📋</div>
               <h1 className="text-2xl font-bold">Estimate</h1>

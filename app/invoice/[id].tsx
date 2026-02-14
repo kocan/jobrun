@@ -11,6 +11,7 @@ import { usePriceBook } from '../../contexts/PriceBookContext';
 import { InvoiceStatus, LineItem } from '../../lib/types';
 import { isValidInvoiceStatusTransition, calculateInvoiceTotals } from '../../lib/storage/invoices';
 import { buildInvoiceShareUrl, buildInvoiceShareMessage } from '../../lib/invoiceSharing';
+import { useSettings } from '../../contexts/SettingsContext';
 
 const STATUS_LABELS: Record<InvoiceStatus, string> = {
   'draft': 'Draft',
@@ -65,6 +66,7 @@ export default function InvoiceDetailScreen() {
   const { getInvoiceById, addInvoice, updateInvoice, deleteInvoice, createInvoiceFromJob, createInvoiceFromEstimate, markAsPaid } = useInvoices();
   const { customers, getCustomerById } = useCustomers();
   const { getJobById } = useJobs();
+  const { settings: appSettings } = useSettings();
   const { getEstimateById } = useEstimates();
   const { getActiveServices } = usePriceBook();
   const [servicePickerVisible, setServicePickerVisible] = useState(false);
@@ -438,7 +440,7 @@ export default function InvoiceDetailScreen() {
                     onPress={async () => {
                       const inv = getInvoiceById(id!);
                       if (!inv) return;
-                      const message = buildInvoiceShareMessage(inv, customerName);
+                      const message = buildInvoiceShareMessage(inv, customerName, appSettings.businessName || undefined);
                       try {
                         await Share.share({ message });
                         if (inv.status === 'draft') {
