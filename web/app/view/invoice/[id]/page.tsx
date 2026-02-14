@@ -16,6 +16,7 @@ interface ShareableInvoiceData {
   dd?: string;
   dt: string;
   s: string;
+  bn?: string;
 }
 
 function decodeInvoiceData(encoded: string): ShareableInvoiceData | null {
@@ -67,6 +68,7 @@ export default function CustomerInvoiceView() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden print:shadow-none print:border-none">
           {/* Header */}
           <div className="bg-gradient-to-r from-orange-600 to-orange-500 px-6 py-8 text-white print:bg-orange-600">
+            {data.bn && <p className="text-lg font-semibold mb-2">{data.bn}</p>}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center text-xl">📄</div>

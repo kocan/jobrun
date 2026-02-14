@@ -26,6 +26,8 @@ export interface ShareableInvoiceData {
   dt: string;
   /** status */
   s: string;
+  /** business name */
+  bn?: string;
 }
 
 export const SHARE_BASE_URL = 'https://jobrun.app';
@@ -33,6 +35,7 @@ export const SHARE_BASE_URL = 'https://jobrun.app';
 export function buildShareableInvoiceData(
   invoice: Invoice,
   customerName: string,
+  businessName?: string,
 ): ShareableInvoiceData {
   return {
     n: invoice.invoiceNumber,
@@ -47,6 +50,7 @@ export function buildShareableInvoiceData(
     dd: invoice.dueDate?.split('T')[0],
     dt: invoice.createdAt.split('T')[0],
     s: invoice.status,
+    bn: businessName || undefined,
   };
 }
 
@@ -66,14 +70,14 @@ export function decodeInvoiceData(encoded: string): ShareableInvoiceData | null 
   }
 }
 
-export function buildInvoiceShareUrl(invoice: Invoice, customerName: string): string {
-  const data = buildShareableInvoiceData(invoice, customerName);
+export function buildInvoiceShareUrl(invoice: Invoice, customerName: string, businessName?: string): string {
+  const data = buildShareableInvoiceData(invoice, customerName, businessName);
   const encoded = encodeInvoiceData(data);
   return `${SHARE_BASE_URL}/view/invoice/${invoice.id.substring(0, 8)}?d=${encoded}`;
 }
 
 export function buildInvoiceShareMessage(invoice: Invoice, customerName: string, businessName: string = 'our company'): string {
-  const url = buildInvoiceShareUrl(invoice, customerName);
+  const url = buildInvoiceShareUrl(invoice, customerName, businessName !== 'our company' ? businessName : undefined);
   return `Here's your invoice from ${businessName}: ${url}`;
 }
 

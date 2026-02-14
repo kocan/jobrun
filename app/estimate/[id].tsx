@@ -11,6 +11,7 @@ import { useInvoices } from '../../contexts/InvoiceContext';
 import { EstimateStatus, LineItem } from '../../lib/types';
 import { isValidEstimateStatusTransition, calculateEstimateTotals } from '../../lib/storage/estimates';
 import { buildShareUrl, buildShareMessage } from '../../lib/estimateSharing';
+import { useSettings } from '../../contexts/SettingsContext';
 
 const STATUS_LABELS: Record<EstimateStatus, string> = {
   'draft': 'Draft',
@@ -61,6 +62,7 @@ export default function EstimateDetailScreen() {
   const { addJob } = useJobs();
   const { getActiveServices } = usePriceBook();
   const { getInvoiceByJobId } = useInvoices();
+  const { settings: appSettings } = useSettings();
   const [servicePickerVisible, setServicePickerVisible] = useState(false);
   const [customerPickerVisible, setCustomerPickerVisible] = useState(false);
   const [customerSearch, setCustomerSearch] = useState('');
@@ -393,7 +395,7 @@ export default function EstimateDetailScreen() {
                       const est = getEstimateById(id!);
                       if (!est) return;
                       const name = customerName;
-                      const message = buildShareMessage(est, name);
+                      const message = buildShareMessage(est, name, appSettings.businessName || undefined);
                       try {
                         await Share.share({ message });
                         if (est.status === 'draft') {
