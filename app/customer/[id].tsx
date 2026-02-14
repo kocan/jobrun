@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { useCustomers } from '../../contexts/CustomerContext';
 import { useJobs } from '../../contexts/JobContext';
+import { useEstimates } from '../../contexts/EstimateContext';
 import { Customer } from '../../lib/types';
 
 type FormData = {
@@ -44,6 +45,7 @@ export default function CustomerDetailScreen() {
   const router = useRouter();
   const { getCustomerById, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
   const { getJobsByCustomer } = useJobs();
+  const { getEstimatesByCustomer } = useEstimates();
 
   const isNew = id === 'new';
   const [editing, setEditing] = useState(isNew);
@@ -174,6 +176,24 @@ export default function CustomerDetailScreen() {
               <InfoRow label="Address" value={[form.address, form.city, form.state, form.zip].filter(Boolean).join(', ')} />
               <InfoRow label="Notes" value={form.notes} />
 
+              <Text style={styles.sectionTitle}>Estimates</Text>
+              <Pressable style={styles.addJobBtn} onPress={() => router.push({ pathname: '/estimate/[id]', params: { id: 'new', customerId: id } })}>
+                <Text style={styles.addJobBtnText}>+ New Estimate</Text>
+              </Pressable>
+              {getEstimatesByCustomer(id!).length === 0 ? (
+                <Text style={styles.placeholder}>No estimates yet</Text>
+              ) : (
+                getEstimatesByCustomer(id!).map((est) => (
+                  <Pressable key={est.id} style={styles.jobRow} onPress={() => router.push({ pathname: '/estimate/[id]', params: { id: est.id } })}>
+                    <View style={styles.jobRowLeft}>
+                      <Text style={styles.jobRowTitle}>${est.total.toFixed(2)}</Text>
+                      <Text style={styles.jobRowDate}>{est.status} · {est.createdAt.split('T')[0]}</Text>
+                    </View>
+                    <View style={[styles.jobStatusDot, { backgroundColor: { 'draft': '#6B7280', 'sent': '#3B82F6', 'viewed': '#8B5CF6', 'accepted': '#10B981', 'declined': '#EF4444', 'expired': '#F59E0B' }[est.status] }]} />
+                  </Pressable>
+                ))
+              )}
+
               <Text style={styles.sectionTitle}>Jobs</Text>
               <Pressable style={styles.addJobBtn} onPress={() => router.push({ pathname: '/job/[id]', params: { id: 'new', customerId: id } })}>
                 <Text style={styles.addJobBtnText}>+ New Job</Text>
@@ -190,7 +210,7 @@ export default function CustomerDetailScreen() {
                     <View style={[styles.jobStatusDot, { backgroundColor: { 'scheduled': '#3B82F6', 'in-progress': '#F59E0B', 'completed': '#10B981', 'cancelled': '#EF4444' }[job.status] }]} />
                   </Pressable>
                 ))
-              )
+              )}
 
               <Pressable style={styles.deleteBtn} onPress={handleDelete}>
                 <Text style={styles.deleteBtnText}>Delete Customer</Text>

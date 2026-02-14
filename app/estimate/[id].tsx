@@ -1,18 +1,602 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { View, Text, TextInput, ScrollView, Pressable, Alert, StyleSheet, KeyboardAvoidingView, Platform, Modal, FlatList } from 'react-native';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { useState, useEffect, useMemo } from 'react';
+import * as Crypto from 'expo-crypto';
+import { useEstimates } from '../../contexts/EstimateContext';
+import { useCustomers } from '../../contexts/CustomerContext';
+import { useJobs } from '../../contexts/JobContext';
+import { usePriceBook } from '../../contexts/PriceBookContext';
+import { EstimateStatus, LineItem } from '../../lib/types';
+import { isValidEstimateStatusTransition, calculateEstimateTotals } from '../../lib/storage/estimates';
+
+const STATUS_LABELS: Record<EstimateStatus, string> = {
+  'draft': 'Draft',
+  'sent': 'Sent',
+  'viewed': 'Viewed',
+  'accepted': 'Accepted',
+  'declined': 'Declined',
+  'expired': 'Expired',
+};
+const STATUS_COLORS: Record<EstimateStatus, string> = {
+  'draft': '#6B7280',
+  'sent': '#3B82F6',
+  'viewed': '#8B5CF6',
+  'accepted': '#10B981',
+  'declined': '#EF4444',
+  'expired': '#F59E0B',
+};
+
+type FormData = {
+  customerId: string;
+  status: EstimateStatus;
+  lineItems: LineItem[];
+  taxRate: string;
+  notes: string;
+  expiresAt: string;
+};
+
+function defaultExpiresAt(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 30);
+  return d.toISOString().split('T')[0];
+}
+
+const emptyForm: FormData = {
+  customerId: '',
+  status: 'draft',
+  lineItems: [],
+  taxRate: '0',
+  notes: '',
+  expiresAt: defaultExpiresAt(),
+};
 
 export default function EstimateDetailScreen() {
-  const { id } = useLocalSearchParams();
+  const { id, customerId: preselectedCustomerId } = useLocalSearchParams<{ id: string; customerId?: string }>();
+  const router = useRouter();
+  const { getEstimateById, addEstimate, updateEstimate, deleteEstimate } = useEstimates();
+  const { customers, getCustomerById } = useCustomers();
+  const { addJob } = useJobs();
+  const { getActiveServices } = usePriceBook();
+  const [servicePickerVisible, setServicePickerVisible] = useState(false);
+  const [customerPickerVisible, setCustomerPickerVisible] = useState(false);
+  const [customerSearch, setCustomerSearch] = useState('');
+
+  const isNew = id === 'new';
+  const [editing, setEditing] = useState(isNew);
+  const [form, setForm] = useState<FormData>(() => ({
+    ...emptyForm,
+    customerId: preselectedCustomerId || '',
+  }));
+
+  useEffect(() => {
+    if (!isNew && id) {
+      const est = getEstimateById(id);
+      if (est) {
+        setForm({
+          customerId: est.customerId,
+          status: est.status,
+          lineItems: est.lineItems,
+          taxRate: String(est.taxRate),
+          notes: est.notes || '',
+          expiresAt: est.expiresAt.split('T')[0],
+        });
+      }
+    }
+  }, [id, isNew, getEstimateById]);
+
+  const selectedCustomer = useMemo(
+    () => form.customerId ? getCustomerById(form.customerId) : undefined,
+    [form.customerId, getCustomerById]
+  );
+
+  const taxRate = parseFloat(form.taxRate) || 0;
+  const totals = useMemo(
+    () => calculateEstimateTotals(form.lineItems, taxRate),
+    [form.lineItems, taxRate]
+  );
+
+  const activeServices = useMemo(() => getActiveServices(), [getActiveServices]);
+
+  const addLineItemFromService = (serviceId: string) => {
+    const svc = activeServices.find((s) => s.id === serviceId);
+    if (!svc) return;
+    const li: LineItem = {
+      id: Crypto.randomUUID(),
+      serviceId: svc.id,
+      name: svc.name,
+      description: svc.description,
+      quantity: 1,
+      unitPrice: svc.price,
+      total: svc.price,
+    };
+    setForm((f) => ({ ...f, lineItems: [...f.lineItems, li] }));
+  };
+
+  const updateLineItem = (liId: string, updates: Partial<LineItem>) => {
+    setForm((f) => ({
+      ...f,
+      lineItems: f.lineItems.map((li) => {
+        if (li.id !== liId) return li;
+        const updated = { ...li, ...updates };
+        updated.total = Math.round(updated.unitPrice * updated.quantity * 100) / 100;
+        return updated;
+      }),
+    }));
+  };
+
+  const removeLineItem = (liId: string) => {
+    setForm((f) => ({ ...f, lineItems: f.lineItems.filter((li) => li.id !== liId) }));
+  };
+
+  const filteredCustomers = useMemo(() => {
+    if (!customerSearch.trim()) return customers;
+    const q = customerSearch.toLowerCase();
+    return customers.filter(
+      (c) => c.firstName.toLowerCase().includes(q) || c.lastName.toLowerCase().includes(q) || (c.phone && c.phone.includes(q))
+    );
+  }, [customers, customerSearch]);
+
+  const handleSave = async () => {
+    if (!form.customerId) {
+      Alert.alert('Error', 'Please select a customer');
+      return;
+    }
+    if (form.lineItems.length === 0) {
+      Alert.alert('Error', 'Please add at least one line item');
+      return;
+    }
+
+    const data = {
+      customerId: form.customerId,
+      status: form.status,
+      lineItems: form.lineItems,
+      subtotal: totals.subtotal,
+      taxRate,
+      taxAmount: totals.taxAmount,
+      total: totals.total,
+      notes: form.notes.trim() || undefined,
+      expiresAt: form.expiresAt,
+    };
+
+    if (isNew) {
+      await addEstimate(data as any);
+      router.back();
+    } else {
+      await updateEstimate(id!, data);
+      setEditing(false);
+    }
+  };
+
+  const handleStatusChange = async (newStatus: EstimateStatus) => {
+    const est = getEstimateById(id!);
+    if (!est) return;
+    if (!isValidEstimateStatusTransition(est.status, newStatus)) {
+      Alert.alert('Invalid', `Cannot change from ${STATUS_LABELS[est.status]} to ${STATUS_LABELS[newStatus]}`);
+      return;
+    }
+    await updateEstimate(id!, { status: newStatus });
+    setForm((f) => ({ ...f, status: newStatus }));
+  };
+
+  const handleConvertToJob = async () => {
+    Alert.alert('Convert to Job', 'Create a new job from this estimate?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Convert',
+        onPress: async () => {
+          const job = await addJob({
+            customerId: form.customerId,
+            title: `Job from Estimate`,
+            status: 'scheduled',
+            scheduledDate: new Date().toISOString().split('T')[0],
+            lineItems: form.lineItems,
+            total: totals.total,
+            photos: [],
+            estimateId: id!,
+          } as any);
+          await updateEstimate(id!, { jobId: job.id });
+          router.push({ pathname: '/job/[id]', params: { id: job.id } });
+        },
+      },
+    ]);
+  };
+
+  const handleDelete = () => {
+    Alert.alert('Delete Estimate', 'Are you sure? This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          await deleteEstimate(id!);
+          router.back();
+        },
+      },
+    ]);
+  };
+
+  const setField = (key: keyof FormData) => (value: string) => setForm((f) => ({ ...f, [key]: value }));
+  const customerName = selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}`.trim() : 'Select Customer';
+  const title = isNew ? 'New Estimate' : editing ? 'Edit Estimate' : 'Estimate';
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Estimate #{id}</Text>
-      <Text style={styles.subtitle}>Estimate details will appear here</Text>
+    <>
+      <Stack.Screen
+        options={{
+          title,
+          headerRight: () =>
+            !isNew && !editing ? (
+              <Pressable onPress={() => setEditing(true)}>
+                <Text style={styles.headerBtn}>Edit</Text>
+              </Pressable>
+            ) : null,
+        }}
+      />
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+          {editing ? (
+            <>
+              {/* Customer Picker */}
+              <View style={styles.field}>
+                <Text style={styles.label}>Customer *</Text>
+                <Pressable style={styles.pickerBtn} onPress={() => setCustomerPickerVisible(true)}>
+                  <Text style={[styles.pickerText, !form.customerId && styles.pickerPlaceholder]}>
+                    {customerName}
+                  </Text>
+                </Pressable>
+              </View>
+
+              {/* Line Items */}
+              <View style={styles.field}>
+                <Text style={styles.label}>Line Items *</Text>
+                {form.lineItems.map((li) => (
+                  <View key={li.id} style={styles.lineItemRow}>
+                    <View style={styles.lineItemInfo}>
+                      <Text style={styles.lineItemName}>{li.name}</Text>
+                      <View style={styles.lineItemControls}>
+                        <Text style={styles.lineItemLabel}>Qty:</Text>
+                        <TextInput
+                          style={styles.lineItemQtyInput}
+                          value={String(li.quantity)}
+                          onChangeText={(v) => updateLineItem(li.id, { quantity: parseInt(v) || 1 })}
+                          keyboardType="number-pad"
+                        />
+                        <Text style={styles.lineItemLabel}>@ $</Text>
+                        <TextInput
+                          style={styles.lineItemPriceInput}
+                          value={String(li.unitPrice)}
+                          onChangeText={(v) => updateLineItem(li.id, { unitPrice: parseFloat(v) || 0 })}
+                          keyboardType="numeric"
+                        />
+                      </View>
+                    </View>
+                    <View style={styles.lineItemRight}>
+                      <Text style={styles.lineItemTotal}>${(li.unitPrice * li.quantity).toFixed(2)}</Text>
+                      <Pressable onPress={() => removeLineItem(li.id)}>
+                        <Text style={styles.lineItemRemove}>✕</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                ))}
+                <Pressable style={styles.addServiceBtn} onPress={() => setServicePickerVisible(true)}>
+                  <Text style={styles.addServiceBtnText}>+ Add Service</Text>
+                </Pressable>
+              </View>
+
+              {/* Tax Rate */}
+              <View style={styles.field}>
+                <Text style={styles.label}>Tax Rate (%)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={form.taxRate}
+                  onChangeText={setField('taxRate')}
+                  keyboardType="numeric"
+                  placeholder="0"
+                />
+              </View>
+
+              {/* Totals */}
+              {form.lineItems.length > 0 && (
+                <View style={styles.totalsBox}>
+                  <View style={styles.totalsRow}>
+                    <Text style={styles.totalsLabel}>Subtotal</Text>
+                    <Text style={styles.totalsValue}>${totals.subtotal.toFixed(2)}</Text>
+                  </View>
+                  {taxRate > 0 && (
+                    <View style={styles.totalsRow}>
+                      <Text style={styles.totalsLabel}>Tax ({taxRate}%)</Text>
+                      <Text style={styles.totalsValue}>${totals.taxAmount.toFixed(2)}</Text>
+                    </View>
+                  )}
+                  <View style={[styles.totalsRow, styles.totalRowFinal]}>
+                    <Text style={styles.totalLabel}>Total</Text>
+                    <Text style={styles.totalValue}>${totals.total.toFixed(2)}</Text>
+                  </View>
+                </View>
+              )}
+
+              {/* Expiration Date */}
+              <Field label="Expires (YYYY-MM-DD)" value={form.expiresAt} onChange={setField('expiresAt')} />
+
+              {/* Notes */}
+              <Field label="Notes / Terms" value={form.notes} onChange={setField('notes')} multiline placeholder="e.g. Estimate valid for 30 days" />
+
+              <Pressable style={styles.saveBtn} onPress={handleSave}>
+                <Text style={styles.saveBtnText}>{isNew ? 'Create Estimate' : 'Save Changes'}</Text>
+              </Pressable>
+              {!isNew && (
+                <Pressable style={styles.cancelBtn} onPress={() => setEditing(false)}>
+                  <Text style={styles.cancelBtnText}>Cancel</Text>
+                </Pressable>
+              )}
+              {isNew && (
+                <Pressable style={styles.cancelBtn} onPress={() => router.back()}>
+                  <Text style={styles.cancelBtnText}>Cancel</Text>
+                </Pressable>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Status Badge */}
+              <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[form.status] }]}>  
+                <Text style={styles.statusBadgeText}>{STATUS_LABELS[form.status]}</Text>
+              </View>
+
+              <InfoRow label="Customer" value={customerName} />
+
+              {/* Line Items Table */}
+              {form.lineItems.length > 0 && (
+                <View style={styles.field}>
+                  <Text style={styles.sectionTitle}>Line Items</Text>
+                  {form.lineItems.map((li) => (
+                    <View key={li.id} style={styles.viewLineItem}>
+                      <View style={styles.viewLineItemLeft}>
+                        <Text style={styles.viewLineItemName}>{li.name}</Text>
+                        <Text style={styles.viewLineItemDetail}>{li.quantity} × ${li.unitPrice.toFixed(2)}</Text>
+                      </View>
+                      <Text style={styles.viewLineItemTotal}>${(li.unitPrice * li.quantity).toFixed(2)}</Text>
+                    </View>
+                  ))}
+                  <View style={styles.totalsBox}>
+                    <View style={styles.totalsRow}>
+                      <Text style={styles.totalsLabel}>Subtotal</Text>
+                      <Text style={styles.totalsValue}>${totals.subtotal.toFixed(2)}</Text>
+                    </View>
+                    {taxRate > 0 && (
+                      <View style={styles.totalsRow}>
+                        <Text style={styles.totalsLabel}>Tax ({taxRate}%)</Text>
+                        <Text style={styles.totalsValue}>${totals.taxAmount.toFixed(2)}</Text>
+                      </View>
+                    )}
+                    <View style={[styles.totalsRow, styles.totalRowFinal]}>
+                      <Text style={styles.totalLabel}>Total</Text>
+                      <Text style={styles.totalValue}>${totals.total.toFixed(2)}</Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              <InfoRow label="Expires" value={form.expiresAt} />
+              <InfoRow label="Notes" value={form.notes} />
+
+              {/* Status Actions */}
+              <Text style={styles.sectionTitle}>Actions</Text>
+              {form.status === 'draft' && (
+                <Pressable style={[styles.actionBtn, { backgroundColor: '#3B82F6' }]} onPress={() => handleStatusChange('sent')}>
+                  <Text style={styles.actionBtnText}>✉ Mark as Sent</Text>
+                </Pressable>
+              )}
+              {form.status === 'sent' && (
+                <>
+                  <Pressable style={[styles.actionBtn, { backgroundColor: '#10B981' }]} onPress={() => handleStatusChange('accepted')}>
+                    <Text style={styles.actionBtnText}>✓ Mark Accepted</Text>
+                  </Pressable>
+                  <Pressable style={[styles.actionBtn, { backgroundColor: '#EF4444' }]} onPress={() => handleStatusChange('declined')}>
+                    <Text style={styles.actionBtnText}>✕ Mark Declined</Text>
+                  </Pressable>
+                </>
+              )}
+              {form.status === 'accepted' && !getEstimateById(id!)?.jobId && (
+                <Pressable style={[styles.actionBtn, { backgroundColor: '#EA580C' }]} onPress={handleConvertToJob}>
+                  <Text style={styles.actionBtnText}>🔧 Convert to Job</Text>
+                </Pressable>
+              )}
+              {(form.status === 'declined' || form.status === 'expired') && (
+                <Pressable style={[styles.actionBtn, { backgroundColor: '#6B7280' }]} onPress={() => handleStatusChange('draft')}>
+                  <Text style={styles.actionBtnText}>↻ Revert to Draft</Text>
+                </Pressable>
+              )}
+
+              <Pressable style={styles.deleteBtn} onPress={handleDelete}>
+                <Text style={styles.deleteBtnText}>Delete Estimate</Text>
+              </Pressable>
+            </>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      {/* Customer Picker Modal */}
+      <Modal visible={customerPickerVisible} animationType="slide" presentationStyle="pageSheet">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Pressable onPress={() => { setCustomerPickerVisible(false); setCustomerSearch(''); }}>
+              <Text style={styles.headerBtn}>Close</Text>
+            </Pressable>
+            <Text style={styles.modalTitle}>Select Customer</Text>
+            <View style={{ width: 50 }} />
+          </View>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search customers..."
+            value={customerSearch}
+            onChangeText={setCustomerSearch}
+            autoFocus
+          />
+          <FlatList
+            data={filteredCustomers}
+            keyExtractor={(c) => c.id}
+            renderItem={({ item }) => (
+              <Pressable
+                style={styles.pickerRow}
+                onPress={() => {
+                  setForm((f) => ({ ...f, customerId: item.id }));
+                  setCustomerPickerVisible(false);
+                  setCustomerSearch('');
+                }}
+              >
+                <Text style={styles.pickerRowName}>{item.firstName} {item.lastName}</Text>
+                {item.phone ? <Text style={styles.pickerRowSub}>{item.phone}</Text> : null}
+              </Pressable>
+            )}
+            ListEmptyComponent={<Text style={styles.emptyText}>No customers found</Text>}
+          />
+        </View>
+      </Modal>
+
+      {/* Service Picker Modal */}
+      <Modal visible={servicePickerVisible} animationType="slide" presentationStyle="pageSheet">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Pressable onPress={() => setServicePickerVisible(false)}>
+              <Text style={styles.headerBtn}>Close</Text>
+            </Pressable>
+            <Text style={styles.modalTitle}>Add Service</Text>
+            <View style={{ width: 50 }} />
+          </View>
+          <FlatList
+            data={activeServices}
+            keyExtractor={(s) => s.id}
+            renderItem={({ item }) => (
+              <Pressable
+                style={styles.pickerRow}
+                onPress={() => {
+                  addLineItemFromService(item.id);
+                  setServicePickerVisible(false);
+                }}
+              >
+                <Text style={styles.pickerRowName}>{item.name}</Text>
+                <Text style={styles.pickerRowSub}>${item.price.toFixed(2)} · {item.estimatedDuration}min</Text>
+              </Pressable>
+            )}
+            ListEmptyComponent={<Text style={styles.emptyText}>No active services. Add some in Price Book.</Text>}
+          />
+        </View>
+      </Modal>
+    </>
+  );
+}
+
+function Field({
+  label, value, onChange, multiline, placeholder,
+}: {
+  label: string; value: string; onChange: (v: string) => void;
+  multiline?: boolean; placeholder?: string;
+}) {
+  return (
+    <View style={styles.field}>
+      <Text style={styles.label}>{label}</Text>
+      <TextInput
+        style={[styles.input, multiline && styles.inputMultiline]}
+        value={value}
+        onChangeText={onChange}
+        multiline={multiline}
+        numberOfLines={multiline ? 3 : 1}
+        placeholder={placeholder}
+      />
+    </View>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value?: string }) {
+  if (!value) return null;
+  return (
+    <View style={styles.infoRow}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue}>{value}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#EA580C' },
-  subtitle: { fontSize: 16, color: '#666', marginTop: 8 },
+  flex: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#fff' },
+  content: { padding: 16, paddingBottom: 40 },
+  headerBtn: { color: '#EA580C', fontSize: 17, fontWeight: '600' },
+  field: { marginBottom: 16 },
+  label: { fontSize: 13, fontWeight: '600', color: '#666', marginBottom: 6, textTransform: 'uppercase' },
+  input: {
+    borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8,
+    padding: 12, fontSize: 16, color: '#111', backgroundColor: '#F9FAFB',
+  },
+  inputMultiline: { minHeight: 80, textAlignVertical: 'top' },
+  pickerBtn: {
+    borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8,
+    padding: 12, backgroundColor: '#F9FAFB',
+  },
+  pickerText: { fontSize: 16, color: '#111' },
+  pickerPlaceholder: { color: '#999' },
+  statusBadge: { alignSelf: 'flex-start', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, marginBottom: 16 },
+  statusBadgeText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  saveBtn: { backgroundColor: '#EA580C', padding: 16, borderRadius: 10, alignItems: 'center', marginTop: 8 },
+  saveBtnText: { color: '#fff', fontSize: 17, fontWeight: '600' },
+  cancelBtn: { padding: 16, alignItems: 'center', marginTop: 4 },
+  cancelBtnText: { color: '#666', fontSize: 17 },
+  deleteBtn: { padding: 16, alignItems: 'center', marginTop: 24 },
+  deleteBtnText: { color: '#EF4444', fontSize: 17, fontWeight: '600' },
+  infoRow: { paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB' },
+  infoLabel: { fontSize: 13, color: '#666', textTransform: 'uppercase', marginBottom: 4 },
+  infoValue: { fontSize: 17, color: '#111' },
+  sectionTitle: { fontSize: 20, fontWeight: '700', color: '#111', marginTop: 24, marginBottom: 12 },
+  actionBtn: { padding: 14, borderRadius: 10, alignItems: 'center', marginBottom: 10 },
+  actionBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  modalContainer: { flex: 1, backgroundColor: '#fff', paddingTop: Platform.OS === 'ios' ? 60 : 20 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 12 },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: '#111' },
+  searchInput: {
+    marginHorizontal: 16, marginBottom: 8, borderWidth: 1, borderColor: '#D1D5DB',
+    borderRadius: 8, padding: 12, fontSize: 16, backgroundColor: '#F9FAFB',
+  },
+  pickerRow: { paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB' },
+  pickerRowName: { fontSize: 17, color: '#111' },
+  pickerRowSub: { fontSize: 14, color: '#666', marginTop: 2 },
+  emptyText: { textAlign: 'center', padding: 24, color: '#999', fontSize: 16 },
+  lineItemRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB',
+  },
+  lineItemInfo: { flex: 1 },
+  lineItemName: { fontSize: 16, color: '#111', fontWeight: '500' },
+  lineItemControls: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
+  lineItemLabel: { fontSize: 14, color: '#666', marginRight: 4 },
+  lineItemQtyInput: {
+    borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 6,
+    paddingHorizontal: 8, paddingVertical: 4, width: 48, fontSize: 14, textAlign: 'center', marginRight: 8,
+  },
+  lineItemPriceInput: {
+    borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 6,
+    paddingHorizontal: 8, paddingVertical: 4, width: 72, fontSize: 14, textAlign: 'right',
+  },
+  lineItemRight: { alignItems: 'flex-end', marginLeft: 12 },
+  lineItemTotal: { fontSize: 16, fontWeight: '600', color: '#111' },
+  lineItemRemove: { fontSize: 18, color: '#EF4444', marginTop: 4, padding: 4 },
+  addServiceBtn: {
+    paddingVertical: 12, alignItems: 'center', borderWidth: 1, borderColor: '#EA580C',
+    borderRadius: 8, borderStyle: 'dashed', marginTop: 8,
+  },
+  addServiceBtnText: { color: '#EA580C', fontSize: 16, fontWeight: '600' },
+  totalsBox: { marginTop: 12, backgroundColor: '#F9FAFB', borderRadius: 8, padding: 12 },
+  totalsRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
+  totalsLabel: { fontSize: 15, color: '#666' },
+  totalsValue: { fontSize: 15, color: '#111' },
+  totalRowFinal: { borderTopWidth: 2, borderTopColor: '#111', marginTop: 4, paddingTop: 8 },
+  totalLabel: { fontSize: 18, fontWeight: '700', color: '#111' },
+  totalValue: { fontSize: 18, fontWeight: '700', color: '#111' },
+  viewLineItem: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB',
+  },
+  viewLineItemLeft: { flex: 1 },
+  viewLineItemName: { fontSize: 16, color: '#111', fontWeight: '500' },
+  viewLineItemDetail: { fontSize: 14, color: '#666', marginTop: 2 },
+  viewLineItemTotal: { fontSize: 16, fontWeight: '600', color: '#111', marginLeft: 12 },
 });
