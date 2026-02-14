@@ -1,0 +1,131 @@
+export type VerticalId =
+  | 'pressure-washing'
+  | 'auto-detailing'
+  | 'lawn-care'
+  | 'cleaning'
+  | 'handyman';
+
+export interface Vertical {
+  id: VerticalId;
+  name: string;
+  icon: string;
+  defaultServices: PriceBookService[];
+  terminology?: {
+    job?: string;
+    customer?: string;
+    estimate?: string;
+  };
+}
+
+export interface Customer {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  notes?: string;
+  verticalId?: VerticalId;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type JobStatus = 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+
+export interface Job {
+  id: string;
+  customerId: string;
+  title: string;
+  description?: string;
+  status: JobStatus;
+  scheduledDate: string;
+  scheduledTime?: string;
+  estimatedDuration?: number; // minutes
+  address?: string;
+  lineItems: LineItem[];
+  total: number;
+  notes?: string;
+  photos: Photo[];
+  estimateId?: string;
+  invoiceId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LineItem {
+  id: string;
+  serviceId?: string;
+  name: string;
+  description?: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
+
+export interface PriceBookService {
+  id?: string;
+  name: string;
+  price: number;
+  description?: string;
+}
+
+export type EstimateStatus = 'draft' | 'sent' | 'viewed' | 'accepted' | 'declined' | 'expired';
+
+export interface Estimate {
+  id: string;
+  customerId: string;
+  jobId?: string;
+  lineItems: LineItem[];
+  subtotal: number;
+  tax?: number;
+  total: number;
+  status: EstimateStatus;
+  notes?: string;
+  validUntil?: string;
+  shareToken?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type InvoiceStatus = 'draft' | 'sent' | 'viewed' | 'paid' | 'overdue' | 'cancelled';
+
+export interface Invoice {
+  id: string;
+  customerId: string;
+  jobId?: string;
+  estimateId?: string;
+  lineItems: LineItem[];
+  subtotal: number;
+  tax?: number;
+  total: number;
+  status: InvoiceStatus;
+  dueDate?: string;
+  paidAt?: string;
+  shareToken?: string;
+  payments: Payment[];
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Payment {
+  id: string;
+  invoiceId: string;
+  amount: number;
+  method: 'stripe' | 'cash' | 'check' | 'other';
+  stripePaymentIntentId?: string;
+  notes?: string;
+  paidAt: string;
+}
+
+export interface Photo {
+  id: string;
+  jobId: string;
+  uri: string;
+  type: 'before' | 'after' | 'other';
+  caption?: string;
+  createdAt: string;
+}
