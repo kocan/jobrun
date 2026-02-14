@@ -2,6 +2,7 @@ import { View, Text, TextInput, ScrollView, Pressable, Alert, StyleSheet, Keyboa
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { useCustomers } from '../../contexts/CustomerContext';
+import { useJobs } from '../../contexts/JobContext';
 import { Customer } from '../../lib/types';
 
 type FormData = {
@@ -42,6 +43,7 @@ export default function CustomerDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { getCustomerById, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
+  const { getJobsByCustomer } = useJobs();
 
   const isNew = id === 'new';
   const [editing, setEditing] = useState(isNew);
@@ -172,8 +174,23 @@ export default function CustomerDetailScreen() {
               <InfoRow label="Address" value={[form.address, form.city, form.state, form.zip].filter(Boolean).join(', ')} />
               <InfoRow label="Notes" value={form.notes} />
 
-              <Text style={styles.sectionTitle}>Recent Jobs</Text>
-              <Text style={styles.placeholder}>No jobs yet</Text>
+              <Text style={styles.sectionTitle}>Jobs</Text>
+              <Pressable style={styles.addJobBtn} onPress={() => router.push({ pathname: '/job/[id]', params: { id: 'new', customerId: id } })}>
+                <Text style={styles.addJobBtnText}>+ New Job</Text>
+              </Pressable>
+              {getJobsByCustomer(id!).length === 0 ? (
+                <Text style={styles.placeholder}>No jobs yet</Text>
+              ) : (
+                getJobsByCustomer(id!).map((job) => (
+                  <Pressable key={job.id} style={styles.jobRow} onPress={() => router.push({ pathname: '/job/[id]', params: { id: job.id } })}>
+                    <View style={styles.jobRowLeft}>
+                      <Text style={styles.jobRowTitle}>{job.title}</Text>
+                      <Text style={styles.jobRowDate}>{job.scheduledDate}{job.scheduledTime ? ` at ${job.scheduledTime}` : ''}</Text>
+                    </View>
+                    <View style={[styles.jobStatusDot, { backgroundColor: { 'scheduled': '#3B82F6', 'in-progress': '#F59E0B', 'completed': '#10B981', 'cancelled': '#EF4444' }[job.status] }]} />
+                  </Pressable>
+                ))
+              )
 
               <Pressable style={styles.deleteBtn} onPress={handleDelete}>
                 <Text style={styles.deleteBtnText}>Delete Customer</Text>
@@ -270,4 +287,11 @@ const styles = StyleSheet.create({
   infoValue: { fontSize: 17, color: '#111' },
   sectionTitle: { fontSize: 20, fontWeight: '700', color: '#111', marginTop: 24, marginBottom: 12 },
   placeholder: { fontSize: 15, color: '#999', fontStyle: 'italic' },
+  addJobBtn: { backgroundColor: '#EA580C', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8, alignSelf: 'flex-start', marginBottom: 12 },
+  addJobBtnText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  jobRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB' },
+  jobRowLeft: { flex: 1 },
+  jobRowTitle: { fontSize: 16, color: '#111', fontWeight: '500' },
+  jobRowDate: { fontSize: 14, color: '#666', marginTop: 2 },
+  jobStatusDot: { width: 10, height: 10, borderRadius: 5, marginLeft: 12 },
 });
