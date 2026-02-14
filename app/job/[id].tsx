@@ -5,6 +5,7 @@ import * as Crypto from 'expo-crypto';
 import { useJobs } from '../../contexts/JobContext';
 import { useCustomers } from '../../contexts/CustomerContext';
 import { usePriceBook } from '../../contexts/PriceBookContext';
+import { useInvoices } from '../../contexts/InvoiceContext';
 import { Job, JobStatus, LineItem } from '../../lib/types';
 import { isValidStatusTransition } from '../../lib/storage/jobs';
 import { calculateTotal } from '../../lib/storage/priceBook';
@@ -53,6 +54,7 @@ export default function JobDetailScreen() {
   const { getJobById, addJob, updateJob, deleteJob } = useJobs();
   const { customers, getCustomerById } = useCustomers();
   const { getActiveServices } = usePriceBook();
+  const { getInvoiceByJobId } = useInvoices();
   const [servicePickerVisible, setServicePickerVisible] = useState(false);
 
   const isNew = id === 'new';
@@ -344,6 +346,23 @@ export default function JobDetailScreen() {
                   <Text style={styles.actionBtnText}>↻ Reschedule</Text>
                 </Pressable>
               )}
+
+              {/* Invoice */}
+              {!isNew && (() => {
+                const existingInvoice = getInvoiceByJobId(id!);
+                if (existingInvoice) {
+                  return (
+                    <Pressable style={[styles.actionBtn, { backgroundColor: '#7C3AED' }]} onPress={() => router.push({ pathname: '/invoice/[id]', params: { id: existingInvoice.id } })}>
+                      <Text style={styles.actionBtnText}>📄 View Invoice ({existingInvoice.invoiceNumber})</Text>
+                    </Pressable>
+                  );
+                }
+                return (
+                  <Pressable style={[styles.actionBtn, { backgroundColor: '#7C3AED' }]} onPress={() => router.push({ pathname: '/invoice/[id]', params: { id: 'new', fromJob: id } })}>
+                    <Text style={styles.actionBtnText}>📄 Create Invoice</Text>
+                  </Pressable>
+                );
+              })()}
 
               <Pressable style={styles.deleteBtn} onPress={handleDelete}>
                 <Text style={styles.deleteBtnText}>Delete Job</Text>

@@ -110,14 +110,17 @@ export type InvoiceStatus = 'draft' | 'sent' | 'viewed' | 'paid' | 'overdue' | '
 
 export interface Invoice {
   id: string;
+  invoiceNumber: string;
   customerId: string;
   jobId?: string;
   estimateId?: string;
   lineItems: LineItem[];
   subtotal: number;
-  tax?: number;
+  taxRate: number;
+  taxAmount: number;
   total: number;
   status: InvoiceStatus;
+  paymentTerms?: string;
   dueDate?: string;
   paidAt?: string;
   shareToken?: string;
