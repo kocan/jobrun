@@ -1,13 +1,15 @@
-import { View, Text, TextInput, ScrollView, Pressable, Alert, StyleSheet, KeyboardAvoidingView, Platform, Modal, FlatList } from 'react-native';
+import { View, Text, TextInput, ScrollView, Pressable, Alert, StyleSheet, KeyboardAvoidingView, Platform, Modal, FlatList, Share } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useState, useEffect, useMemo } from 'react';
 import * as Crypto from 'expo-crypto';
+import * as Clipboard from 'expo-clipboard';
 import { useEstimates } from '../../contexts/EstimateContext';
 import { useCustomers } from '../../contexts/CustomerContext';
 import { useJobs } from '../../contexts/JobContext';
 import { usePriceBook } from '../../contexts/PriceBookContext';
 import { EstimateStatus, LineItem } from '../../lib/types';
 import { isValidEstimateStatusTransition, calculateEstimateTotals } from '../../lib/storage/estimates';
+import { buildShareUrl, buildShareMessage } from '../../lib/estimateSharing';
 
 const STATUS_LABELS: Record<EstimateStatus, string> = {
   'draft': 'Draft',
@@ -378,6 +380,47 @@ export default function EstimateDetailScreen() {
 
               <InfoRow label="Expires" value={form.expiresAt} />
               <InfoRow label="Notes" value={form.notes} />
+
+              {/* Share Actions */}
+              {(form.status === 'draft' || form.status === 'sent') && (
+                <>
+                  <Text style={styles.sectionTitle}>Share</Text>
+                  <Pressable
+                    style={[styles.actionBtn, { backgroundColor: '#7C3AED' }]}
+                    onPress={async () => {
+                      const est = getEstimateById(id!);
+                      if (!est) return;
+                      const name = customerName;
+                      const message = buildShareMessage(est, name);
+                      try {
+                        await Share.share({ message });
+                        if (est.status === 'draft') {
+                          await updateEstimate(id!, { status: 'sent' });
+                          setForm((f) => ({ ...f, status: 'sent' }));
+                        }
+                      } catch {}
+                    }}
+                  >
+                    <Text style={styles.actionBtnText}>📤 Share Estimate</Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.actionBtn, { backgroundColor: '#6B7280' }]}
+                    onPress={async () => {
+                      const est = getEstimateById(id!);
+                      if (!est) return;
+                      const url = buildShareUrl(est, customerName);
+                      try {
+                        await Clipboard.setStringAsync(url);
+                        Alert.alert('Copied', 'Estimate link copied to clipboard');
+                      } catch {
+                        Alert.alert('Link', url);
+                      }
+                    }}
+                  >
+                    <Text style={styles.actionBtnText}>🔗 Copy Link</Text>
+                  </Pressable>
+                </>
+              )}
 
               {/* Status Actions */}
               <Text style={styles.sectionTitle}>Actions</Text>
