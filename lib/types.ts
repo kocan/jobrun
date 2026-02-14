@@ -95,11 +95,12 @@ export interface Estimate {
   jobId?: string;
   lineItems: LineItem[];
   subtotal: number;
-  tax?: number;
+  taxRate: number;
+  taxAmount: number;
   total: number;
   status: EstimateStatus;
   notes?: string;
-  validUntil?: string;
+  expiresAt: string;
   shareToken?: string;
   createdAt: string;
   updatedAt: string;

@@ -2,6 +2,7 @@ import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 
 const menuItems = [
+  { label: 'Estimates', icon: '📝', route: '/estimate/new' as const, description: 'Create and manage estimates' },
   { label: 'Price Book', icon: '📋', route: '/price-book' as const, description: 'Manage your services and pricing' },
 ];
 
