@@ -23,3 +23,6 @@ web/out/
 # IDE
 .vscode/
 .idea/
+
+# waitlist data
+web/data/waitlist.json
