@@ -12,7 +12,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Today',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>📋</Text>,
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>📆</Text>,
         }}
       />
       <Tabs.Screen
