@@ -7,6 +7,7 @@ import { useEstimates } from '../../contexts/EstimateContext';
 import { useCustomers } from '../../contexts/CustomerContext';
 import { useJobs } from '../../contexts/JobContext';
 import { usePriceBook } from '../../contexts/PriceBookContext';
+import { useInvoices } from '../../contexts/InvoiceContext';
 import { EstimateStatus, LineItem } from '../../lib/types';
 import { isValidEstimateStatusTransition, calculateEstimateTotals } from '../../lib/storage/estimates';
 import { buildShareUrl, buildShareMessage } from '../../lib/estimateSharing';
@@ -59,6 +60,7 @@ export default function EstimateDetailScreen() {
   const { customers, getCustomerById } = useCustomers();
   const { addJob } = useJobs();
   const { getActiveServices } = usePriceBook();
+  const { getInvoiceByJobId } = useInvoices();
   const [servicePickerVisible, setServicePickerVisible] = useState(false);
   const [customerPickerVisible, setCustomerPickerVisible] = useState(false);
   const [customerSearch, setCustomerSearch] = useState('');
@@ -442,6 +444,11 @@ export default function EstimateDetailScreen() {
               {form.status === 'accepted' && !getEstimateById(id!)?.jobId && (
                 <Pressable style={[styles.actionBtn, { backgroundColor: '#EA580C' }]} onPress={handleConvertToJob}>
                   <Text style={styles.actionBtnText}>🔧 Convert to Job</Text>
+                </Pressable>
+              )}
+              {form.status === 'accepted' && (
+                <Pressable style={[styles.actionBtn, { backgroundColor: '#7C3AED' }]} onPress={() => router.push({ pathname: '/invoice/[id]', params: { id: 'new', fromEstimate: id } })}>
+                  <Text style={styles.actionBtnText}>📄 Create Invoice</Text>
                 </Pressable>
               )}
               {(form.status === 'declined' || form.status === 'expired') && (

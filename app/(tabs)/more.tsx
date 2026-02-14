@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 
 const menuItems = [
   { label: 'Estimates', icon: '📝', route: '/estimate/new' as const, description: 'Create and manage estimates' },
+  { label: 'Invoices', icon: '📄', route: '/invoice/new' as const, description: 'Create and manage invoices' },
   { label: 'Price Book', icon: '📋', route: '/price-book' as const, description: 'Manage your services and pricing' },
 ];
 

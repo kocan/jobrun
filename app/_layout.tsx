@@ -3,6 +3,7 @@ import { CustomerProvider } from '../contexts/CustomerContext';
 import { JobProvider } from '../contexts/JobContext';
 import { PriceBookProvider } from '../contexts/PriceBookContext';
 import { EstimateProvider } from '../contexts/EstimateContext';
+import { InvoiceProvider } from '../contexts/InvoiceContext';
 
 export default function RootLayout() {
   return (
@@ -10,6 +11,7 @@ export default function RootLayout() {
       <JobProvider>
         <PriceBookProvider>
           <EstimateProvider>
+          <InvoiceProvider>
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="job/[id]" options={{ title: 'Job Details' }} />
@@ -19,6 +21,7 @@ export default function RootLayout() {
             <Stack.Screen name="price-book" options={{ title: 'Price Book' }} />
             <Stack.Screen name="price-book-edit" options={{ title: 'Edit Service' }} />
           </Stack>
+          </InvoiceProvider>
           </EstimateProvider>
         </PriceBookProvider>
       </JobProvider>

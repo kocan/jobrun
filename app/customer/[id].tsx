@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useCustomers } from '../../contexts/CustomerContext';
 import { useJobs } from '../../contexts/JobContext';
 import { useEstimates } from '../../contexts/EstimateContext';
+import { useInvoices } from '../../contexts/InvoiceContext';
 import { Customer } from '../../lib/types';
 
 type FormData = {
@@ -46,6 +47,7 @@ export default function CustomerDetailScreen() {
   const { getCustomerById, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
   const { getJobsByCustomer } = useJobs();
   const { getEstimatesByCustomer } = useEstimates();
+  const { getInvoicesByCustomer } = useInvoices();
 
   const isNew = id === 'new';
   const [editing, setEditing] = useState(isNew);
@@ -208,6 +210,24 @@ export default function CustomerDetailScreen() {
                       <Text style={styles.jobRowDate}>{job.scheduledDate}{job.scheduledTime ? ` at ${job.scheduledTime}` : ''}</Text>
                     </View>
                     <View style={[styles.jobStatusDot, { backgroundColor: { 'scheduled': '#3B82F6', 'in-progress': '#F59E0B', 'completed': '#10B981', 'cancelled': '#EF4444' }[job.status] }]} />
+                  </Pressable>
+                ))
+              )}
+
+              <Text style={styles.sectionTitle}>Invoices</Text>
+              <Pressable style={styles.addJobBtn} onPress={() => router.push({ pathname: '/invoice/[id]', params: { id: 'new', customerId: id } })}>
+                <Text style={styles.addJobBtnText}>+ New Invoice</Text>
+              </Pressable>
+              {getInvoicesByCustomer(id!).length === 0 ? (
+                <Text style={styles.placeholder}>No invoices yet</Text>
+              ) : (
+                getInvoicesByCustomer(id!).map((inv) => (
+                  <Pressable key={inv.id} style={styles.jobRow} onPress={() => router.push({ pathname: '/invoice/[id]', params: { id: inv.id } })}>
+                    <View style={styles.jobRowLeft}>
+                      <Text style={styles.jobRowTitle}>{inv.invoiceNumber} — ${inv.total.toFixed(2)}</Text>
+                      <Text style={styles.jobRowDate}>{inv.status} · {inv.createdAt.split('T')[0]}</Text>
+                    </View>
+                    <View style={[styles.jobStatusDot, { backgroundColor: { 'draft': '#6B7280', 'sent': '#3B82F6', 'viewed': '#8B5CF6', 'paid': '#10B981', 'overdue': '#EF4444', 'cancelled': '#9CA3AF' }[inv.status] }]} />
                   </Pressable>
                 ))
               )}
