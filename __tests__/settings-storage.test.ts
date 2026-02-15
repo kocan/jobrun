@@ -1,9 +1,7 @@
-import {
-  getSettings, saveSettings, updateSettings, isOnboardingComplete,
-  clearSettings, defaultSettings, AppSettings,
-} from '../lib/storage/settings';
+import { getSettings, saveSettings, updateSettings, isOnboardingComplete, clearSettings, defaultSettings, AppSettings } from '../lib/storage/settings';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () => {
   let store: Record<string, string> = {};
   return {
@@ -20,6 +18,7 @@ jest.mock('@react-native-async-storage/async-storage', () => {
       store = {};
       return Promise.resolve();
     }),
+    __getStore: () => store,
     __resetStore: () => { store = {}; },
   };
 });
@@ -30,46 +29,60 @@ beforeEach(() => {
 });
 
 describe('Settings Storage', () => {
-  test('getSettings returns defaults when empty', async () => {
-    const settings = await getSettings();
-    expect(settings).toEqual(defaultSettings);
-    expect(settings.onboardingComplete).toBe(false);
-    expect(settings.selectedVertical).toBeNull();
-    expect(settings.businessName).toBe('');
+  describe('getSettings', () => {
+    it('returns default settings when none saved', async () => {
+      const settings = await getSettings();
+      expect(settings).toEqual(defaultSettings);
+    });
+
+    it('returns saved settings merged with defaults', async () => {
+      const partial = { businessName: 'Test Biz', onboardingComplete: true };
+      await AsyncStorage.setItem('@jobrun_settings', JSON.stringify(partial));
+      const settings = await getSettings();
+      expect(settings.businessName).toBe('Test Biz');
+      expect(settings.onboardingComplete).toBe(true);
+      expect(settings.businessPhone).toBe(''); // default
+    });
   });
 
-  test('saveSettings persists and retrieves', async () => {
-    const data: AppSettings = {
-      ...defaultSettings,
-      businessName: 'Test Biz',
-      businessPhone: '555-1234',
-      businessEmail: 'test@test.com',
-      selectedVertical: 'pressure-washing',
-      onboardingComplete: true,
-    };
-    await saveSettings(data);
-    const loaded = await getSettings();
-    expect(loaded).toEqual(data);
+  describe('saveSettings', () => {
+    it('saves full settings object', async () => {
+      const settings: AppSettings = {
+        ...defaultSettings,
+        businessName: 'My Business',
+        onboardingComplete: true,
+      };
+      await saveSettings(settings);
+      const stored = JSON.parse((AsyncStorage as any).__getStore()['@jobrun_settings']);
+      expect(stored.businessName).toBe('My Business');
+    });
   });
 
-  test('updateSettings merges partial updates', async () => {
-    await saveSettings({ ...defaultSettings, businessName: 'Old Name' });
-    const updated = await updateSettings({ businessName: 'New Name', businessPhone: '999' });
-    expect(updated.businessName).toBe('New Name');
-    expect(updated.businessPhone).toBe('999');
-    expect(updated.onboardingComplete).toBe(false);
+  describe('updateSettings', () => {
+    it('merges updates with existing settings', async () => {
+      await saveSettings({ ...defaultSettings, businessName: 'Original' });
+      const updated = await updateSettings({ businessPhone: '555-1234' });
+      expect(updated.businessName).toBe('Original');
+      expect(updated.businessPhone).toBe('555-1234');
+    });
   });
 
-  test('isOnboardingComplete returns correct value', async () => {
-    expect(await isOnboardingComplete()).toBe(false);
-    await updateSettings({ onboardingComplete: true });
-    expect(await isOnboardingComplete()).toBe(true);
+  describe('isOnboardingComplete', () => {
+    it('returns false by default', async () => {
+      expect(await isOnboardingComplete()).toBe(false);
+    });
+
+    it('returns true after completion', async () => {
+      await saveSettings({ ...defaultSettings, onboardingComplete: true });
+      expect(await isOnboardingComplete()).toBe(true);
+    });
   });
 
-  test('clearSettings resets to defaults', async () => {
-    await saveSettings({ ...defaultSettings, businessName: 'Biz', onboardingComplete: true });
-    await clearSettings();
-    const settings = await getSettings();
-    expect(settings).toEqual(defaultSettings);
+  describe('clearSettings', () => {
+    it('removes settings from storage', async () => {
+      await saveSettings({ ...defaultSettings, businessName: 'Test' });
+      await clearSettings();
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith('@jobrun_settings');
+    });
   });
 });

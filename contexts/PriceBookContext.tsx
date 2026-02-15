@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import * as Crypto from 'expo-crypto';
 import { PriceBookService, DefaultServiceTemplate } from '../lib/types';
-import * as storage from '../lib/storage/priceBook';
+import * as repo from '../lib/db/repositories/priceBook';
 
 interface PriceBookContextType {
   services: PriceBookService[];
@@ -24,87 +24,50 @@ export function PriceBookProvider({ children }: { children: ReactNode }) {
 
   const refreshServices = useCallback(async () => {
     setLoading(true);
-    try {
-      const data = await storage.getServices();
-      setServices(data);
-    } finally {
-      setLoading(false);
-    }
+    try { setServices(repo.getServices()); } finally { setLoading(false); }
   }, []);
 
-  useEffect(() => {
-    refreshServices();
-  }, [refreshServices]);
+  useEffect(() => { refreshServices(); }, [refreshServices]);
 
-  const addService = useCallback(
-    async (data: Omit<PriceBookService, 'id' | 'createdAt' | 'updatedAt'>) => {
-      const now = new Date().toISOString();
-      const service: PriceBookService = {
-        ...data,
-        id: Crypto.randomUUID(),
-        createdAt: now,
-        updatedAt: now,
-      };
-      await storage.addService(service);
-      setServices((prev) => [...prev, service]);
-      return service;
-    },
-    []
-  );
+  const addService = useCallback(async (data: Omit<PriceBookService, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const now = new Date().toISOString();
+    const service: PriceBookService = { ...data, id: Crypto.randomUUID(), createdAt: now, updatedAt: now };
+    repo.addService(service);
+    setServices((prev) => [...prev, service]);
+    return service;
+  }, []);
 
   const updateService = useCallback(async (id: string, data: Partial<PriceBookService>) => {
-    const updated = await storage.updateService(id, data);
-    if (updated) {
-      setServices((prev) => prev.map((s) => (s.id === id ? updated : s)));
-    }
+    const updated = repo.updateService(id, data);
+    if (updated) setServices((prev) => prev.map((s) => (s.id === id ? updated : s)));
     return updated;
   }, []);
 
   const deleteService = useCallback(async (id: string) => {
-    const ok = await storage.deleteService(id);
-    if (ok) {
-      setServices((prev) => prev.filter((s) => s.id !== id));
-    }
+    const ok = repo.deleteService(id);
+    if (ok) setServices((prev) => prev.filter((s) => s.id !== id));
     return ok;
   }, []);
 
-  const getServicesByCategory = useCallback(() => {
-    return storage.getServicesByCategory(services);
-  }, [services]);
-
-  const getActiveServices = useCallback(() => {
-    return storage.getActiveServices(services);
-  }, [services]);
+  const getServicesByCategory = useCallback(() => repo.getServicesByCategory(services), [services]);
+  const getActiveServices = useCallback(() => repo.getActiveServices(services), [services]);
 
   const initializeFromDefaults = useCallback(async (defaults: DefaultServiceTemplate[]) => {
-    const existing = await storage.getServices();
-    if (existing.length > 0) return; // already initialized
-    const newServices = storage.buildServicesFromDefaults(defaults, () => Crypto.randomUUID());
-    await storage.saveServices(newServices);
+    const existing = repo.getServices();
+    if (existing.length > 0) return;
+    const newServices = repo.buildServicesFromDefaults(defaults, () => Crypto.randomUUID());
+    repo.saveServices(newServices);
     setServices(newServices);
   }, []);
 
   const resetToDefaults = useCallback(async (defaults: DefaultServiceTemplate[]) => {
-    const newServices = storage.buildServicesFromDefaults(defaults, () => Crypto.randomUUID());
-    await storage.saveServices(newServices);
+    const newServices = repo.buildServicesFromDefaults(defaults, () => Crypto.randomUUID());
+    repo.saveServices(newServices);
     setServices(newServices);
   }, []);
 
   return (
-    <PriceBookContext.Provider
-      value={{
-        services,
-        loading,
-        refreshServices,
-        addService,
-        updateService,
-        deleteService,
-        getServicesByCategory,
-        getActiveServices,
-        initializeFromDefaults,
-        resetToDefaults,
-      }}
-    >
+    <PriceBookContext.Provider value={{ services, loading, refreshServices, addService, updateService, deleteService, getServicesByCategory, getActiveServices, initializeFromDefaults, resetToDefaults }}>
       {children}
     </PriceBookContext.Provider>
   );

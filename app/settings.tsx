@@ -1,9 +1,11 @@
 import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSettings } from '../contexts/SettingsContext';
 import { usePriceBook } from '../contexts/PriceBookContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useNetwork } from '../lib/network';
+import { getPendingSyncCount } from '../lib/db/syncQueue';
 import { verticals } from '../constants/verticals';
 import { VerticalId } from '../lib/types';
 
@@ -14,6 +16,12 @@ export default function SettingsScreen() {
   const { settings, updateSettings } = useSettings();
   const { resetToDefaults } = usePriceBook();
   const { user, signOut, isConfigured } = useAuth();
+  const { isOnline } = useNetwork();
+  const [pendingSync, setPendingSync] = useState(0);
+
+  useEffect(() => {
+    setPendingSync(getPendingSyncCount());
+  }, []);
 
   const [name, setName] = useState(settings.businessName);
   const [phone, setPhone] = useState(settings.businessPhone);
@@ -137,6 +145,18 @@ export default function SettingsScreen() {
           </Pressable>
         </View>
       </View>
+      {/* Sync Status Section */}
+      <Text style={styles.sectionTitle}>Sync Status</Text>
+      <View style={styles.card}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: isOnline ? '#22C55E' : '#EAB308', marginRight: 8 }} />
+          <Text style={{ fontSize: 15, color: '#333', fontWeight: '500' }}>{isOnline ? 'Online' : 'Offline'}</Text>
+        </View>
+        <Text style={{ fontSize: 14, color: '#666' }}>
+          {pendingSync === 0 ? 'All changes synced' : `${pendingSync} change${pendingSync !== 1 ? 's' : ''} pending sync`}
+        </Text>
+      </View>
+
       {/* Account Section */}
       <Text style={styles.sectionTitle}>Account</Text>
       <View style={styles.card}>

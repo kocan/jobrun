@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import * as Crypto from 'expo-crypto';
 import { Estimate, EstimateStatus } from '../lib/types';
-import * as storage from '../lib/storage/estimates';
+import * as repo from '../lib/db/repositories/estimates';
 
 interface EstimateContextType {
   estimates: Estimate[];
@@ -23,69 +23,37 @@ export function EstimateProvider({ children }: { children: ReactNode }) {
 
   const refreshEstimates = useCallback(async () => {
     setLoading(true);
-    try {
-      const data = await storage.getEstimates();
-      setEstimates(data);
-    } finally {
-      setLoading(false);
-    }
+    try { setEstimates(repo.getEstimates()); } finally { setLoading(false); }
   }, []);
 
-  useEffect(() => {
-    refreshEstimates();
-  }, [refreshEstimates]);
+  useEffect(() => { refreshEstimates(); }, [refreshEstimates]);
 
-  const addEstimate = useCallback(
-    async (data: Omit<Estimate, 'id' | 'createdAt' | 'updatedAt'>) => {
-      const now = new Date().toISOString();
-      const estimate: Estimate = {
-        ...data,
-        id: Crypto.randomUUID(),
-        createdAt: now,
-        updatedAt: now,
-      };
-      await storage.addEstimate(estimate);
-      setEstimates((prev) => [...prev, estimate]);
-      return estimate;
-    },
-    []
-  );
+  const addEstimate = useCallback(async (data: Omit<Estimate, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const now = new Date().toISOString();
+    const estimate: Estimate = { ...data, id: Crypto.randomUUID(), createdAt: now, updatedAt: now };
+    repo.addEstimate(estimate);
+    setEstimates((prev) => [...prev, estimate]);
+    return estimate;
+  }, []);
 
   const updateEstimate = useCallback(async (id: string, data: Partial<Estimate>) => {
-    const updated = await storage.updateEstimate(id, data);
-    if (updated) {
-      setEstimates((prev) => prev.map((e) => (e.id === id ? updated : e)));
-    }
+    const updated = repo.updateEstimate(id, data);
+    if (updated) setEstimates((prev) => prev.map((e) => (e.id === id ? updated : e)));
     return updated;
   }, []);
 
   const deleteEstimate = useCallback(async (id: string) => {
-    const success = await storage.deleteEstimate(id);
-    if (success) {
-      setEstimates((prev) => prev.filter((e) => e.id !== id));
-    }
+    const success = repo.deleteEstimate(id);
+    if (success) setEstimates((prev) => prev.filter((e) => e.id !== id));
     return success;
   }, []);
 
-  const getEstimateById = useCallback(
-    (id: string) => estimates.find((e) => e.id === id),
-    [estimates]
-  );
-
-  const getEstimatesByCustomer = useCallback(
-    (customerId: string) => storage.filterEstimatesByCustomer(estimates, customerId),
-    [estimates]
-  );
-
-  const getEstimatesByStatus = useCallback(
-    (status: EstimateStatus) => storage.filterEstimatesByStatus(estimates, status),
-    [estimates]
-  );
+  const getEstimateById = useCallback((id: string) => estimates.find((e) => e.id === id), [estimates]);
+  const getEstimatesByCustomer = useCallback((customerId: string) => repo.filterEstimatesByCustomer(estimates, customerId), [estimates]);
+  const getEstimatesByStatus = useCallback((status: EstimateStatus) => repo.filterEstimatesByStatus(estimates, status), [estimates]);
 
   return (
-    <EstimateContext.Provider
-      value={{ estimates, loading, refreshEstimates, addEstimate, updateEstimate, deleteEstimate, getEstimateById, getEstimatesByCustomer, getEstimatesByStatus }}
-    >
+    <EstimateContext.Provider value={{ estimates, loading, refreshEstimates, addEstimate, updateEstimate, deleteEstimate, getEstimateById, getEstimatesByCustomer, getEstimatesByStatus }}>
       {children}
     </EstimateContext.Provider>
   );
