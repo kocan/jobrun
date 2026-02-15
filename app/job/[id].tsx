@@ -7,8 +7,8 @@ import { useCustomers } from '../../contexts/CustomerContext';
 import { usePriceBook } from '../../contexts/PriceBookContext';
 import { useInvoices } from '../../contexts/InvoiceContext';
 import { Job, JobStatus, LineItem } from '../../lib/types';
-import { isValidStatusTransition } from '../../lib/storage/jobs';
-import { calculateTotal } from '../../lib/storage/priceBook';
+import { isValidStatusTransition } from '../../lib/db/repositories/jobs';
+import { calculateTotal } from '../../lib/db/repositories/priceBook';
 
 const STATUS_OPTIONS: JobStatus[] = ['scheduled', 'in-progress', 'completed', 'cancelled'];
 const STATUS_LABELS: Record<JobStatus, string> = {
@@ -49,7 +49,7 @@ const emptyForm: FormData = {
 };
 
 export default function JobDetailScreen() {
-  const { id, customerId: preselectedCustomerId } = useLocalSearchParams<{ id: string; customerId?: string }>();
+  const { id, customerId: preselectedCustomerId, scheduledDate: preselectedDate, date: preselectedDate2 } = useLocalSearchParams<{ id: string; customerId?: string; scheduledDate?: string; date?: string }>();
   const router = useRouter();
   const { getJobById, addJob, updateJob, deleteJob } = useJobs();
   const { customers, getCustomerById } = useCustomers();
@@ -62,6 +62,7 @@ export default function JobDetailScreen() {
   const [form, setForm] = useState<FormData>(() => ({
     ...emptyForm,
     customerId: preselectedCustomerId || '',
+    scheduledDate: preselectedDate || preselectedDate2 || emptyForm.scheduledDate,
   }));
   const [customerPickerVisible, setCustomerPickerVisible] = useState(false);
   const [customerSearch, setCustomerSearch] = useState('');

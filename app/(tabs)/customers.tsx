@@ -2,7 +2,7 @@ import { View, Text, TextInput, FlatList, Pressable, StyleSheet, ActivityIndicat
 import { useRouter } from 'expo-router';
 import { useState, useMemo, useCallback } from 'react';
 import { useCustomers } from '../../contexts/CustomerContext';
-import { filterCustomers } from '../../lib/storage/customers';
+import { filterCustomers } from '../../lib/db/repositories/customers';
 
 export default function CustomersScreen() {
   const { customers, loading, refreshCustomers } = useCustomers();
