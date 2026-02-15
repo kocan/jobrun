@@ -9,7 +9,7 @@ import { useJobs } from '../../contexts/JobContext';
 import { usePriceBook } from '../../contexts/PriceBookContext';
 import { useInvoices } from '../../contexts/InvoiceContext';
 import { EstimateStatus, LineItem } from '../../lib/types';
-import { isValidEstimateStatusTransition, calculateEstimateTotals } from '../../lib/storage/estimates';
+import { isValidEstimateStatusTransition, calculateEstimateTotals } from '../../lib/db/repositories/estimates';
 import { buildShareUrl, buildShareMessage } from '../../lib/estimateSharing';
 import { useSettings } from '../../contexts/SettingsContext';
 

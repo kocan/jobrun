@@ -45,9 +45,12 @@ export function getInvoiceById(id: string): Invoice | null {
 
 export function getNextInvoiceNumber(): string {
   const db = getDatabase();
-  const row = db.getFirstSync<{ next_number: number }>('SELECT next_number FROM invoice_counter WHERE id = 1');
-  const next = row ? row.next_number : 1;
-  db.runSync('UPDATE invoice_counter SET next_number = ? WHERE id = 1', [next + 1]);
+  let next = 1;
+  db.withTransactionSync(() => {
+    const row = db.getFirstSync<{ next_number: number }>('SELECT next_number FROM invoice_counter WHERE id = 1');
+    next = row ? row.next_number : 1;
+    db.runSync('UPDATE invoice_counter SET next_number = ? WHERE id = 1', [next + 1]);
+  });
   return `INV-${String(next).padStart(4, '0')}`;
 }
 

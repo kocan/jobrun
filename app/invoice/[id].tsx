@@ -9,7 +9,7 @@ import { useJobs } from '../../contexts/JobContext';
 import { useEstimates } from '../../contexts/EstimateContext';
 import { usePriceBook } from '../../contexts/PriceBookContext';
 import { InvoiceStatus, LineItem } from '../../lib/types';
-import { isValidInvoiceStatusTransition, calculateInvoiceTotals } from '../../lib/storage/invoices';
+import { isValidInvoiceStatusTransition, calculateInvoiceTotals } from '../../lib/db/repositories/invoices';
 import { buildInvoiceShareUrl, buildInvoiceShareMessage } from '../../lib/invoiceSharing';
 import { useSettings } from '../../contexts/SettingsContext';
 
@@ -206,12 +206,7 @@ export default function InvoiceDetailScreen() {
     };
 
     if (isNew) {
-      const inv = await addInvoice(data as any);
-      // Link invoice back to job if created from job
-      if (fromJob) {
-        const { updateJob } = require('../../contexts/JobContext');
-        // We can't call updateJob here easily; the job screen handles linking
-      }
+      await addInvoice(data as any);
       router.back();
     } else {
       await updateInvoice(id!, data);
