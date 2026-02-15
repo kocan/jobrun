@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import * as Crypto from 'expo-crypto';
 import { Job, JobStatus } from '../lib/types';
-import * as storage from '../lib/storage/jobs';
+import * as repo from '../lib/db/repositories/jobs';
 
 interface JobContextType {
   jobs: Job[];
@@ -25,8 +25,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
   const refreshJobs = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await storage.getJobs();
-      setJobs(data);
+      setJobs(repo.getJobs());
     } finally {
       setLoading(false);
     }
@@ -39,13 +38,8 @@ export function JobProvider({ children }: { children: ReactNode }) {
   const addJob = useCallback(
     async (data: Omit<Job, 'id' | 'createdAt' | 'updatedAt'>) => {
       const now = new Date().toISOString();
-      const job: Job = {
-        ...data,
-        id: Crypto.randomUUID(),
-        createdAt: now,
-        updatedAt: now,
-      };
-      await storage.addJob(job);
+      const job: Job = { ...data, id: Crypto.randomUUID(), createdAt: now, updatedAt: now };
+      repo.addJob(job);
       setJobs((prev) => [...prev, job]);
       return job;
     },
@@ -53,45 +47,24 @@ export function JobProvider({ children }: { children: ReactNode }) {
   );
 
   const updateJob = useCallback(async (id: string, data: Partial<Job>) => {
-    const updated = await storage.updateJob(id, data);
-    if (updated) {
-      setJobs((prev) => prev.map((j) => (j.id === id ? updated : j)));
-    }
+    const updated = repo.updateJob(id, data);
+    if (updated) setJobs((prev) => prev.map((j) => (j.id === id ? updated : j)));
     return updated;
   }, []);
 
   const deleteJob = useCallback(async (id: string) => {
-    const success = await storage.deleteJob(id);
-    if (success) {
-      setJobs((prev) => prev.filter((j) => j.id !== id));
-    }
+    const success = repo.deleteJob(id);
+    if (success) setJobs((prev) => prev.filter((j) => j.id !== id));
     return success;
   }, []);
 
-  const getJobById = useCallback(
-    (id: string) => jobs.find((j) => j.id === id),
-    [jobs]
-  );
-
-  const getJobsByCustomer = useCallback(
-    (customerId: string) => storage.filterJobsByCustomer(jobs, customerId),
-    [jobs]
-  );
-
-  const getJobsByDate = useCallback(
-    (date: string) => storage.filterJobsByDate(jobs, date),
-    [jobs]
-  );
-
-  const getJobsByStatus = useCallback(
-    (status: JobStatus) => storage.filterJobsByStatus(jobs, status),
-    [jobs]
-  );
+  const getJobById = useCallback((id: string) => jobs.find((j) => j.id === id), [jobs]);
+  const getJobsByCustomer = useCallback((customerId: string) => repo.filterJobsByCustomer(jobs, customerId), [jobs]);
+  const getJobsByDate = useCallback((date: string) => repo.filterJobsByDate(jobs, date), [jobs]);
+  const getJobsByStatus = useCallback((status: JobStatus) => repo.filterJobsByStatus(jobs, status), [jobs]);
 
   return (
-    <JobContext.Provider
-      value={{ jobs, loading, refreshJobs, addJob, updateJob, deleteJob, getJobById, getJobsByCustomer, getJobsByDate, getJobsByStatus }}
-    >
+    <JobContext.Provider value={{ jobs, loading, refreshJobs, addJob, updateJob, deleteJob, getJobById, getJobsByCustomer, getJobsByDate, getJobsByStatus }}>
       {children}
     </JobContext.Provider>
   );

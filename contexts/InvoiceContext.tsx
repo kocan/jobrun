@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import * as Crypto from 'expo-crypto';
 import { Invoice, InvoiceStatus, Job, Estimate } from '../lib/types';
-import * as storage from '../lib/storage/invoices';
+import * as repo from '../lib/db/repositories/invoices';
 
 interface InvoiceContextType {
   invoices: Invoice[];
@@ -27,123 +27,52 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
 
   const refreshInvoices = useCallback(async () => {
     setLoading(true);
-    try {
-      const data = await storage.getInvoices();
-      setInvoices(data);
-    } finally {
-      setLoading(false);
-    }
+    try { setInvoices(repo.getInvoices()); } finally { setLoading(false); }
   }, []);
 
-  useEffect(() => {
-    refreshInvoices();
-  }, [refreshInvoices]);
+  useEffect(() => { refreshInvoices(); }, [refreshInvoices]);
 
-  const addInvoice = useCallback(
-    async (data: Omit<Invoice, 'id' | 'invoiceNumber' | 'createdAt' | 'updatedAt'>) => {
-      const now = new Date().toISOString();
-      const invoiceNumber = await storage.getNextInvoiceNumber();
-      const invoice: Invoice = {
-        ...data,
-        id: Crypto.randomUUID(),
-        invoiceNumber,
-        createdAt: now,
-        updatedAt: now,
-      };
-      await storage.addInvoice(invoice);
-      setInvoices((prev) => [...prev, invoice]);
-      return invoice;
-    },
-    []
-  );
+  const addInvoice = useCallback(async (data: Omit<Invoice, 'id' | 'invoiceNumber' | 'createdAt' | 'updatedAt'>) => {
+    const now = new Date().toISOString();
+    const invoiceNumber = repo.getNextInvoiceNumber();
+    const invoice: Invoice = { ...data, id: Crypto.randomUUID(), invoiceNumber, createdAt: now, updatedAt: now };
+    repo.addInvoice(invoice);
+    setInvoices((prev) => [...prev, invoice]);
+    return invoice;
+  }, []);
 
   const updateInvoice = useCallback(async (id: string, data: Partial<Invoice>) => {
-    const updated = await storage.updateInvoice(id, data);
-    if (updated) {
-      setInvoices((prev) => prev.map((i) => (i.id === id ? updated : i)));
-    }
+    const updated = repo.updateInvoice(id, data);
+    if (updated) setInvoices((prev) => prev.map((i) => (i.id === id ? updated : i)));
     return updated;
   }, []);
 
   const deleteInvoice = useCallback(async (id: string) => {
-    const success = await storage.deleteInvoice(id);
-    if (success) {
-      setInvoices((prev) => prev.filter((i) => i.id !== id));
-    }
+    const success = repo.deleteInvoice(id);
+    if (success) setInvoices((prev) => prev.filter((i) => i.id !== id));
     return success;
   }, []);
 
-  const getInvoiceById = useCallback(
-    (id: string) => invoices.find((i) => i.id === id),
-    [invoices]
-  );
+  const getInvoiceById = useCallback((id: string) => invoices.find((i) => i.id === id), [invoices]);
+  const getInvoicesByCustomer = useCallback((customerId: string) => repo.filterInvoicesByCustomer(invoices, customerId), [invoices]);
+  const getInvoicesByStatus = useCallback((status: InvoiceStatus) => repo.filterInvoicesByStatus(invoices, status), [invoices]);
+  const getInvoiceByJobId = useCallback((jobId: string) => invoices.find((i) => i.jobId === jobId), [invoices]);
 
-  const getInvoicesByCustomer = useCallback(
-    (customerId: string) => storage.filterInvoicesByCustomer(invoices, customerId),
-    [invoices]
-  );
+  const createInvoiceFromJob = useCallback((job: Job): Omit<Invoice, 'id' | 'invoiceNumber' | 'createdAt' | 'updatedAt'> => {
+    const subtotal = Math.round(job.lineItems.reduce((sum, li) => sum + li.unitPrice * li.quantity, 0) * 100) / 100;
+    return { customerId: job.customerId, jobId: job.id, estimateId: job.estimateId, lineItems: job.lineItems, subtotal, taxRate: 0, taxAmount: 0, total: subtotal, status: 'draft', paymentTerms: 'Due upon receipt', payments: [] };
+  }, []);
 
-  const getInvoicesByStatus = useCallback(
-    (status: InvoiceStatus) => storage.filterInvoicesByStatus(invoices, status),
-    [invoices]
-  );
-
-  const getInvoiceByJobId = useCallback(
-    (jobId: string) => invoices.find((i) => i.jobId === jobId),
-    [invoices]
-  );
-
-  const createInvoiceFromJob = useCallback(
-    (job: Job): Omit<Invoice, 'id' | 'invoiceNumber' | 'createdAt' | 'updatedAt'> => {
-      const subtotal = Math.round(job.lineItems.reduce((sum, li) => sum + li.unitPrice * li.quantity, 0) * 100) / 100;
-      return {
-        customerId: job.customerId,
-        jobId: job.id,
-        estimateId: job.estimateId,
-        lineItems: job.lineItems,
-        subtotal,
-        taxRate: 0,
-        taxAmount: 0,
-        total: subtotal,
-        status: 'draft',
-        paymentTerms: 'Due upon receipt',
-        payments: [],
-      };
-    },
-    []
-  );
-
-  const createInvoiceFromEstimate = useCallback(
-    (estimate: Estimate): Omit<Invoice, 'id' | 'invoiceNumber' | 'createdAt' | 'updatedAt'> => {
-      return {
-        customerId: estimate.customerId,
-        estimateId: estimate.id,
-        jobId: estimate.jobId,
-        lineItems: estimate.lineItems,
-        subtotal: estimate.subtotal,
-        taxRate: estimate.taxRate,
-        taxAmount: estimate.taxAmount,
-        total: estimate.total,
-        status: 'draft',
-        paymentTerms: 'Due upon receipt',
-        payments: [],
-      };
-    },
-    []
-  );
+  const createInvoiceFromEstimate = useCallback((estimate: Estimate): Omit<Invoice, 'id' | 'invoiceNumber' | 'createdAt' | 'updatedAt'> => {
+    return { customerId: estimate.customerId, estimateId: estimate.id, jobId: estimate.jobId, lineItems: estimate.lineItems, subtotal: estimate.subtotal, taxRate: estimate.taxRate, taxAmount: estimate.taxAmount, total: estimate.total, status: 'draft', paymentTerms: 'Due upon receipt', payments: [] };
+  }, []);
 
   const markAsPaid = useCallback(async (id: string) => {
     return updateInvoice(id, { status: 'paid', paidAt: new Date().toISOString() });
   }, [updateInvoice]);
 
   return (
-    <InvoiceContext.Provider
-      value={{
-        invoices, loading, refreshInvoices, addInvoice, updateInvoice, deleteInvoice,
-        getInvoiceById, getInvoicesByCustomer, getInvoicesByStatus, getInvoiceByJobId,
-        createInvoiceFromJob, createInvoiceFromEstimate, markAsPaid,
-      }}
-    >
+    <InvoiceContext.Provider value={{ invoices, loading, refreshInvoices, addInvoice, updateInvoice, deleteInvoice, getInvoiceById, getInvoicesByCustomer, getInvoicesByStatus, getInvoiceByJobId, createInvoiceFromJob, createInvoiceFromEstimate, markAsPaid }}>
       {children}
     </InvoiceContext.Provider>
   );

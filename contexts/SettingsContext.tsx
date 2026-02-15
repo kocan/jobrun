@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { VerticalId } from '../lib/types';
-import * as settingsStorage from '../lib/storage/settings';
-import { AppSettings } from '../lib/storage/settings';
+import * as settingsRepo from '../lib/db/repositories/settings';
+import { AppSettings } from '../lib/db/repositories/settings';
 
 interface SettingsContextType {
   settings: AppSettings;
@@ -20,52 +20,30 @@ interface SettingsContextType {
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<AppSettings>(settingsStorage.defaultSettings);
+  const [settings, setSettings] = useState<AppSettings>(settingsRepo.defaultSettings);
   const [loading, setLoading] = useState(true);
 
   const refreshSettings = useCallback(async () => {
     setLoading(true);
-    try {
-      const data = await settingsStorage.getSettings();
-      setSettings(data);
-    } finally {
-      setLoading(false);
-    }
+    try { setSettings(settingsRepo.getSettings()); } finally { setLoading(false); }
   }, []);
 
-  useEffect(() => {
-    refreshSettings();
-  }, [refreshSettings]);
+  useEffect(() => { refreshSettings(); }, [refreshSettings]);
 
   const update = useCallback(async (updates: Partial<AppSettings>) => {
-    const updated = await settingsStorage.updateSettings(updates);
+    const updated = settingsRepo.updateSettings(updates);
     setSettings(updated);
   }, []);
 
   const completeOnboarding = useCallback(async (data: {
-    businessName: string;
-    businessPhone: string;
-    businessEmail: string;
-    selectedVertical: VerticalId | 'custom';
+    businessName: string; businessPhone: string; businessEmail: string; selectedVertical: VerticalId | 'custom';
   }) => {
-    const updated = await settingsStorage.updateSettings({
-      ...data,
-      onboardingComplete: true,
-    });
+    const updated = settingsRepo.updateSettings({ ...data, onboardingComplete: true });
     setSettings(updated);
   }, []);
 
   return (
-    <SettingsContext.Provider
-      value={{
-        settings,
-        loading,
-        isOnboardingComplete: settings.onboardingComplete,
-        updateSettings: update,
-        completeOnboarding,
-        refreshSettings,
-      }}
-    >
+    <SettingsContext.Provider value={{ settings, loading, isOnboardingComplete: settings.onboardingComplete, updateSettings: update, completeOnboarding, refreshSettings }}>
       {children}
     </SettingsContext.Provider>
   );

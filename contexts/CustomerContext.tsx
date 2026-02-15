@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import * as Crypto from 'expo-crypto';
 import { Customer } from '../lib/types';
-import * as storage from '../lib/storage/customers';
+import * as repo from '../lib/db/repositories/customers';
 
 interface CustomerContextType {
   customers: Customer[];
@@ -22,8 +22,7 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
   const refreshCustomers = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await storage.getCustomers();
-      setCustomers(data);
+      setCustomers(repo.getCustomers());
     } finally {
       setLoading(false);
     }
@@ -42,7 +41,7 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
         createdAt: now,
         updatedAt: now,
       };
-      await storage.addCustomer(customer);
+      repo.addCustomer(customer);
       setCustomers((prev) => [...prev, customer]);
       return customer;
     },
@@ -50,7 +49,7 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
   );
 
   const updateCustomer = useCallback(async (id: string, data: Partial<Customer>) => {
-    const updated = await storage.updateCustomer(id, data);
+    const updated = repo.updateCustomer(id, data);
     if (updated) {
       setCustomers((prev) => prev.map((c) => (c.id === id ? updated : c)));
     }
@@ -58,7 +57,7 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const deleteCustomer = useCallback(async (id: string) => {
-    const success = await storage.deleteCustomer(id);
+    const success = repo.deleteCustomer(id);
     if (success) {
       setCustomers((prev) => prev.filter((c) => c.id !== id));
     }
