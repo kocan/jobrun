@@ -20,8 +20,20 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
       - run: npx tsc --noEmit
+
+  test-mobile:
+    name: Mobile — Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - run: npx jest --ci
 
   lint-and-typecheck-web:
     name: Web — Lint & Typecheck
@@ -37,5 +49,5 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
-      - run: npx next lint
+      - run: npm run lint
       - run: npx tsc --noEmit

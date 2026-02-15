@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useSettings } from '../contexts/SettingsContext';
 import { usePriceBook } from '../contexts/PriceBookContext';
+import { useAuth } from '../contexts/AuthContext';
 import { verticals } from '../constants/verticals';
 import { VerticalId } from '../lib/types';
 
@@ -12,6 +13,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { settings, updateSettings } = useSettings();
   const { resetToDefaults } = usePriceBook();
+  const { user, signOut, isConfigured } = useAuth();
 
   const [name, setName] = useState(settings.businessName);
   const [phone, setPhone] = useState(settings.businessPhone);
@@ -135,6 +137,37 @@ export default function SettingsScreen() {
           </Pressable>
         </View>
       </View>
+      {/* Account Section */}
+      <Text style={styles.sectionTitle}>Account</Text>
+      <View style={styles.card}>
+        {user ? (
+          <>
+            <Text style={styles.label}>Signed in as</Text>
+            <Text style={styles.accountEmail}>{user.email}</Text>
+            <Pressable
+              style={styles.signOutButton}
+              onPress={() => {
+                Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Sign Out', style: 'destructive', onPress: signOut },
+                ]);
+              }}
+            >
+              <Text style={styles.signOutText}>Sign Out</Text>
+            </Pressable>
+          </>
+        ) : (
+          <>
+            <Text style={styles.accountOffline}>Using app offline (no account)</Text>
+            <Pressable
+              style={styles.saveButton}
+              onPress={() => router.push('/auth/login')}
+            >
+              <Text style={styles.saveButtonText}>Sign In</Text>
+            </Pressable>
+          </>
+        )}
+      </View>
     </ScrollView>
   );
 }
@@ -171,4 +204,11 @@ const styles = StyleSheet.create({
   verticalItemIcon: { fontSize: 22, marginRight: 10 },
   verticalItemName: { fontSize: 15, fontWeight: '500', color: '#333' },
   verticalItemNameActive: { color: '#EA580C', fontWeight: '600' },
+  accountEmail: { fontSize: 16, color: '#111', fontWeight: '500', marginTop: 4, marginBottom: 16 },
+  accountOffline: { fontSize: 15, color: '#888', marginBottom: 16 },
+  signOutButton: {
+    borderWidth: 1.5, borderColor: '#DC2626', borderRadius: 10,
+    paddingVertical: 12, alignItems: 'center' as const,
+  },
+  signOutText: { color: '#DC2626', fontSize: 16, fontWeight: '600' },
 });
