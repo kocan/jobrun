@@ -79,7 +79,9 @@ export default function PriceBookScreen() {
           )}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={styles.emptyText}>{loading ? 'Loading...' : 'No services yet'}</Text>
+              <Text style={styles.emptyIcon}>{loading ? '' : '📋'}</Text>
+              <Text style={styles.emptyTitle}>{loading ? 'Loading...' : 'No services yet'}</Text>
+              {!loading && <Text style={styles.emptySubtitle}>Add your services and pricing so you can quickly build estimates and invoices.</Text>}
             </View>
           }
           ListFooterComponent={
@@ -113,6 +115,9 @@ const styles = StyleSheet.create({
   inactive: { color: '#999' },
   serviceDetail: { fontSize: 14, color: '#666', marginTop: 2 },
   empty: { padding: 40, alignItems: 'center' },
+  emptyIcon: { fontSize: 40, marginBottom: 10 },
+  emptyTitle: { fontSize: 18, fontWeight: '600', color: '#666', marginBottom: 6 },
+  emptySubtitle: { fontSize: 14, color: '#999', textAlign: 'center', maxWidth: 280 },
   emptyText: { fontSize: 16, color: '#999' },
   footer: { padding: 24, alignItems: 'center' },
   resetBtn: { padding: 12 },

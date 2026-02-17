@@ -204,7 +204,11 @@ export default function CalendarScreen() {
               {formatDayHeader(selectedDate)} · {selectedDayJobs.length} job{selectedDayJobs.length !== 1 ? 's' : ''}
             </Text>
             {selectedDayJobs.length === 0 ? (
-              <Text style={styles.emptyText}>No jobs scheduled</Text>
+              <View style={styles.emptyDay}>
+                <Text style={styles.emptyDayIcon}>📅</Text>
+                <Text style={styles.emptyDayTitle}>No jobs scheduled</Text>
+                <Text style={styles.emptyDaySubtitle}>This day is free — tap + to add a job.</Text>
+              </View>
             ) : (
               selectedDayJobs.map((job) => (
                 <JobCard key={job.id} job={job} customerName={customerMap[job.customerId]} onPress={handleJobPress} />
@@ -331,6 +335,10 @@ const styles = StyleSheet.create({
   dayJobsList: { padding: 16 },
   dayJobsHeader: { fontSize: 15, fontWeight: '700', color: '#333', marginBottom: 12 },
   emptyText: { fontSize: 14, color: '#999', textAlign: 'center', paddingVertical: 24 },
+  emptyDay: { alignItems: 'center', paddingVertical: 32 },
+  emptyDayIcon: { fontSize: 36, marginBottom: 8 },
+  emptyDayTitle: { fontSize: 16, fontWeight: '600', color: '#666', marginBottom: 4 },
+  emptyDaySubtitle: { fontSize: 14, color: '#999', textAlign: 'center' },
 
   // Job card
   jobCard: { backgroundColor: '#F9FAFB', borderRadius: 10, padding: 12, marginBottom: 8, borderLeftWidth: 4 },

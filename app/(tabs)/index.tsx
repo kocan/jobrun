@@ -220,11 +220,12 @@ export default function TodayScreen() {
           {header}
           <Text style={styles.emptyIcon}>📭</Text>
           <Text style={styles.emptyTitle}>No jobs scheduled for today</Text>
+          <Text style={styles.emptySubtitle}>Your day is wide open — schedule a job to get started.</Text>
           <Pressable
             style={styles.ctaButton}
             onPress={() => router.push(`/job/new?scheduledDate=${today}`)}
           >
-            <Text style={styles.ctaText}>Schedule a Job</Text>
+            <Text style={styles.ctaText}>+ Schedule a Job</Text>
           </Pressable>
           {renderTomorrowSection()}
         </View>
@@ -293,7 +294,8 @@ const styles = StyleSheet.create({
   actionBtn: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8 },
   actionBtnText: { color: '#fff', fontSize: 13, fontWeight: '600' },
   emptyIcon: { fontSize: 48, marginBottom: 12, marginTop: 20 },
-  emptyTitle: { fontSize: 18, color: '#666', marginBottom: 16 },
+  emptyTitle: { fontSize: 18, color: '#666', marginBottom: 6 },
+  emptySubtitle: { fontSize: 14, color: '#999', marginBottom: 20, textAlign: 'center', maxWidth: 260 },
   ctaButton: { backgroundColor: '#EA580C', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 10 },
   ctaText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   fab: {

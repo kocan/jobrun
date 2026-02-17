@@ -183,7 +183,10 @@ export default function CustomerDetailScreen() {
                 <Text style={styles.addJobBtnText}>+ New Estimate</Text>
               </Pressable>
               {getEstimatesByCustomer(id!).length === 0 ? (
-                <Text style={styles.placeholder}>No estimates yet</Text>
+                <View style={styles.emptySection}>
+                  <Text style={styles.emptySectionIcon}>📝</Text>
+                  <Text style={styles.emptySectionText}>No estimates yet — create one to send a quote.</Text>
+                </View>
               ) : (
                 getEstimatesByCustomer(id!).map((est) => (
                   <Pressable key={est.id} style={styles.jobRow} onPress={() => router.push({ pathname: '/estimate/[id]', params: { id: est.id } })}>
@@ -201,7 +204,10 @@ export default function CustomerDetailScreen() {
                 <Text style={styles.addJobBtnText}>+ New Job</Text>
               </Pressable>
               {getJobsByCustomer(id!).length === 0 ? (
-                <Text style={styles.placeholder}>No jobs yet</Text>
+                <View style={styles.emptySection}>
+                  <Text style={styles.emptySectionIcon}>🔧</Text>
+                  <Text style={styles.emptySectionText}>No jobs yet — schedule one to get started.</Text>
+                </View>
               ) : (
                 getJobsByCustomer(id!).map((job) => (
                   <Pressable key={job.id} style={styles.jobRow} onPress={() => router.push({ pathname: '/job/[id]', params: { id: job.id } })}>
@@ -219,7 +225,10 @@ export default function CustomerDetailScreen() {
                 <Text style={styles.addJobBtnText}>+ New Invoice</Text>
               </Pressable>
               {getInvoicesByCustomer(id!).length === 0 ? (
-                <Text style={styles.placeholder}>No invoices yet</Text>
+                <View style={styles.emptySection}>
+                  <Text style={styles.emptySectionIcon}>📄</Text>
+                  <Text style={styles.emptySectionText}>No invoices yet — create one to get paid.</Text>
+                </View>
               ) : (
                 getInvoicesByCustomer(id!).map((inv) => (
                   <Pressable key={inv.id} style={styles.jobRow} onPress={() => router.push({ pathname: '/invoice/[id]', params: { id: inv.id } })}>
@@ -327,6 +336,9 @@ const styles = StyleSheet.create({
   infoValue: { fontSize: 17, color: '#111' },
   sectionTitle: { fontSize: 20, fontWeight: '700', color: '#111', marginTop: 24, marginBottom: 12 },
   placeholder: { fontSize: 15, color: '#999', fontStyle: 'italic' },
+  emptySection: { alignItems: 'center', paddingVertical: 16 },
+  emptySectionIcon: { fontSize: 28, marginBottom: 6 },
+  emptySectionText: { fontSize: 14, color: '#999', textAlign: 'center' },
   addJobBtn: { backgroundColor: '#EA580C', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8, alignSelf: 'flex-start', marginBottom: 12 },
   addJobBtnText: { color: '#fff', fontSize: 15, fontWeight: '600' },
   jobRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB' },
