@@ -630,7 +630,7 @@ const styles = StyleSheet.create({
   },
   lineItemRight: { alignItems: 'flex-end', marginLeft: 12 },
   lineItemTotal: { fontSize: 16, fontWeight: '600', color: '#111' },
-  lineItemRemove: { fontSize: 18, color: '#EF4444', marginTop: 4, padding: 4 },
+  lineItemRemove: { fontSize: 18, color: '#EF4444', minWidth: 44, minHeight: 44, textAlign: 'center' as const, lineHeight: 44, padding: 4 },
   addServiceBtn: {
     paddingVertical: 12, alignItems: 'center', borderWidth: 1, borderColor: '#EA580C',
     borderRadius: 8, borderStyle: 'dashed', marginTop: 8,
