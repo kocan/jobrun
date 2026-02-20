@@ -41,7 +41,6 @@ function formatDate(dateStr: string): string {
 export default function CustomerInvoiceView() {
   const searchParams = useSearchParams();
   const encoded = searchParams.get('d');
-  const [payClicked, setPayClicked] = useState(false);
   const [showContact, setShowContact] = useState(false);
 
   const data = useMemo(() => {
@@ -165,33 +164,27 @@ export default function CustomerInvoiceView() {
               </div>
             )}
 
-            {/* Pay Now / Actions */}
+            {/* Payment Instructions */}
             {!isPaid && (
               <div className="space-y-3 print:hidden">
-                {payClicked ? (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-                    <p className="text-lg font-semibold text-blue-800 mb-2">💳 Online Payment Coming Soon</p>
-                    <p className="text-blue-600 text-sm">
-                      Online payments will be available shortly. Please contact us to arrange payment.
-                    </p>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setPayClicked(true)}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-lg transition-colors text-lg"
-                  >
-                    💳 Pay Now — {formatCurrency(data.t)}
-                  </button>
-                )}
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
+                  <p className="text-lg font-semibold text-orange-900 mb-1">
+                    Ready to pay?
+                  </p>
+                  <p className="text-orange-700 text-sm leading-relaxed">
+                    Contact {data.bn || 'us'} to arrange payment. Please reference invoice{' '}
+                    <span className="font-semibold">#{data.n}</span> when you reach out.
+                  </p>
+                </div>
                 <button
                   onClick={() => setShowContact(!showContact)}
                   className="w-full text-gray-500 hover:text-gray-700 text-sm py-2 transition-colors"
                 >
-                  Already paid? Contact us
+                  Already paid? Let us know
                 </button>
                 {showContact && (
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center text-sm text-gray-600">
-                    <p>If you&apos;ve already paid this invoice, please contact us and we&apos;ll update our records.</p>
+                    <p>If you&apos;ve already paid this invoice, please contact {data.bn || 'us'} and we&apos;ll update our records.</p>
                   </div>
                 )}
               </div>

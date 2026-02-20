@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
-  statValue: { fontSize: 22, fontWeight: 'bold', color: '#EA580C' },
+  statValue: { fontSize: 22, fontWeight: 'bold', color: '#9A3412' }, // orange-800 — WCAG AA contrast on white
   statLabel: { fontSize: 12, color: '#666', marginTop: 2 },
   card: {
     backgroundColor: '#fff',
