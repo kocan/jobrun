@@ -24,6 +24,7 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    # Security updates always get individual PRs (default behavior)
 
   # Web (Next.js) npm dependencies
   - package-ecosystem: "npm"
@@ -33,7 +34,7 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "America/New_York"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
     groups:
       web-dev-dependencies:
         dependency-type: "development"
