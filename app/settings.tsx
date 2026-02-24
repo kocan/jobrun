@@ -75,7 +75,7 @@ export default function SettingsScreen() {
       <View style={styles.card}>
         <View style={styles.field}>
           <Text style={styles.label}>Business Name</Text>
-          <TextInput
+          <TextInput accessibilityRole="text" accessibilityLabel="Text input field"
             style={styles.input}
             value={name}
             onChangeText={(v) => { setName(v); setDirty(true); }}
@@ -85,7 +85,7 @@ export default function SettingsScreen() {
         </View>
         <View style={styles.field}>
           <Text style={styles.label}>Phone</Text>
-          <TextInput
+          <TextInput accessibilityRole="text" accessibilityLabel="Text input field"
             style={styles.input}
             value={phone}
             onChangeText={(v) => { setPhone(v); setDirty(true); }}
@@ -96,7 +96,7 @@ export default function SettingsScreen() {
         </View>
         <View style={styles.field}>
           <Text style={styles.label}>Email</Text>
-          <TextInput
+          <TextInput accessibilityRole="text" accessibilityLabel="Text input field"
             style={styles.input}
             value={email}
             onChangeText={(v) => { setEmail(v); setDirty(true); }}
@@ -107,7 +107,7 @@ export default function SettingsScreen() {
           />
         </View>
         {dirty && (
-          <Pressable style={styles.saveButton} onPress={handleSaveBusiness}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.saveButton} onPress={handleSaveBusiness}>
             <Text style={styles.saveButtonText}>Save Changes</Text>
           </Pressable>
         )}
@@ -123,7 +123,7 @@ export default function SettingsScreen() {
         <Text style={styles.changeHint}>Tap a different industry to switch. This will reset your price book.</Text>
         <View style={styles.verticalList}>
           {verticals.map((v) => (
-            <Pressable
+            <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
               key={v.id}
               style={[styles.verticalItem, settings.selectedVertical === v.id && styles.verticalItemActive]}
               onPress={() => handleChangeVertical(v.id)}
@@ -134,7 +134,7 @@ export default function SettingsScreen() {
               </Text>
             </Pressable>
           ))}
-          <Pressable
+          <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
             style={[styles.verticalItem, settings.selectedVertical === 'custom' && styles.verticalItemActive]}
             onPress={() => handleChangeVertical('custom')}
           >
@@ -164,7 +164,7 @@ export default function SettingsScreen() {
           <>
             <Text style={styles.label}>Signed in as</Text>
             <Text style={styles.accountEmail}>{user.email}</Text>
-            <Pressable
+            <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
               style={styles.signOutButton}
               onPress={() => {
                 Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
@@ -179,7 +179,7 @@ export default function SettingsScreen() {
         ) : (
           <>
             <Text style={styles.accountOffline}>Using app offline (no account)</Text>
-            <Pressable
+            <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
               style={styles.saveButton}
               onPress={() => router.push('/auth/login')}
             >

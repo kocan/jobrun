@@ -13,7 +13,7 @@ export default function CustomersScreen() {
 
   const renderItem = useCallback(
     ({ item }: { item: (typeof customers)[0] }) => (
-      <Pressable style={styles.row} onPress={() => router.push(`/customer/${item.id}`)}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.row} onPress={() => router.push(`/customer/${item.id}`)}>
         <View style={styles.rowLeft}>
           <Text style={styles.name}>
             {item.firstName} {item.lastName}
@@ -37,7 +37,7 @@ export default function CustomersScreen() {
 
   return (
     <View style={styles.container}>
-      <TextInput
+      <TextInput accessibilityRole="text" accessibilityLabel="Text input field"
         style={styles.search}
         placeholder="Search customers..."
         placeholderTextColor="#999"
@@ -59,7 +59,7 @@ export default function CustomersScreen() {
         }
         contentContainerStyle={filtered.length === 0 ? styles.emptyContainer : undefined}
       />
-      <Pressable style={styles.fab} onPress={() => router.push('/customer/new')}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.fab} onPress={() => router.push('/customer/new')}>
         <Text style={styles.fabText}>+</Text>
       </Pressable>
     </View>

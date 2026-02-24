@@ -98,17 +98,17 @@ export default function PriceBookEditScreen() {
 
           <View style={styles.switchRow}>
             <Text style={styles.label}>Active</Text>
-            <Switch value={form.isActive} onValueChange={(v) => setForm((f) => ({ ...f, isActive: v }))} trackColor={{ true: '#EA580C' }} />
+            <Switch accessibilityRole="switch" accessibilityLabel="Toggle" value={form.isActive} onValueChange={(v) => setForm((f) => ({ ...f, isActive: v }))} trackColor={{ true: '#EA580C' }} />
           </View>
 
-          <Pressable style={styles.saveBtn} onPress={handleSave}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.saveBtn} onPress={handleSave}>
             <Text style={styles.saveBtnText}>{isNew ? 'Add Service' : 'Save Changes'}</Text>
           </Pressable>
-          <Pressable style={styles.cancelBtn} onPress={() => router.back()}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.cancelBtn} onPress={() => router.back()}>
             <Text style={styles.cancelBtnText}>Cancel</Text>
           </Pressable>
           {!isNew && (
-            <Pressable style={styles.deleteBtn} onPress={handleDelete}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.deleteBtn} onPress={handleDelete}>
               <Text style={styles.deleteBtnText}>Delete Service</Text>
             </Pressable>
           )}
@@ -128,7 +128,7 @@ function Field({
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput
+      <TextInput accessibilityRole="text" accessibilityLabel="Text input field"
         style={[styles.input, multiline && styles.inputMultiline]}
         value={value}
         onChangeText={onChange}

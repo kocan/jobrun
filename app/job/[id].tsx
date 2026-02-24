@@ -207,7 +207,7 @@ export default function JobDetailScreen() {
           title,
           headerRight: () =>
             !isNew && !editing ? (
-              <Pressable onPress={() => setEditing(true)}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" onPress={() => setEditing(true)}>
                 <Text style={styles.headerBtn}>Edit</Text>
               </Pressable>
             ) : null,
@@ -220,7 +220,7 @@ export default function JobDetailScreen() {
               {/* Customer Picker */}
               <View style={styles.field}>
                 <Text style={styles.label}>Customer *</Text>
-                <Pressable style={styles.pickerBtn} onPress={() => setCustomerPickerVisible(true)}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.pickerBtn} onPress={() => setCustomerPickerVisible(true)}>
                   <Text style={[styles.pickerText, !form.customerId && styles.pickerPlaceholder]}>
                     {customerName}
                   </Text>
@@ -235,7 +235,7 @@ export default function JobDetailScreen() {
                 <Text style={styles.label}>Status</Text>
                 <View style={styles.statusRow}>
                   {STATUS_OPTIONS.map((s) => (
-                    <Pressable
+                    <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
                       key={s}
                       style={[styles.statusChip, form.status === s && { backgroundColor: STATUS_COLORS[s] }]}
                       onPress={() => setForm((f) => ({ ...f, status: s }))}
@@ -260,14 +260,14 @@ export default function JobDetailScreen() {
                       <Text style={styles.lineItemName}>{li.name}</Text>
                       <View style={styles.lineItemControls}>
                         <Text style={styles.lineItemLabel}>Qty:</Text>
-                        <TextInput
+                        <TextInput accessibilityRole="text" accessibilityLabel="Text input field"
                           style={styles.lineItemQtyInput}
                           value={String(li.quantity)}
                           onChangeText={(v) => updateLineItem(li.id, { quantity: parseInt(v) || 1 })}
                           keyboardType="number-pad"
                         />
                         <Text style={styles.lineItemLabel}>@ $</Text>
-                        <TextInput
+                        <TextInput accessibilityRole="text" accessibilityLabel="Text input field"
                           style={styles.lineItemPriceInput}
                           value={String(li.unitPrice)}
                           onChangeText={(v) => updateLineItem(li.id, { unitPrice: parseFloat(v) || 0 })}
@@ -277,13 +277,13 @@ export default function JobDetailScreen() {
                     </View>
                     <View style={styles.lineItemRight}>
                       <Text style={styles.lineItemTotal}>${(li.unitPrice * li.quantity).toFixed(2)}</Text>
-                      <Pressable onPress={() => removeLineItem(li.id)}>
+                      <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" onPress={() => removeLineItem(li.id)}>
                         <Text style={styles.lineItemRemove}>✕</Text>
                       </Pressable>
                     </View>
                   </View>
                 ))}
-                <Pressable style={styles.addServiceBtn} onPress={() => setServicePickerVisible(true)}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.addServiceBtn} onPress={() => setServicePickerVisible(true)}>
                   <Text style={styles.addServiceBtnText}>+ Add Service</Text>
                 </Pressable>
                 {form.lineItems.length > 0 && (
@@ -296,16 +296,16 @@ export default function JobDetailScreen() {
 
               <Field label="Notes" value={form.notes} onChange={setField('notes')} multiline />
 
-              <Pressable style={styles.saveBtn} onPress={handleSave}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.saveBtn} onPress={handleSave}>
                 <Text style={styles.saveBtnText}>{isNew ? 'Create Job' : 'Save Changes'}</Text>
               </Pressable>
               {!isNew && (
-                <Pressable style={styles.cancelBtn} onPress={() => setEditing(false)}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.cancelBtn} onPress={() => setEditing(false)}>
                   <Text style={styles.cancelBtnText}>Cancel</Text>
                 </Pressable>
               )}
               {isNew && (
-                <Pressable style={styles.cancelBtn} onPress={() => router.back()}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.cancelBtn} onPress={() => router.back()}>
                   <Text style={styles.cancelBtnText}>Cancel</Text>
                 </Pressable>
               )}
@@ -328,22 +328,22 @@ export default function JobDetailScreen() {
               {/* Action Buttons */}
               <Text style={styles.sectionTitle}>Actions</Text>
               {form.status === 'scheduled' && (
-                <Pressable style={[styles.actionBtn, { backgroundColor: '#F59E0B' }]} onPress={() => handleStatusChange('in-progress')}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={[styles.actionBtn, { backgroundColor: '#F59E0B' }]} onPress={() => handleStatusChange('in-progress')}>
                   <Text style={styles.actionBtnText}>▶ Start Job</Text>
                 </Pressable>
               )}
               {form.status === 'in-progress' && (
-                <Pressable style={[styles.actionBtn, { backgroundColor: '#10B981' }]} onPress={() => handleStatusChange('completed')}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={[styles.actionBtn, { backgroundColor: '#10B981' }]} onPress={() => handleStatusChange('completed')}>
                   <Text style={styles.actionBtnText}>✓ Complete Job</Text>
                 </Pressable>
               )}
               {(form.status === 'scheduled' || form.status === 'in-progress') && (
-                <Pressable style={[styles.actionBtn, { backgroundColor: '#EF4444' }]} onPress={() => handleStatusChange('cancelled')}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={[styles.actionBtn, { backgroundColor: '#EF4444' }]} onPress={() => handleStatusChange('cancelled')}>
                   <Text style={styles.actionBtnText}>✕ Cancel Job</Text>
                 </Pressable>
               )}
               {form.status === 'cancelled' && (
-                <Pressable style={[styles.actionBtn, { backgroundColor: '#3B82F6' }]} onPress={() => handleStatusChange('scheduled')}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={[styles.actionBtn, { backgroundColor: '#3B82F6' }]} onPress={() => handleStatusChange('scheduled')}>
                   <Text style={styles.actionBtnText}>↻ Reschedule</Text>
                 </Pressable>
               )}
@@ -353,19 +353,19 @@ export default function JobDetailScreen() {
                 const existingInvoice = getInvoiceByJobId(id!);
                 if (existingInvoice) {
                   return (
-                    <Pressable style={[styles.actionBtn, { backgroundColor: '#7C3AED' }]} onPress={() => router.push({ pathname: '/invoice/[id]', params: { id: existingInvoice.id } })}>
+                    <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={[styles.actionBtn, { backgroundColor: '#7C3AED' }]} onPress={() => router.push({ pathname: '/invoice/[id]', params: { id: existingInvoice.id } })}>
                       <Text style={styles.actionBtnText}>📄 View Invoice ({existingInvoice.invoiceNumber})</Text>
                     </Pressable>
                   );
                 }
                 return (
-                  <Pressable style={[styles.actionBtn, { backgroundColor: '#7C3AED' }]} onPress={() => router.push({ pathname: '/invoice/[id]', params: { id: 'new', fromJob: id } })}>
+                  <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={[styles.actionBtn, { backgroundColor: '#7C3AED' }]} onPress={() => router.push({ pathname: '/invoice/[id]', params: { id: 'new', fromJob: id } })}>
                     <Text style={styles.actionBtnText}>📄 Create Invoice</Text>
                   </Pressable>
                 );
               })()}
 
-              <Pressable style={styles.deleteBtn} onPress={handleDelete}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.deleteBtn} onPress={handleDelete}>
                 <Text style={styles.deleteBtnText}>Delete Job</Text>
               </Pressable>
             </>
@@ -377,13 +377,13 @@ export default function JobDetailScreen() {
       <Modal visible={customerPickerVisible} animationType="slide" presentationStyle="pageSheet">
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Pressable onPress={() => { setCustomerPickerVisible(false); setCustomerSearch(''); }}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" onPress={() => { setCustomerPickerVisible(false); setCustomerSearch(''); }}>
               <Text style={styles.headerBtn}>Close</Text>
             </Pressable>
             <Text style={styles.modalTitle}>Select Customer</Text>
             <View style={{ width: 50 }} />
           </View>
-          <TextInput
+          <TextInput accessibilityRole="text" accessibilityLabel="Text input field"
             style={styles.searchInput}
             placeholder="Search customers..."
             value={customerSearch}
@@ -394,7 +394,7 @@ export default function JobDetailScreen() {
             data={filteredCustomers}
             keyExtractor={(c) => c.id}
             renderItem={({ item }) => (
-              <Pressable
+              <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
                 style={styles.customerRow}
                 onPress={() => {
                   setForm((f) => ({ ...f, customerId: item.id }));
@@ -415,7 +415,7 @@ export default function JobDetailScreen() {
       <Modal visible={servicePickerVisible} animationType="slide" presentationStyle="pageSheet">
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Pressable onPress={() => setServicePickerVisible(false)}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" onPress={() => setServicePickerVisible(false)}>
               <Text style={styles.headerBtn}>Close</Text>
             </Pressable>
             <Text style={styles.modalTitle}>Add Service</Text>
@@ -425,7 +425,7 @@ export default function JobDetailScreen() {
             data={activeServices}
             keyExtractor={(s) => s.id}
             renderItem={({ item }) => (
-              <Pressable
+              <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
                 style={styles.customerRow}
                 onPress={() => {
                   addLineItemFromService(item.id);
@@ -454,7 +454,7 @@ function Field({
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput
+      <TextInput accessibilityRole="text" accessibilityLabel="Text input field"
         style={[styles.input, multiline && styles.inputMultiline]}
         value={value}
         onChangeText={onChange}

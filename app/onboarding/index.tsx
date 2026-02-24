@@ -21,7 +21,7 @@ export default function WelcomeScreen() {
           <View style={styles.dot} />
           <View style={styles.dot} />
         </View>
-        <Pressable style={styles.button} onPress={() => router.push('/onboarding/business-info')}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.button} onPress={() => router.push('/onboarding/business-info')}>
           <Text style={styles.buttonText}>Get Started</Text>
         </Pressable>
       </View>

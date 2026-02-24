@@ -112,7 +112,7 @@ export default function TodayScreen() {
     const actionLabel = job.status === 'scheduled' ? 'Start Job' : 'Complete Job';
 
     return (
-      <Pressable
+      <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
         key={job.id}
         style={styles.card}
         onPress={() => router.push(`/job/${job.id}`)}
@@ -128,7 +128,7 @@ export default function TodayScreen() {
         <View style={styles.cardFooter}>
           <Text style={styles.cardAmount}>${job.total.toFixed(2)}</Text>
           {canAct && (
-            <Pressable
+            <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
               style={[styles.actionBtn, { backgroundColor: STATUS_COLORS[job.status === 'scheduled' ? 'in-progress' : 'completed'] }]}
               onPress={() => handleQuickAction(job)}
             >
@@ -145,7 +145,7 @@ export default function TodayScreen() {
     const preview = tomorrowExpanded ? tomorrowJobs : tomorrowJobs.slice(0, 3);
     return (
       <View style={styles.tomorrowSection}>
-        <Pressable
+        <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
           style={styles.tomorrowHeader}
           onPress={() => setTomorrowExpanded(!tomorrowExpanded)}
         >
@@ -158,7 +158,7 @@ export default function TodayScreen() {
           const customer = getCustomerById(job.customerId);
           const name = customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown';
           return (
-            <Pressable
+            <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
               key={job.id}
               style={styles.tomorrowCard}
               onPress={() => router.push(`/job/${job.id}`)}
@@ -170,7 +170,7 @@ export default function TodayScreen() {
           );
         })}
         {!tomorrowExpanded && tomorrowJobs.length > 3 && (
-          <Pressable onPress={() => setTomorrowExpanded(true)}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" onPress={() => setTomorrowExpanded(true)}>
             <Text style={styles.showMore}>+{tomorrowJobs.length - 3} more</Text>
           </Pressable>
         )}
@@ -221,7 +221,7 @@ export default function TodayScreen() {
           <Text style={styles.emptyIcon}>📭</Text>
           <Text style={styles.emptyTitle}>No jobs scheduled for today</Text>
           <Text style={styles.emptySubtitle}>Your day is wide open — schedule a job to get started.</Text>
-          <Pressable
+          <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
             style={styles.ctaButton}
             onPress={() => router.push(`/job/new?scheduledDate=${today}`)}
           >
@@ -242,7 +242,7 @@ export default function TodayScreen() {
           }
         />
       )}
-      <Pressable
+      <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
         style={styles.fab}
         onPress={() => router.push(`/job/new?scheduledDate=${today}`)}
       >
