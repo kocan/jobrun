@@ -47,7 +47,7 @@ function WaitlistForm({ className = '' }: { className?: string }) {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="your@email.com"
-        className="px-4 py-3 rounded-lg border border-gray-300 text-gray-900 flex-1 max-w-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+        className="px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white flex-1 max-w-sm focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
         required
         disabled={state === 'loading'}
       />
@@ -58,17 +58,17 @@ function WaitlistForm({ className = '' }: { className?: string }) {
       >
         {state === 'loading' ? 'Joining...' : 'Join the Waitlist'}
       </button>
-      {state === 'error' && <p className="text-red-600 text-sm mt-1 sm:mt-0 sm:self-center">{message}</p>}
+      {state === 'error' && <p className="text-red-600 dark:text-red-400 text-sm mt-1 sm:mt-0 sm:self-center">{message}</p>}
     </form>
   );
 }
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
       {/* Nav */}
       <nav className="px-6 py-4 flex items-center justify-between max-w-6xl mx-auto">
-        <span className="text-xl font-bold text-gray-900">
+        <span className="text-xl font-bold text-gray-900 dark:text-gray-100">
           <span className="text-orange-600">Job</span>Run
         </span>
         <a
@@ -86,21 +86,21 @@ export default function Home() {
             <p className="text-orange-600 font-semibold text-sm uppercase tracking-wide mb-4">
               Coming Soon
             </p>
-            <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight">
+            <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight leading-tight">
               Book jobs.
               <br />
               Send invoices.
               <br />
               <span className="text-orange-600">Get paid.</span>
             </h1>
-            <p className="mt-6 text-xl text-gray-600 max-w-lg">
+            <p className="mt-6 text-xl text-gray-600 dark:text-gray-300 max-w-lg">
               The all-in-one app for solo service operators. Schedule work, send estimates, collect
               payments — all from your phone.
             </p>
             <div className="mt-8">
               <WaitlistForm />
             </div>
-            <p className="mt-4 text-sm text-gray-400">
+            <p className="mt-4 text-sm text-gray-400 dark:text-slate-500">
               Join 100+ solo operators already on the waitlist.
             </p>
           </div>
@@ -109,7 +109,7 @@ export default function Home() {
           <div className="flex justify-center lg:justify-end">
             <div className="relative w-[280px] h-[560px] bg-gray-900 rounded-[3rem] p-3 shadow-2xl">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-gray-900 rounded-b-2xl z-10" />
-              <div className="w-full h-full bg-gradient-to-br from-orange-50 to-white rounded-[2.25rem] overflow-hidden flex flex-col">
+              <div className="w-full h-full bg-gradient-to-br from-orange-50 to-white dark:from-slate-800 dark:to-slate-900 rounded-[2.25rem] overflow-hidden flex flex-col">
                 <div className="bg-orange-600 text-white px-5 pt-10 pb-4">
                   <p className="text-xs opacity-75">Today</p>
                   <p className="text-lg font-bold">3 Jobs Scheduled</p>
@@ -120,12 +120,12 @@ export default function Home() {
                     { time: '11:30 AM', job: 'House Wash', customer: 'S. Williams', price: '$350' },
                     { time: '2:00 PM', job: 'Deck Cleaning', customer: 'R. Davis', price: '$225' },
                   ].map((j) => (
-                    <div key={j.time} className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+                    <div key={j.time} className="bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm border border-gray-100 dark:border-gray-700">
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="text-xs text-gray-400">{j.time}</p>
-                          <p className="text-sm font-semibold text-gray-900">{j.job}</p>
-                          <p className="text-xs text-gray-500">{j.customer}</p>
+                          <p className="text-xs text-gray-400 dark:text-slate-400">{j.time}</p>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{j.job}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-300">{j.customer}</p>
                         </div>
                         <span className="text-sm font-bold text-orange-600">{j.price}</span>
                       </div>
@@ -144,12 +144,12 @@ export default function Home() {
       </section>
 
       {/* Features */}
-      <section className="px-6 py-20 bg-orange-50">
+      <section className="px-6 py-20 bg-orange-50 dark:bg-gray-900">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
+          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-gray-100 mb-4">
             Everything you need to run your business
           </h2>
-          <p className="text-center text-gray-500 mb-12 max-w-2xl mx-auto">
+          <p className="text-center text-gray-500 dark:text-gray-300 mb-12 max-w-2xl mx-auto">
             Stop juggling spreadsheets, texts, and paper invoices. JobRun handles it all.
           </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -159,10 +159,10 @@ export default function Home() {
               { icon: '💰', title: 'Invoice', desc: 'One-tap invoicing. Send via text or email instantly.' },
               { icon: '💳', title: 'Get Paid', desc: 'Accept cards on-site or send a payment link. Money hits your bank fast.' },
             ].map((f) => (
-              <div key={f.title} className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+              <div key={f.title} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
                 <div className="text-4xl mb-4">{f.icon}</div>
-                <h3 className="text-lg font-semibold text-gray-900">{f.title}</h3>
-                <p className="mt-2 text-gray-600 text-sm leading-relaxed">{f.desc}</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{f.title}</h3>
+                <p className="mt-2 text-gray-600 dark:text-gray-300 text-sm leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -172,8 +172,8 @@ export default function Home() {
       {/* Who It's For */}
       <section className="px-6 py-20">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Built for solo operators</h2>
-          <p className="text-gray-500 mb-10">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">Built for solo operators</h2>
+          <p className="text-gray-500 dark:text-gray-300 mb-10">
             If you run a service business from your truck, JobRun was made for you.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
@@ -186,7 +186,7 @@ export default function Home() {
             ].map((v) => (
               <span
                 key={v.label}
-                className="px-6 py-3 bg-orange-100 text-orange-800 rounded-full font-medium text-sm hover:bg-orange-200 transition-colors"
+                className="px-6 py-3 bg-orange-100 text-orange-800 dark:bg-orange-950/50 dark:text-orange-200 rounded-full font-medium text-sm hover:bg-orange-200 dark:hover:bg-orange-900 transition-colors"
               >
                 {v.icon} {v.label}
               </span>
@@ -196,16 +196,16 @@ export default function Home() {
       </section>
 
       {/* Pricing */}
-      <section className="px-6 py-20 bg-gray-50">
+      <section className="px-6 py-20 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Simple, honest pricing</h2>
-          <p className="text-gray-500 mb-12">Start free. Upgrade when you&apos;re ready.</p>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">Simple, honest pricing</h2>
+          <p className="text-gray-500 dark:text-gray-300 mb-12">Start free. Upgrade when you&apos;re ready.</p>
           <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900">Free</h3>
-              <p className="text-4xl font-extrabold text-gray-900 mt-4">$0</p>
-              <p className="text-gray-500 mt-1">forever</p>
-              <ul className="mt-6 text-left text-gray-600 space-y-3 text-sm">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm border border-gray-200 dark:border-gray-700">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Free</h3>
+              <p className="text-4xl font-extrabold text-gray-900 dark:text-gray-100 mt-4">$0</p>
+              <p className="text-gray-500 dark:text-gray-300 mt-1">forever</p>
+              <ul className="mt-6 text-left text-gray-600 dark:text-gray-300 space-y-3 text-sm">
                 <li className="flex items-center gap-2"><span className="text-green-500">✓</span> 10 customers</li>
                 <li className="flex items-center gap-2"><span className="text-green-500">✓</span> Basic scheduling</li>
                 <li className="flex items-center gap-2"><span className="text-green-500">✓</span> Invoice generation</li>
@@ -235,7 +235,7 @@ export default function Home() {
       {/* FAQ */}
       <section className="px-6 py-20">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-gray-100 mb-12">
             Frequently asked questions
           </h2>
           <div className="space-y-6">
@@ -265,12 +265,12 @@ export default function Home() {
                 a: 'Up to 10 customers, basic scheduling, invoicing, and a price book. Everything you need to get started.',
               },
             ].map((faq) => (
-              <details key={faq.q} className="group border-b border-gray-200 pb-4">
-                <summary className="flex items-center justify-between cursor-pointer py-2 text-lg font-medium text-gray-900 hover:text-orange-600 transition-colors">
+              <details key={faq.q} className="group border-b border-gray-200 dark:border-gray-700 pb-4">
+                <summary className="flex items-center justify-between cursor-pointer py-2 text-lg font-medium text-gray-900 dark:text-gray-100 hover:text-orange-600 transition-colors">
                   {faq.q}
-                  <span className="text-gray-400 group-open:rotate-45 transition-transform text-xl">+</span>
+                  <span className="text-gray-400 dark:text-slate-400 group-open:rotate-45 transition-transform text-xl">+</span>
                 </summary>
-                <p className="mt-2 text-gray-600 leading-relaxed">{faq.a}</p>
+                <p className="mt-2 text-gray-600 dark:text-gray-300 leading-relaxed">{faq.a}</p>
               </details>
             ))}
           </div>
@@ -291,7 +291,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="px-6 py-10 bg-gray-900 text-gray-400">
+      <footer className="px-6 py-10 bg-gray-900 text-gray-400 dark:bg-black">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
             <span className="text-lg font-bold text-white">
