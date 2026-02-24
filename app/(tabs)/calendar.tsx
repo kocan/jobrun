@@ -26,10 +26,10 @@ import {
 } from '../../lib/dateUtils';
 
 const STATUS_COLORS: Record<JobStatus, string> = {
-  scheduled: '#3B82F6',
-  'in-progress': '#F59E0B',
-  completed: '#10B981',
-  cancelled: '#EF4444',
+  scheduled: theme.colors.status.scheduled,
+  'in-progress': theme.colors.status.inProgress,
+  completed: theme.colors.status.completed,
+  cancelled: '#9CA3AF',
 };
 
 const STATUS_LABELS: Record<JobStatus, string> = {
@@ -298,70 +298,70 @@ function formatDayHeader(dateStr: string): string {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: theme.colors.white },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   flex: { flex: 1 },
 
   // Toggle
   toggleRow: { flexDirection: 'row', justifyContent: 'center', paddingTop: 12, paddingBottom: 4, gap: 4 },
-  toggleBtn: { paddingHorizontal: 20, paddingVertical: 6, borderRadius: 16, backgroundColor: '#F3F4F6' },
+  toggleBtn: { paddingHorizontal: 20, paddingVertical: 6, borderRadius: 16, backgroundColor: theme.colors.gray100 },
   toggleActive: { backgroundColor: theme.colors.primary },
-  toggleText: { fontSize: 14, fontWeight: '600', color: '#666' },
-  toggleTextActive: { color: '#fff' },
+  toggleText: { fontSize: 14, fontWeight: '600', color: theme.colors.textMuted },
+  toggleTextActive: { color: theme.colors.white },
 
   // Nav
   navRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 8, gap: 12 },
   navBtn: { padding: 8 },
   navArrow: { fontSize: 28, color: theme.colors.primary, fontWeight: '300' },
-  navTitle: { fontSize: 16, fontWeight: '600', color: '#111' },
+  navTitle: { fontSize: 16, fontWeight: '600', color: theme.colors.text },
 
   todayBtn: { alignSelf: 'center', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, backgroundColor: theme.colors.orange50, marginBottom: 4 },
   todayBtnText: { fontSize: 13, color: theme.colors.primary, fontWeight: '600' },
 
   // Week row
-  weekRow: { flexDirection: 'row', paddingHorizontal: 4, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+  weekRow: { flexDirection: 'row', paddingHorizontal: 4, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
   dayCol: { flex: 1, alignItems: 'center', paddingVertical: 4, borderRadius: 8 },
   dayColSelected: { backgroundColor: theme.colors.orange50 },
-  dayName: { fontSize: 11, color: '#999', fontWeight: '600', marginBottom: 4 },
+  dayName: { fontSize: 11, color: theme.colors.gray400, fontWeight: '600', marginBottom: 4 },
   dayNameToday: { color: theme.colors.primary },
   dayCircle: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   dayCircleToday: { backgroundColor: theme.colors.primary },
   dayCircleSelected: { borderWidth: 2, borderColor: theme.colors.primary },
-  dayNum: { fontSize: 14, fontWeight: '600', color: '#333' },
-  dayNumHighlight: { color: '#fff' },
+  dayNum: { fontSize: 14, fontWeight: '600', color: theme.colors.gray700 },
+  dayNumHighlight: { color: theme.colors.white },
   jobDot: { marginTop: 2, backgroundColor: theme.colors.primary, borderRadius: 8, paddingHorizontal: 5, paddingVertical: 1, minWidth: 16, alignItems: 'center' },
-  jobDotText: { fontSize: 10, color: '#fff', fontWeight: '700' },
+  jobDotText: { fontSize: 10, color: theme.colors.white, fontWeight: '700' },
 
   // Day jobs list (week view expanded)
   dayJobsList: { padding: 16 },
-  dayJobsHeader: { fontSize: 15, fontWeight: '700', color: '#333', marginBottom: 12 },
-  emptyText: { fontSize: 14, color: '#999', textAlign: 'center', paddingVertical: 24 },
+  dayJobsHeader: { fontSize: 15, fontWeight: '700', color: theme.colors.gray700, marginBottom: 12 },
+  emptyText: { fontSize: 14, color: theme.colors.gray400, textAlign: 'center', paddingVertical: 24 },
   emptyDay: { alignItems: 'center', paddingVertical: 32 },
   emptyDayIcon: { fontSize: 36, marginBottom: 8 },
-  emptyDayTitle: { fontSize: 16, fontWeight: '600', color: '#666', marginBottom: 4 },
-  emptyDaySubtitle: { fontSize: 14, color: '#999', textAlign: 'center' },
+  emptyDayTitle: { fontSize: 16, fontWeight: '600', color: theme.colors.textMuted, marginBottom: 4 },
+  emptyDaySubtitle: { fontSize: 14, color: theme.colors.gray400, textAlign: 'center' },
 
   // Job card
-  jobCard: { backgroundColor: '#F9FAFB', borderRadius: 10, padding: 12, marginBottom: 8, borderLeftWidth: 4 },
+  jobCard: { backgroundColor: theme.colors.gray50, borderRadius: 10, padding: 12, marginBottom: 8, borderLeftWidth: 4 },
   jobCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  jobCardTime: { fontSize: 13, fontWeight: '600', color: '#555' },
-  jobCardCustomer: { fontSize: 15, fontWeight: '600', color: '#111' },
-  jobCardAmount: { fontSize: 13, color: '#666', marginTop: 2 },
+  jobCardTime: { fontSize: 13, fontWeight: '600', color: theme.colors.gray500 },
+  jobCardCustomer: { fontSize: 15, fontWeight: '600', color: theme.colors.text },
+  jobCardAmount: { fontSize: 13, color: theme.colors.textMuted, marginTop: 2 },
 
   // Status badge
   statusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
-  statusBadgeText: { fontSize: 11, color: '#fff', fontWeight: '700' },
+  statusBadgeText: { fontSize: 11, color: theme.colors.white, fontWeight: '700' },
 
   // Timeline (day view)
   timeline: { position: 'relative', paddingLeft: 56, minHeight: (END_HOUR - START_HOUR + 1) * HOUR_HEIGHT },
   timeSlot: { height: HOUR_HEIGHT, flexDirection: 'row', alignItems: 'flex-start' },
-  timeLabel: { position: 'absolute', left: -52, width: 48, fontSize: 11, color: '#999', textAlign: 'right', top: -6 },
-  timeSlotLine: { flex: 1, borderTopWidth: 1, borderTopColor: '#E5E7EB', marginTop: 0 },
+  timeLabel: { position: 'absolute', left: -52, width: 48, fontSize: 11, color: theme.colors.gray400, textAlign: 'right', top: -6 },
+  timeSlotLine: { flex: 1, borderTopWidth: 1, borderTopColor: theme.colors.border, marginTop: 0 },
   timeBlock: { position: 'absolute', left: 60, right: 16, borderLeftWidth: 4, borderRadius: 6, padding: 6, overflow: 'hidden' },
-  timeBlockTime: { fontSize: 11, fontWeight: '600', color: '#555' },
-  timeBlockTitle: { fontSize: 13, fontWeight: '600', color: '#111' },
+  timeBlockTime: { fontSize: 11, fontWeight: '600', color: theme.colors.gray500 },
+  timeBlockTitle: { fontSize: 13, fontWeight: '600', color: theme.colors.text },
 
   // FAB
-  fab: { position: 'absolute', bottom: 24, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 },
-  fabText: { fontSize: 28, color: '#fff', fontWeight: '300', marginTop: -2 },
+  fab: { position: 'absolute', bottom: 24, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center', elevation: 4, shadowColor: theme.colors.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 },
+  fabText: { fontSize: 28, color: theme.colors.white, fontWeight: '300', marginTop: -2 },
 });
