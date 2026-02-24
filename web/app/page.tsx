@@ -291,7 +291,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="px-6 py-10 bg-gray-900 text-gray-400 dark:bg-black">
+      <footer className="px-6 py-10 bg-gray-900 text-gray-400 dark:bg-gray-950 dark:text-gray-300">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
             <span className="text-lg font-bold text-white">
@@ -305,7 +305,7 @@ export default function Home() {
             <a href="mailto:hello@jobrun.app" className="hover:text-white transition-colors">Contact</a>
           </div>
         </div>
-        <div className="max-w-5xl mx-auto mt-8 pt-6 border-t border-gray-800 text-center text-xs text-gray-500">
+        <div className="max-w-5xl mx-auto mt-8 pt-6 border-t border-gray-800 dark:border-gray-700 text-center text-xs text-gray-500 dark:text-gray-400">
           © {new Date().getFullYear()} JobRun. All rights reserved.
         </div>
       </footer>
