@@ -133,7 +133,7 @@ export default function CustomerDetailScreen() {
           title,
           headerRight: () =>
             !isNew && !editing ? (
-              <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" onPress={() => setEditing(true)}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Enable edit mode" onPress={() => setEditing(true)}>
                 <Text style={styles.headerBtn}>Edit</Text>
               </Pressable>
             ) : null,
@@ -161,11 +161,11 @@ export default function CustomerDetailScreen() {
               </View>
               <Field label="Notes" value={form.notes} onChange={setField('notes')} multiline />
 
-              <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.saveBtn} onPress={handleSave}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Save changes" style={styles.saveBtn} onPress={handleSave}>
                 <Text style={styles.saveBtnText}>{isNew ? 'Add Customer' : 'Save Changes'}</Text>
               </Pressable>
               {!isNew && (
-                <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.cancelBtn} onPress={() => setEditing(false)}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Cancel changes" style={styles.cancelBtn} onPress={() => setEditing(false)}>
                   <Text style={styles.cancelBtnText}>Cancel</Text>
                 </Pressable>
               )}
@@ -179,7 +179,7 @@ export default function CustomerDetailScreen() {
               <InfoRow label="Notes" value={form.notes} />
 
               <Text style={styles.sectionTitle}>Estimates</Text>
-              <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.addJobBtn} onPress={() => router.push({ pathname: '/estimate/[id]', params: { id: 'new', customerId: id } })}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Create new record" style={styles.addJobBtn} onPress={() => router.push({ pathname: '/estimate/[id]', params: { id: 'new', customerId: id } })}>
                 <Text style={styles.addJobBtnText}>+ New Estimate</Text>
               </Pressable>
               {getEstimatesByCustomer(id!).length === 0 ? (
@@ -189,7 +189,7 @@ export default function CustomerDetailScreen() {
                 </View>
               ) : (
                 getEstimatesByCustomer(id!).map((est) => (
-                  <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" key={est.id} style={styles.jobRow} onPress={() => router.push({ pathname: '/estimate/[id]', params: { id: est.id } })}>
+                  <Pressable accessibilityRole="button" accessibilityLabel="Activate action" key={est.id} style={styles.jobRow} onPress={() => router.push({ pathname: '/estimate/[id]', params: { id: est.id } })}>
                     <View style={styles.jobRowLeft}>
                       <Text style={styles.jobRowTitle}>${est.total.toFixed(2)}</Text>
                       <Text style={styles.jobRowDate}>{est.status} · {est.createdAt.split('T')[0]}</Text>
@@ -200,7 +200,7 @@ export default function CustomerDetailScreen() {
               )}
 
               <Text style={styles.sectionTitle}>Jobs</Text>
-              <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.addJobBtn} onPress={() => router.push({ pathname: '/job/[id]', params: { id: 'new', customerId: id } })}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Create new record" style={styles.addJobBtn} onPress={() => router.push({ pathname: '/job/[id]', params: { id: 'new', customerId: id } })}>
                 <Text style={styles.addJobBtnText}>+ New Job</Text>
               </Pressable>
               {getJobsByCustomer(id!).length === 0 ? (
@@ -210,7 +210,7 @@ export default function CustomerDetailScreen() {
                 </View>
               ) : (
                 getJobsByCustomer(id!).map((job) => (
-                  <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" key={job.id} style={styles.jobRow} onPress={() => router.push({ pathname: '/job/[id]', params: { id: job.id } })}>
+                  <Pressable accessibilityRole="button" accessibilityLabel="Activate action" key={job.id} style={styles.jobRow} onPress={() => router.push({ pathname: '/job/[id]', params: { id: job.id } })}>
                     <View style={styles.jobRowLeft}>
                       <Text style={styles.jobRowTitle}>{job.title}</Text>
                       <Text style={styles.jobRowDate}>{job.scheduledDate}{job.scheduledTime ? ` at ${job.scheduledTime}` : ''}</Text>
@@ -221,7 +221,7 @@ export default function CustomerDetailScreen() {
               )}
 
               <Text style={styles.sectionTitle}>Invoices</Text>
-              <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.addJobBtn} onPress={() => router.push({ pathname: '/invoice/[id]', params: { id: 'new', customerId: id } })}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Create new record" style={styles.addJobBtn} onPress={() => router.push({ pathname: '/invoice/[id]', params: { id: 'new', customerId: id } })}>
                 <Text style={styles.addJobBtnText}>+ New Invoice</Text>
               </Pressable>
               {getInvoicesByCustomer(id!).length === 0 ? (
@@ -231,7 +231,7 @@ export default function CustomerDetailScreen() {
                 </View>
               ) : (
                 getInvoicesByCustomer(id!).map((inv) => (
-                  <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" key={inv.id} style={styles.jobRow} onPress={() => router.push({ pathname: '/invoice/[id]', params: { id: inv.id } })}>
+                  <Pressable accessibilityRole="button" accessibilityLabel="Activate action" key={inv.id} style={styles.jobRow} onPress={() => router.push({ pathname: '/invoice/[id]', params: { id: inv.id } })}>
                     <View style={styles.jobRowLeft}>
                       <Text style={styles.jobRowTitle}>{inv.invoiceNumber} — ${inv.total.toFixed(2)}</Text>
                       <Text style={styles.jobRowDate}>{inv.status} · {inv.createdAt.split('T')[0]}</Text>
@@ -241,7 +241,7 @@ export default function CustomerDetailScreen() {
                 ))
               )}
 
-              <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.deleteBtn} onPress={handleDelete}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Delete record" style={styles.deleteBtn} onPress={handleDelete}>
                 <Text style={styles.deleteBtnText}>Delete Customer</Text>
               </Pressable>
             </>
@@ -274,7 +274,7 @@ function Field({
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput accessibilityRole="text" accessibilityLabel="Text input field"
+      <TextInput accessibilityRole="text" accessibilityLabel="Text input"
         style={[styles.input, multiline && styles.inputMultiline, error && styles.inputError]}
         value={value}
         onChangeText={onChange}

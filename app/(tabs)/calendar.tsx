@@ -12,6 +12,7 @@ import { useMemo, useState, useCallback } from 'react';
 import { useJobs } from '../../contexts/JobContext';
 import { useCustomers } from '../../contexts/CustomerContext';
 import { Job, JobStatus } from '../../lib/types';
+import { theme } from '../../lib/theme';
 import {
   getLocalDateString,
   getWeekStart,
@@ -118,7 +119,7 @@ export default function CalendarScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#EA580C" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
@@ -127,13 +128,13 @@ export default function CalendarScreen() {
     <View style={styles.container}>
       {/* View mode toggle */}
       <View style={styles.toggleRow}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
+        <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
           style={[styles.toggleBtn, viewMode === 'week' && styles.toggleActive]}
           onPress={() => setViewMode('week')}
         >
           <Text style={[styles.toggleText, viewMode === 'week' && styles.toggleTextActive]}>Week</Text>
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
+        <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
           style={[styles.toggleBtn, viewMode === 'day' && styles.toggleActive]}
           onPress={() => setViewMode('day')}
         >
@@ -143,23 +144,23 @@ export default function CalendarScreen() {
 
       {/* Navigation header */}
       <View style={styles.navRow}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" onPress={() => (viewMode === 'week' ? navigateWeek(-1) : navigateDay(-1))} style={styles.navBtn}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Activate action" onPress={() => (viewMode === 'week' ? navigateWeek(-1) : navigateDay(-1))} style={styles.navBtn}>
           <Text style={styles.navArrow}>‹</Text>
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" onPress={goToday}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Activate action" onPress={goToday}>
           <Text style={styles.navTitle}>
             {viewMode === 'week'
               ? formatWeekRange(weekStart)
               : formatDayHeader(selectedDate)}
           </Text>
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" onPress={() => (viewMode === 'week' ? navigateWeek(1) : navigateDay(1))} style={styles.navBtn}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Activate action" onPress={() => (viewMode === 'week' ? navigateWeek(1) : navigateDay(1))} style={styles.navBtn}>
           <Text style={styles.navArrow}>›</Text>
         </Pressable>
       </View>
 
       {selectedDate !== today && (
-        <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" onPress={goToday} style={styles.todayBtn}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Activate action" onPress={goToday} style={styles.todayBtn}>
           <Text style={styles.todayBtnText}>Today</Text>
         </Pressable>
       )}
@@ -177,7 +178,7 @@ export default function CalendarScreen() {
               const isSelected = dateStr === selectedDate;
               const jobCount = (jobsByDate[dateStr] || []).length;
               return (
-                <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
+                <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
                   key={i}
                   style={[styles.dayCol, isSelected && styles.dayColSelected]}
                   onPress={() => handleDayPress(dateStr)}
@@ -239,7 +240,7 @@ export default function CalendarScreen() {
               const height = Math.max((job.estimatedDuration || 60) * (HOUR_HEIGHT / 60), 30);
               const color = STATUS_COLORS[job.status];
               return (
-                <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
+                <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
                   key={job.id}
                   style={[styles.timeBlock, { top, height, borderLeftColor: color, backgroundColor: color + '18' }]}
                   onPress={() => handleJobPress(job)}
@@ -261,7 +262,7 @@ export default function CalendarScreen() {
       )}
 
       {/* FAB */}
-      <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.fab} onPress={() => handleAddJob(selectedDate)}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Add new item" style={styles.fab} onPress={() => handleAddJob(selectedDate)}>
         <Text style={styles.fabText}>+</Text>
       </Pressable>
     </View>
@@ -271,7 +272,7 @@ export default function CalendarScreen() {
 function JobCard({ job, customerName, onPress }: { job: Job; customerName?: string; onPress: (j: Job) => void }) {
   const color = STATUS_COLORS[job.status];
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={[styles.jobCard, { borderLeftColor: color }]} onPress={() => onPress(job)}>
+    <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={[styles.jobCard, { borderLeftColor: color }]} onPress={() => onPress(job)}>
       <View style={styles.jobCardHeader}>
         <Text style={styles.jobCardTime}>
           {job.scheduledTime ? formatTime12(job.scheduledTime) : 'No time'}
@@ -304,31 +305,31 @@ const styles = StyleSheet.create({
   // Toggle
   toggleRow: { flexDirection: 'row', justifyContent: 'center', paddingTop: 12, paddingBottom: 4, gap: 4 },
   toggleBtn: { paddingHorizontal: 20, paddingVertical: 6, borderRadius: 16, backgroundColor: '#F3F4F6' },
-  toggleActive: { backgroundColor: '#EA580C' },
+  toggleActive: { backgroundColor: theme.colors.primary },
   toggleText: { fontSize: 14, fontWeight: '600', color: '#666' },
   toggleTextActive: { color: '#fff' },
 
   // Nav
   navRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 8, gap: 12 },
   navBtn: { padding: 8 },
-  navArrow: { fontSize: 28, color: '#EA580C', fontWeight: '300' },
+  navArrow: { fontSize: 28, color: theme.colors.primary, fontWeight: '300' },
   navTitle: { fontSize: 16, fontWeight: '600', color: '#111' },
 
-  todayBtn: { alignSelf: 'center', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, backgroundColor: '#FFF7ED', marginBottom: 4 },
-  todayBtnText: { fontSize: 13, color: '#EA580C', fontWeight: '600' },
+  todayBtn: { alignSelf: 'center', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, backgroundColor: theme.colors.orange50, marginBottom: 4 },
+  todayBtnText: { fontSize: 13, color: theme.colors.primary, fontWeight: '600' },
 
   // Week row
   weekRow: { flexDirection: 'row', paddingHorizontal: 4, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
   dayCol: { flex: 1, alignItems: 'center', paddingVertical: 4, borderRadius: 8 },
-  dayColSelected: { backgroundColor: '#FFF7ED' },
+  dayColSelected: { backgroundColor: theme.colors.orange50 },
   dayName: { fontSize: 11, color: '#999', fontWeight: '600', marginBottom: 4 },
-  dayNameToday: { color: '#EA580C' },
+  dayNameToday: { color: theme.colors.primary },
   dayCircle: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  dayCircleToday: { backgroundColor: '#EA580C' },
-  dayCircleSelected: { borderWidth: 2, borderColor: '#EA580C' },
+  dayCircleToday: { backgroundColor: theme.colors.primary },
+  dayCircleSelected: { borderWidth: 2, borderColor: theme.colors.primary },
   dayNum: { fontSize: 14, fontWeight: '600', color: '#333' },
   dayNumHighlight: { color: '#fff' },
-  jobDot: { marginTop: 2, backgroundColor: '#EA580C', borderRadius: 8, paddingHorizontal: 5, paddingVertical: 1, minWidth: 16, alignItems: 'center' },
+  jobDot: { marginTop: 2, backgroundColor: theme.colors.primary, borderRadius: 8, paddingHorizontal: 5, paddingVertical: 1, minWidth: 16, alignItems: 'center' },
   jobDotText: { fontSize: 10, color: '#fff', fontWeight: '700' },
 
   // Day jobs list (week view expanded)
@@ -361,6 +362,6 @@ const styles = StyleSheet.create({
   timeBlockTitle: { fontSize: 13, fontWeight: '600', color: '#111' },
 
   // FAB
-  fab: { position: 'absolute', bottom: 24, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: '#EA580C', alignItems: 'center', justifyContent: 'center', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 },
+  fab: { position: 'absolute', bottom: 24, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 },
   fabText: { fontSize: 28, color: '#fff', fontWeight: '300', marginTop: -2 },
 });

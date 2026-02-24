@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState, useMemo, useCallback } from 'react';
 import { useCustomers } from '../../contexts/CustomerContext';
 import { filterCustomers } from '../../lib/db/repositories/customers';
+import { theme } from '../../lib/theme';
 
 export default function CustomersScreen() {
   const { customers, loading, refreshCustomers } = useCustomers();
@@ -13,7 +14,7 @@ export default function CustomersScreen() {
 
   const renderItem = useCallback(
     ({ item }: { item: (typeof customers)[0] }) => (
-      <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.row} onPress={() => router.push(`/customer/${item.id}`)}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={styles.row} onPress={() => router.push(`/customer/${item.id}`)}>
         <View style={styles.rowLeft}>
           <Text style={styles.name}>
             {item.firstName} {item.lastName}
@@ -30,17 +31,17 @@ export default function CustomersScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#EA580C" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <TextInput accessibilityRole="text" accessibilityLabel="Text input field"
+      <TextInput accessibilityRole="text" accessibilityLabel="Text input"
         style={styles.search}
         placeholder="Search customers..."
-        placeholderTextColor="#999"
+        placeholderTextColor={theme.colors.gray400}
         value={search}
         onChangeText={setSearch}
       />
@@ -59,7 +60,7 @@ export default function CustomersScreen() {
         }
         contentContainerStyle={filtered.length === 0 ? styles.emptyContainer : undefined}
       />
-      <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.fab} onPress={() => router.push('/customer/new')}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Add new item" style={styles.fab} onPress={() => router.push('/customer/new')}>
         <Text style={styles.fabText}>+</Text>
       </Pressable>
     </View>
@@ -67,15 +68,15 @@ export default function CustomersScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: theme.colors.surface },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   search: {
     margin: 16,
     padding: 12,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.gray100,
     borderRadius: 10,
     fontSize: 16,
-    color: '#111',
+    color: theme.colors.text,
   },
   row: {
     flexDirection: 'row',
@@ -83,11 +84,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: theme.colors.border,
   },
   rowLeft: { flex: 1 },
-  name: { fontSize: 17, fontWeight: '600', color: '#111' },
-  detail: { fontSize: 14, color: '#666', marginTop: 2 },
+  name: { fontSize: 17, fontWeight: '600', color: theme.colors.text },
+  detail: { fontSize: 14, color: theme.colors.textMuted, marginTop: 2 },
   chevron: { fontSize: 22, color: '#CCC' },
   fab: {
     position: 'absolute',
@@ -96,7 +97,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#EA580C',
+    backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -108,6 +109,6 @@ const styles = StyleSheet.create({
   fabText: { color: '#fff', fontSize: 28, lineHeight: 30 },
   emptyContainer: { flexGrow: 1 },
   emptyIcon: { fontSize: 48, marginBottom: 12 },
-  emptyTitle: { fontSize: 20, fontWeight: '600', color: '#111' },
-  emptySubtitle: { fontSize: 15, color: '#666', marginTop: 4 },
+  emptyTitle: { fontSize: 20, fontWeight: '600', color: theme.colors.text },
+  emptySubtitle: { fontSize: 15, color: theme.colors.textMuted, marginTop: 4 },
 });

@@ -73,7 +73,7 @@ export default function ConfirmScreen() {
           <View style={styles.dot} />
           <View style={[styles.dot, styles.dotActive]} />
         </View>
-        <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.button} onPress={handleComplete}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Continue" style={styles.button} onPress={handleComplete}>
           <Text style={styles.buttonText}>Start Using JobRun</Text>
         </Pressable>
       </View>

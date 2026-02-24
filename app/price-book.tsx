@@ -59,7 +59,7 @@ export default function PriceBookScreen() {
             </View>
           )}
           renderItem={({ item }) => (
-            <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
+            <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
               style={styles.row}
               onPress={() => router.push(`/price-book-edit?id=${item.id}`)}
               onLongPress={() => handleDelete(item)}
@@ -86,14 +86,14 @@ export default function PriceBookScreen() {
           }
           ListFooterComponent={
             <View style={styles.footer}>
-              <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.resetBtn} onPress={handleReset}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={styles.resetBtn} onPress={handleReset}>
                 <Text style={styles.resetBtnText}>Reset to Defaults</Text>
               </Pressable>
             </View>
           }
           stickySectionHeadersEnabled={false}
         />
-        <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" style={styles.fab} onPress={() => router.push('/price-book-edit?id=new')}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Add new item" style={styles.fab} onPress={() => router.push('/price-book-edit?id=new')}>
           <Text style={styles.fabText}>+</Text>
         </Pressable>
       </View>

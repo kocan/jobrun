@@ -13,6 +13,7 @@ import { useJobs } from '../../contexts/JobContext';
 import { useCustomers } from '../../contexts/CustomerContext';
 import { Job, JobStatus } from '../../lib/types';
 import { getLocalDateString, getTomorrowDateString, computeStats } from '../../lib/dateUtils';
+import { theme } from '../../lib/theme';
 
 const STATUS_COLORS: Record<JobStatus, string> = {
   scheduled: '#3B82F6',
@@ -112,7 +113,7 @@ export default function TodayScreen() {
     const actionLabel = job.status === 'scheduled' ? 'Start Job' : 'Complete Job';
 
     return (
-      <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
+      <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
         key={job.id}
         style={styles.card}
         onPress={() => router.push(`/job/${job.id}`)}
@@ -128,7 +129,7 @@ export default function TodayScreen() {
         <View style={styles.cardFooter}>
           <Text style={styles.cardAmount}>${job.total.toFixed(2)}</Text>
           {canAct && (
-            <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
+            <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
               style={[styles.actionBtn, { backgroundColor: STATUS_COLORS[job.status === 'scheduled' ? 'in-progress' : 'completed'] }]}
               onPress={() => handleQuickAction(job)}
             >
@@ -145,7 +146,7 @@ export default function TodayScreen() {
     const preview = tomorrowExpanded ? tomorrowJobs : tomorrowJobs.slice(0, 3);
     return (
       <View style={styles.tomorrowSection}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
+        <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
           style={styles.tomorrowHeader}
           onPress={() => setTomorrowExpanded(!tomorrowExpanded)}
         >
@@ -158,7 +159,7 @@ export default function TodayScreen() {
           const customer = getCustomerById(job.customerId);
           const name = customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown';
           return (
-            <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
+            <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
               key={job.id}
               style={styles.tomorrowCard}
               onPress={() => router.push(`/job/${job.id}`)}
@@ -170,7 +171,7 @@ export default function TodayScreen() {
           );
         })}
         {!tomorrowExpanded && tomorrowJobs.length > 3 && (
-          <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action" onPress={() => setTomorrowExpanded(true)}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Show more tomorrow jobs" onPress={() => setTomorrowExpanded(true)}>
             <Text style={styles.showMore}>+{tomorrowJobs.length - 3} more</Text>
           </Pressable>
         )}
@@ -181,7 +182,7 @@ export default function TodayScreen() {
   if (loading && jobs.length === 0) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#EA580C" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
@@ -221,7 +222,7 @@ export default function TodayScreen() {
           <Text style={styles.emptyIcon}>📭</Text>
           <Text style={styles.emptyTitle}>No jobs scheduled for today</Text>
           <Text style={styles.emptySubtitle}>Your day is wide open — schedule a job to get started.</Text>
-          <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
+          <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
             style={styles.ctaButton}
             onPress={() => router.push(`/job/new?scheduledDate=${today}`)}
           >
@@ -238,11 +239,11 @@ export default function TodayScreen() {
           ListFooterComponent={footer}
           contentContainerStyle={styles.list}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#EA580C" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
           }
         />
       )}
-      <Pressable accessibilityRole="button" accessibilityLabel="Tap to activate action"
+      <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
         style={styles.fab}
         onPress={() => router.push(`/job/new?scheduledDate=${today}`)}
       >
@@ -253,7 +254,7 @@ export default function TodayScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: theme.colors.background },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 },
   list: { padding: 16 },
   dateHeader: { fontSize: 26, fontWeight: 'bold', color: '#111', marginBottom: 12 },
@@ -270,7 +271,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
-  statValue: { fontSize: 22, fontWeight: 'bold', color: '#EA580C' },
+  statValue: { fontSize: 22, fontWeight: 'bold', color: theme.colors.primary },
   statLabel: { fontSize: 12, color: '#666', marginTop: 2 },
   card: {
     backgroundColor: '#fff',
@@ -296,7 +297,7 @@ const styles = StyleSheet.create({
   emptyIcon: { fontSize: 48, marginBottom: 12, marginTop: 20 },
   emptyTitle: { fontSize: 18, color: '#666', marginBottom: 6 },
   emptySubtitle: { fontSize: 14, color: '#999', marginBottom: 20, textAlign: 'center', maxWidth: 260 },
-  ctaButton: { backgroundColor: '#EA580C', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 10 },
+  ctaButton: { backgroundColor: theme.colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 10 },
   ctaText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   fab: {
     position: 'absolute',
@@ -305,7 +306,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#EA580C',
+    backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -331,5 +332,5 @@ const styles = StyleSheet.create({
   tomorrowTime: { fontSize: 13, color: '#888', width: 70 },
   tomorrowName: { flex: 1, fontSize: 15, color: '#333' },
   tomorrowAmount: { fontSize: 14, fontWeight: '600', color: '#111' },
-  showMore: { textAlign: 'center', color: '#EA580C', fontSize: 14, fontWeight: '500', marginTop: 4 },
+  showMore: { textAlign: 'center', color: theme.colors.primary, fontSize: 14, fontWeight: '500', marginTop: 4 },
 });
