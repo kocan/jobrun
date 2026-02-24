@@ -29,7 +29,7 @@ const STATUS_COLORS: Record<JobStatus, string> = {
   scheduled: theme.colors.status.scheduled,
   'in-progress': theme.colors.status.inProgress,
   completed: theme.colors.status.completed,
-  cancelled: '#9CA3AF',
+  cancelled: theme.colors.status.cancelled,
 };
 
 const STATUS_LABELS: Record<JobStatus, string> = {
