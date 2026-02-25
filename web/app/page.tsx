@@ -6,6 +6,8 @@ function WaitlistForm({ className = '' }: { className?: string }) {
   const [email, setEmail] = useState('');
   const [state, setState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const emailFieldId = 'waitlist-email';
+  const waitlistFeedbackId = 'waitlist-feedback';
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -41,24 +43,39 @@ function WaitlistForm({ className = '' }: { className?: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className={`flex flex-col sm:flex-row gap-3 justify-center ${className}`}>
+    <form
+      onSubmit={handleSubmit}
+      className={`flex flex-col sm:flex-row gap-3 justify-center ${className}`}
+      aria-label="Join the waitlist form"
+    >
+      <label htmlFor={emailFieldId} className="sr-only">Email address</label>
       <input
+        id={emailFieldId}
         type="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="your@email.com"
-        className="px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white flex-1 max-w-sm focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+        className="px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white flex-1 max-w-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
         required
+        aria-required="true"
+        aria-label="Email address"
+        aria-invalid={state === 'error'}
+        aria-describedby={state === 'error' ? waitlistFeedbackId : undefined}
         disabled={state === 'loading'}
       />
       <button
         type="submit"
         disabled={state === 'loading'}
-        className="px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50"
+        aria-label="Join the waitlist"
+        className="px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
       >
         {state === 'loading' ? 'Joining...' : 'Join the Waitlist'}
       </button>
-      {state === 'error' && <p className="text-red-600 dark:text-red-400 text-sm mt-1 sm:mt-0 sm:self-center">{message}</p>}
+      {state === 'error' && (
+        <p id={waitlistFeedbackId} role="alert" className="text-red-600 dark:text-red-400 text-sm mt-1 sm:mt-0 sm:self-center">
+          {message}
+        </p>
+      )}
     </form>
   );
 }
@@ -73,7 +90,7 @@ export default function Home() {
         </span>
         <a
           href="#waitlist"
-          className="px-4 py-2 bg-orange-600 text-white text-sm font-semibold rounded-lg hover:bg-orange-700 transition-colors"
+          className="px-4 py-2 bg-orange-600 text-white text-sm font-semibold rounded-lg hover:bg-orange-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
         >
           Join Waitlist
         </a>

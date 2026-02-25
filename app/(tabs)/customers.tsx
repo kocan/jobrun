@@ -1,9 +1,11 @@
-import { View, Text, TextInput, FlatList, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, FlatList, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState, useMemo, useCallback } from 'react';
 import { useCustomers } from '../../contexts/CustomerContext';
 import { filterCustomers } from '../../lib/db/repositories/customers';
 import { theme } from '../../lib/theme';
+import { LoadingState } from '../../components/LoadingState';
+import { EmptyState } from '../../components/EmptyState';
 
 export default function CustomersScreen() {
   const { customers, loading, refreshCustomers } = useCustomers();
@@ -29,11 +31,7 @@ export default function CustomersScreen() {
   );
 
   if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
-    );
+    return <LoadingState message="Loading customers..." accessibilityLabel="Loading customers" />;
   }
 
   return (
@@ -53,9 +51,11 @@ export default function CustomersScreen() {
         refreshing={loading}
         ListEmptyComponent={
           <View style={styles.center}>
-            <Text style={styles.emptyIcon}>👥</Text>
-            <Text style={styles.emptyTitle}>No customers yet</Text>
-            <Text style={styles.emptySubtitle}>Tap + to add your first customer</Text>
+            <EmptyState
+              icon="👥"
+              title="No customers yet"
+              subtitle="Tap + to add your first customer"
+            />
           </View>
         }
         contentContainerStyle={filtered.length === 0 ? styles.emptyContainer : undefined}
@@ -108,7 +108,4 @@ const styles = StyleSheet.create({
   },
   fabText: { color: theme.colors.white, fontSize: 28, lineHeight: 30 },
   emptyContainer: { flexGrow: 1 },
-  emptyIcon: { fontSize: 48, marginBottom: 12 },
-  emptyTitle: { fontSize: 20, fontWeight: '600', color: theme.colors.text },
-  emptySubtitle: { fontSize: 15, color: theme.colors.textMuted, marginTop: 4 },
 });

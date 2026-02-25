@@ -1,5 +1,5 @@
 import { getLocalDateString, getTomorrowDateString, computeStats } from '../lib/dateUtils';
-import { filterJobsByDate } from '../lib/storage/jobs';
+import { filterJobsByDate } from '../lib/db/repositories/jobs';
 import { Job } from '../lib/types';
 
 describe('dateUtils', () => {

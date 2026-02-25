@@ -278,7 +278,13 @@ export default function EstimateDetailScreen() {
                     </View>
                     <View style={styles.lineItemRight}>
                       <Text style={styles.lineItemTotal}>${(li.unitPrice * li.quantity).toFixed(2)}</Text>
-                      <Pressable accessibilityRole="button" accessibilityLabel="Activate action" onPress={() => removeLineItem(li.id)}>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Remove line item"
+                        style={styles.lineItemRemoveButton}
+                        hitSlop={8}
+                        onPress={() => removeLineItem(li.id)}
+                      >
                         <Text style={styles.lineItemRemove}>✕</Text>
                       </Pressable>
                     </View>
@@ -630,7 +636,13 @@ const styles = StyleSheet.create({
   },
   lineItemRight: { alignItems: 'flex-end', marginLeft: 12 },
   lineItemTotal: { fontSize: 16, fontWeight: '600', color: '#111' },
-  lineItemRemove: { fontSize: 18, color: '#EF4444', minWidth: 44, minHeight: 44, textAlign: 'center' as const, lineHeight: 44, padding: 4 },
+  lineItemRemoveButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lineItemRemove: { fontSize: 18, color: '#EF4444' },
   addServiceBtn: {
     paddingVertical: 12, alignItems: 'center', borderWidth: 1, borderColor: '#EA580C',
     borderRadius: 8, borderStyle: 'dashed', marginTop: 8,
