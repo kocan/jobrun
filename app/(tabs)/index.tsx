@@ -5,7 +5,6 @@ import {
   FlatList,
   Pressable,
   RefreshControl,
-  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMemo, useState, useCallback } from 'react';
@@ -14,6 +13,9 @@ import { useCustomers } from '../../contexts/CustomerContext';
 import { Job, JobStatus } from '../../lib/types';
 import { getLocalDateString, getTomorrowDateString, computeStats } from '../../lib/dateUtils';
 import { theme } from '../../lib/theme';
+import { LoadingState } from '../../components/LoadingState';
+import { EmptyState } from '../../components/EmptyState';
+import { ErrorState } from '../../components/ErrorState';
 
 const STATUS_COLORS: Record<JobStatus, string> = {
   scheduled: theme.colors.status.scheduled,
@@ -60,6 +62,7 @@ export default function TodayScreen() {
   const { getCustomerById } = useCustomers();
   const [refreshing, setRefreshing] = useState(false);
   const [tomorrowExpanded, setTomorrowExpanded] = useState(false);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
 
   const today = getLocalDateString();
   const tomorrow = getTomorrowDateString();
@@ -84,8 +87,14 @@ export default function TodayScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await refreshJobs();
-    setRefreshing(false);
+    setRefreshError(null);
+    try {
+      await refreshJobs();
+    } catch {
+      setRefreshError('Unable to refresh jobs right now.');
+    } finally {
+      setRefreshing(false);
+    }
   }, [refreshJobs]);
 
   const handleQuickAction = useCallback(
@@ -180,11 +189,7 @@ export default function TodayScreen() {
   };
 
   if (loading && jobs.length === 0) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
-    );
+    return <LoadingState message="Loading today’s jobs..." accessibilityLabel="Loading today's jobs" />;
   }
 
   const header = (
@@ -219,15 +224,21 @@ export default function TodayScreen() {
       {todayJobs.length === 0 ? (
         <View style={styles.centered}>
           {header}
-          <Text style={styles.emptyIcon}>📭</Text>
-          <Text style={styles.emptyTitle}>No jobs scheduled for today</Text>
-          <Text style={styles.emptySubtitle}>Your day is wide open — schedule a job to get started.</Text>
-          <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
-            style={styles.ctaButton}
-            onPress={() => router.push(`/job/new?scheduledDate=${today}`)}
-          >
-            <Text style={styles.ctaText}>+ Schedule a Job</Text>
-          </Pressable>
+          {refreshError ? (
+            <ErrorState
+              message={refreshError}
+              retryLabel="Retry refresh"
+              onRetry={onRefresh}
+            />
+          ) : (
+            <EmptyState
+              icon="📭"
+              title="No jobs scheduled for today"
+              subtitle="Your day is wide open — schedule a job to get started."
+              ctaLabel="+ Schedule a Job"
+              onPressCta={() => router.push(`/job/new?scheduledDate=${today}`)}
+            />
+          )}
           {renderTomorrowSection()}
         </View>
       ) : (
@@ -294,11 +305,6 @@ const styles = StyleSheet.create({
   cardAmount: { fontSize: 16, fontWeight: '700', color: theme.colors.text },
   actionBtn: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8 },
   actionBtnText: { color: theme.colors.white, fontSize: 13, fontWeight: '600' },
-  emptyIcon: { fontSize: 48, marginBottom: 12, marginTop: 20 },
-  emptyTitle: { fontSize: 18, color: theme.colors.textMuted, marginBottom: 6 },
-  emptySubtitle: { fontSize: 14, color: theme.colors.gray400, marginBottom: 20, textAlign: 'center', maxWidth: 260 },
-  ctaButton: { backgroundColor: theme.colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 10 },
-  ctaText: { color: theme.colors.white, fontSize: 16, fontWeight: '600' },
   fab: {
     position: 'absolute',
     right: 20,

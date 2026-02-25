@@ -5,7 +5,6 @@ import {
   Pressable,
   ScrollView,
   RefreshControl,
-  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMemo, useState, useCallback } from 'react';
@@ -13,6 +12,9 @@ import { useJobs } from '../../contexts/JobContext';
 import { useCustomers } from '../../contexts/CustomerContext';
 import { Job, JobStatus } from '../../lib/types';
 import { theme } from '../../lib/theme';
+import { LoadingState } from '../../components/LoadingState';
+import { EmptyState } from '../../components/EmptyState';
+import { ErrorState } from '../../components/ErrorState';
 import {
   getLocalDateString,
   getWeekStart,
@@ -53,6 +55,7 @@ export default function CalendarScreen() {
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString());
+  const [refreshError, setRefreshError] = useState<string | null>(null);
 
   const today = getLocalDateString();
 
@@ -116,12 +119,17 @@ export default function CalendarScreen() {
     router.push(`/job/new${date ? `?date=${date}` : ''}`);
   };
 
+  const onRefresh = useCallback(async () => {
+    setRefreshError(null);
+    try {
+      await refreshJobs();
+    } catch {
+      setRefreshError('Unable to refresh calendar right now.');
+    }
+  }, [refreshJobs]);
+
   if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
-    );
+    return <LoadingState message="Loading calendar..." accessibilityLabel="Loading calendar" />;
   }
 
   return (
@@ -168,7 +176,7 @@ export default function CalendarScreen() {
       {viewMode === 'week' ? (
         <ScrollView
           style={styles.flex}
-          refreshControl={<RefreshControl refreshing={loading} onRefresh={refreshJobs} />}
+          refreshControl={<RefreshControl refreshing={loading} onRefresh={onRefresh} />}
         >
           {/* Week day headers */}
           <View style={styles.weekRow}>
@@ -205,11 +213,15 @@ export default function CalendarScreen() {
               {formatDayHeader(selectedDate)} · {selectedDayJobs.length} job{selectedDayJobs.length !== 1 ? 's' : ''}
             </Text>
             {selectedDayJobs.length === 0 ? (
-              <View style={styles.emptyDay}>
-                <Text style={styles.emptyDayIcon}>📅</Text>
-                <Text style={styles.emptyDayTitle}>No jobs scheduled</Text>
-                <Text style={styles.emptyDaySubtitle}>This day is free — tap + to add a job.</Text>
-              </View>
+              refreshError ? (
+                <ErrorState message={refreshError} retryLabel="Retry refresh" onRetry={onRefresh} />
+              ) : (
+                <EmptyState
+                  icon="📅"
+                  title="No jobs scheduled"
+                  subtitle="This day is free — tap + to add a job."
+                />
+              )
             ) : (
               selectedDayJobs.map((job) => (
                 <JobCard key={job.id} job={job} customerName={customerMap[job.customerId]} onPress={handleJobPress} />
@@ -221,7 +233,7 @@ export default function CalendarScreen() {
         /* Day view - timeline */
         <ScrollView
           style={styles.flex}
-          refreshControl={<RefreshControl refreshing={loading} onRefresh={refreshJobs} />}
+          refreshControl={<RefreshControl refreshing={loading} onRefresh={onRefresh} />}
         >
           <View style={styles.timeline}>
             {HOURS.map((hour) => (
