@@ -73,7 +73,7 @@ export default function InvoiceDetailScreen() {
   }>();
   const router = useRouter();
   const { getInvoiceById, addInvoice, updateInvoice, deleteInvoice, createInvoiceFromJob, createInvoiceFromEstimate, markAsPaid } = useInvoices();
-  const { customers, getCustomerById } = useCustomers();
+  const { customers, getCustomerById, addCustomer } = useCustomers();
   const { getJobById } = useJobs();
   const { settings: appSettings } = useSettings();
   const { getEstimateById } = useEstimates();
@@ -419,6 +419,7 @@ export default function InvoiceDetailScreen() {
           setCustomerPickerVisible(false);
         }}
         onClose={() => setCustomerPickerVisible(false)}
+        onAddCustomer={async (data) => addCustomer(data)}
       />
 
       <ServicePicker

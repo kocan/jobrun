@@ -67,7 +67,7 @@ export default function EstimateDetailScreen() {
   const { id, customerId: preselectedCustomerId } = useLocalSearchParams<{ id: string; customerId?: string }>();
   const router = useRouter();
   const { getEstimateById, addEstimate, updateEstimate, deleteEstimate } = useEstimates();
-  const { customers, getCustomerById } = useCustomers();
+  const { customers, getCustomerById, addCustomer } = useCustomers();
   const { addJob } = useJobs();
   const { getActiveServices } = usePriceBook();
   const { getInvoiceByJobId } = useInvoices();
@@ -356,6 +356,7 @@ export default function EstimateDetailScreen() {
           setCustomerPickerVisible(false);
         }}
         onClose={() => setCustomerPickerVisible(false)}
+        onAddCustomer={async (data) => addCustomer(data)}
       />
 
       <ServicePicker

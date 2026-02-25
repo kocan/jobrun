@@ -62,7 +62,7 @@ export default function JobDetailScreen() {
   const { id, customerId: preselectedCustomerId, scheduledDate: preselectedDate, date: preselectedDate2 } = useLocalSearchParams<{ id: string; customerId?: string; scheduledDate?: string; date?: string }>();
   const router = useRouter();
   const { getJobById, addJob, updateJob, deleteJob } = useJobs();
-  const { customers, getCustomerById } = useCustomers();
+  const { customers, getCustomerById, addCustomer } = useCustomers();
   const { getActiveServices } = usePriceBook();
   const { getInvoiceByJobId } = useInvoices();
   const [servicePickerVisible, setServicePickerVisible] = useState(false);
@@ -349,6 +349,7 @@ export default function JobDetailScreen() {
           setCustomerPickerVisible(false);
         }}
         onClose={() => setCustomerPickerVisible(false)}
+        onAddCustomer={async (data) => addCustomer(data)}
       />
 
       <ServicePicker
