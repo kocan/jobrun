@@ -39,12 +39,12 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 15,
-    color: theme.colors.error,
+    color: theme.colors.status.cancelled,
     textAlign: 'center',
   },
   retryButton: {
     marginTop: 14,
-    backgroundColor: theme.colors.error,
+    backgroundColor: theme.colors.status.cancelled,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 10,

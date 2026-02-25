@@ -1,3 +1,5 @@
+import { VerticalId } from '../types';
+
 export interface CustomerRow {
   id: string;
   first_name: string;
@@ -9,7 +11,7 @@ export interface CustomerRow {
   state: string | null;
   zip: string | null;
   notes: string | null;
-  vertical_id: string | null;
+  vertical_id: VerticalId | null;
   sync_status: string;
   created_at: string;
   updated_at: string;
