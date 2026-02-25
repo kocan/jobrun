@@ -32,7 +32,7 @@ export default function PickVerticalScreen() {
 
         <View style={styles.grid}>
           {verticals.map((v) => (
-            <Pressable
+            <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
               key={v.id}
               style={[styles.card, selected === v.id && styles.cardSelected]}
               onPress={() => setSelected(v.id)}
@@ -42,7 +42,7 @@ export default function PickVerticalScreen() {
               <Text style={styles.cardDesc}>{v.defaultServices.length} services included</Text>
             </Pressable>
           ))}
-          <Pressable
+          <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
             style={[styles.card, selected === 'custom' && styles.cardSelected]}
             onPress={() => setSelected('custom')}
           >
@@ -59,7 +59,7 @@ export default function PickVerticalScreen() {
           <View style={[styles.dot, styles.dotActive]} />
           <View style={styles.dot} />
         </View>
-        <Pressable
+        <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
           style={[styles.button, !selected && styles.buttonDisabled]}
           onPress={handleNext}
           disabled={!selected}

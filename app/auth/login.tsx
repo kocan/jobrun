@@ -58,13 +58,13 @@ export default function LoginScreen() {
             <Text style={styles.successText}>
               We sent a login link to {email}. Tap it to sign in.
             </Text>
-            <Pressable style={styles.retryButton} onPress={() => setSent(false)}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Retry login" style={styles.retryButton} onPress={() => setSent(false)}>
               <Text style={styles.retryText}>Use a different email</Text>
             </Pressable>
           </View>
         ) : (
           <>
-            <TextInput
+            <TextInput accessibilityRole="text" accessibilityLabel="Text input"
               style={styles.input}
               placeholder="you@example.com"
               placeholderTextColor="#999"
@@ -78,7 +78,7 @@ export default function LoginScreen() {
 
             {error && <Text style={styles.error}>{error}</Text>}
 
-            <Pressable
+            <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
               style={[styles.button, sending && styles.buttonDisabled]}
               onPress={handleSend}
               disabled={sending}
@@ -90,7 +90,7 @@ export default function LoginScreen() {
           </>
         )}
 
-        <Pressable style={styles.skipButton} onPress={skipAuth}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Skip login for now" style={styles.skipButton} onPress={skipAuth}>
           <Text style={styles.skipText}>Continue without account</Text>
         </Pressable>
       </View>

@@ -32,7 +32,7 @@ export default function BusinessInfoScreen() {
 
           <View style={styles.field}>
             <Text style={styles.label}>Business Name *</Text>
-            <TextInput
+            <TextInput accessibilityRole="text" accessibilityLabel="Text input"
               style={styles.input}
               value={name}
               onChangeText={setName}
@@ -43,7 +43,7 @@ export default function BusinessInfoScreen() {
           </View>
           <View style={styles.field}>
             <Text style={styles.label}>Phone (optional)</Text>
-            <TextInput
+            <TextInput accessibilityRole="text" accessibilityLabel="Text input"
               style={styles.input}
               value={phone}
               onChangeText={setPhone}
@@ -54,7 +54,7 @@ export default function BusinessInfoScreen() {
           </View>
           <View style={styles.field}>
             <Text style={styles.label}>Email (optional)</Text>
-            <TextInput
+            <TextInput accessibilityRole="text" accessibilityLabel="Text input"
               style={styles.input}
               value={email}
               onChangeText={setEmail}
@@ -72,7 +72,7 @@ export default function BusinessInfoScreen() {
             <View style={styles.dot} />
             <View style={styles.dot} />
           </View>
-          <Pressable
+          <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
             style={[styles.button, !canContinue && styles.buttonDisabled]}
             onPress={handleNext}
             disabled={!canContinue}

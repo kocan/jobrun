@@ -13,12 +13,13 @@ import { useJobs } from '../../contexts/JobContext';
 import { useCustomers } from '../../contexts/CustomerContext';
 import { Job, JobStatus } from '../../lib/types';
 import { getLocalDateString, getTomorrowDateString, computeStats } from '../../lib/dateUtils';
+import { theme } from '../../lib/theme';
 
 const STATUS_COLORS: Record<JobStatus, string> = {
-  scheduled: '#3B82F6',
-  'in-progress': '#F59E0B',
-  completed: '#10B981',
-  cancelled: '#9CA3AF',
+  scheduled: theme.colors.status.scheduled,
+  'in-progress': theme.colors.status.inProgress,
+  completed: theme.colors.status.completed,
+  cancelled: theme.colors.gray400,
 };
 
 const STATUS_LABELS: Record<JobStatus, string> = {
@@ -112,7 +113,7 @@ export default function TodayScreen() {
     const actionLabel = job.status === 'scheduled' ? 'Start Job' : 'Complete Job';
 
     return (
-      <Pressable
+      <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
         key={job.id}
         style={styles.card}
         onPress={() => router.push(`/job/${job.id}`)}
@@ -128,7 +129,7 @@ export default function TodayScreen() {
         <View style={styles.cardFooter}>
           <Text style={styles.cardAmount}>${job.total.toFixed(2)}</Text>
           {canAct && (
-            <Pressable
+            <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
               style={[styles.actionBtn, { backgroundColor: STATUS_COLORS[job.status === 'scheduled' ? 'in-progress' : 'completed'] }]}
               onPress={() => handleQuickAction(job)}
             >
@@ -145,7 +146,7 @@ export default function TodayScreen() {
     const preview = tomorrowExpanded ? tomorrowJobs : tomorrowJobs.slice(0, 3);
     return (
       <View style={styles.tomorrowSection}>
-        <Pressable
+        <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
           style={styles.tomorrowHeader}
           onPress={() => setTomorrowExpanded(!tomorrowExpanded)}
         >
@@ -158,7 +159,7 @@ export default function TodayScreen() {
           const customer = getCustomerById(job.customerId);
           const name = customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown';
           return (
-            <Pressable
+            <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
               key={job.id}
               style={styles.tomorrowCard}
               onPress={() => router.push(`/job/${job.id}`)}
@@ -170,7 +171,7 @@ export default function TodayScreen() {
           );
         })}
         {!tomorrowExpanded && tomorrowJobs.length > 3 && (
-          <Pressable onPress={() => setTomorrowExpanded(true)}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Show more tomorrow jobs" onPress={() => setTomorrowExpanded(true)}>
             <Text style={styles.showMore}>+{tomorrowJobs.length - 3} more</Text>
           </Pressable>
         )}
@@ -181,7 +182,7 @@ export default function TodayScreen() {
   if (loading && jobs.length === 0) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#EA580C" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
@@ -221,7 +222,7 @@ export default function TodayScreen() {
           <Text style={styles.emptyIcon}>📭</Text>
           <Text style={styles.emptyTitle}>No jobs scheduled for today</Text>
           <Text style={styles.emptySubtitle}>Your day is wide open — schedule a job to get started.</Text>
-          <Pressable
+          <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
             style={styles.ctaButton}
             onPress={() => router.push(`/job/new?scheduledDate=${today}`)}
           >
@@ -238,11 +239,11 @@ export default function TodayScreen() {
           ListFooterComponent={footer}
           contentContainerStyle={styles.list}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#EA580C" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
           }
         />
       )}
-      <Pressable
+      <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
         style={styles.fab}
         onPress={() => router.push(`/job/new?scheduledDate=${today}`)}
       >
@@ -253,51 +254,51 @@ export default function TodayScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: theme.colors.background },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 },
   list: { padding: 16 },
-  dateHeader: { fontSize: 26, fontWeight: 'bold', color: '#111', marginBottom: 12 },
+  dateHeader: { fontSize: 26, fontWeight: 'bold', color: theme.colors.text, marginBottom: 12 },
   statsRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   statBox: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.white,
     borderRadius: 12,
     padding: 14,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: theme.colors.black,
     shadowOpacity: 0.05,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
-  statValue: { fontSize: 22, fontWeight: 'bold', color: '#EA580C' },
-  statLabel: { fontSize: 12, color: '#666', marginTop: 2 },
+  statValue: { fontSize: 22, fontWeight: 'bold', color: theme.colors.primary },
+  statLabel: { fontSize: 12, color: theme.colors.textMuted, marginTop: 2 },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.white,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: theme.colors.black,
     shadowOpacity: 0.05,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  cardTime: { fontSize: 14, color: '#666', fontWeight: '500' },
+  cardTime: { fontSize: 14, color: theme.colors.textMuted, fontWeight: '500' },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 },
-  badgeText: { color: '#fff', fontSize: 11, fontWeight: '600' },
-  cardCustomer: { fontSize: 17, fontWeight: '600', color: '#111', marginBottom: 2 },
-  cardAddress: { fontSize: 13, color: '#888', marginBottom: 8 },
+  badgeText: { color: theme.colors.white, fontSize: 11, fontWeight: '600' },
+  cardCustomer: { fontSize: 17, fontWeight: '600', color: theme.colors.text, marginBottom: 2 },
+  cardAddress: { fontSize: 13, color: theme.colors.gray400, marginBottom: 8 },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
-  cardAmount: { fontSize: 16, fontWeight: '700', color: '#111' },
+  cardAmount: { fontSize: 16, fontWeight: '700', color: theme.colors.text },
   actionBtn: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8 },
-  actionBtnText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  actionBtnText: { color: theme.colors.white, fontSize: 13, fontWeight: '600' },
   emptyIcon: { fontSize: 48, marginBottom: 12, marginTop: 20 },
-  emptyTitle: { fontSize: 18, color: '#666', marginBottom: 6 },
-  emptySubtitle: { fontSize: 14, color: '#999', marginBottom: 20, textAlign: 'center', maxWidth: 260 },
-  ctaButton: { backgroundColor: '#EA580C', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 10 },
-  ctaText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  emptyTitle: { fontSize: 18, color: theme.colors.textMuted, marginBottom: 6 },
+  emptySubtitle: { fontSize: 14, color: theme.colors.gray400, marginBottom: 20, textAlign: 'center', maxWidth: 260 },
+  ctaButton: { backgroundColor: theme.colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 10 },
+  ctaText: { color: theme.colors.white, fontSize: 16, fontWeight: '600' },
   fab: {
     position: 'absolute',
     right: 20,
@@ -305,31 +306,31 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#EA580C',
+    backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+    shadowColor: theme.colors.black,
     shadowOpacity: 0.2,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 3 },
     elevation: 5,
   },
-  fabText: { color: '#fff', fontSize: 28, fontWeight: '300', marginTop: -2 },
+  fabText: { color: theme.colors.white, fontSize: 28, fontWeight: '300', marginTop: -2 },
   tomorrowSection: { marginTop: 20 },
   tomorrowHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  tomorrowTitle: { fontSize: 18, fontWeight: '600', color: '#444' },
-  chevron: { fontSize: 14, color: '#888' },
+  tomorrowTitle: { fontSize: 18, fontWeight: '600', color: theme.colors.gray700 },
+  chevron: { fontSize: 14, color: theme.colors.gray400 },
   tomorrowCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.white,
     borderRadius: 10,
     padding: 12,
     marginBottom: 8,
     gap: 12,
   },
-  tomorrowTime: { fontSize: 13, color: '#888', width: 70 },
-  tomorrowName: { flex: 1, fontSize: 15, color: '#333' },
-  tomorrowAmount: { fontSize: 14, fontWeight: '600', color: '#111' },
-  showMore: { textAlign: 'center', color: '#EA580C', fontSize: 14, fontWeight: '500', marginTop: 4 },
+  tomorrowTime: { fontSize: 13, color: theme.colors.gray400, width: 70 },
+  tomorrowName: { flex: 1, fontSize: 15, color: theme.colors.gray700 },
+  tomorrowAmount: { fontSize: 14, fontWeight: '600', color: theme.colors.text },
+  showMore: { textAlign: 'center', color: theme.colors.primary, fontSize: 14, fontWeight: '500', marginTop: 4 },
 });

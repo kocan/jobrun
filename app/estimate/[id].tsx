@@ -232,7 +232,7 @@ export default function EstimateDetailScreen() {
           title,
           headerRight: () =>
             !isNew && !editing ? (
-              <Pressable onPress={() => setEditing(true)}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Enable edit mode" onPress={() => setEditing(true)}>
                 <Text style={styles.headerBtn}>Edit</Text>
               </Pressable>
             ) : null,
@@ -245,7 +245,7 @@ export default function EstimateDetailScreen() {
               {/* Customer Picker */}
               <View style={styles.field}>
                 <Text style={styles.label}>Customer *</Text>
-                <Pressable style={styles.pickerBtn} onPress={() => setCustomerPickerVisible(true)}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Open customer picker" style={styles.pickerBtn} onPress={() => setCustomerPickerVisible(true)}>
                   <Text style={[styles.pickerText, !form.customerId && styles.pickerPlaceholder]}>
                     {customerName}
                   </Text>
@@ -261,14 +261,14 @@ export default function EstimateDetailScreen() {
                       <Text style={styles.lineItemName}>{li.name}</Text>
                       <View style={styles.lineItemControls}>
                         <Text style={styles.lineItemLabel}>Qty:</Text>
-                        <TextInput
+                        <TextInput accessibilityRole="text" accessibilityLabel="Text input"
                           style={styles.lineItemQtyInput}
                           value={String(li.quantity)}
                           onChangeText={(v) => updateLineItem(li.id, { quantity: parseInt(v) || 1 })}
                           keyboardType="number-pad"
                         />
                         <Text style={styles.lineItemLabel}>@ $</Text>
-                        <TextInput
+                        <TextInput accessibilityRole="text" accessibilityLabel="Text input"
                           style={styles.lineItemPriceInput}
                           value={String(li.unitPrice)}
                           onChangeText={(v) => updateLineItem(li.id, { unitPrice: parseFloat(v) || 0 })}
@@ -278,13 +278,13 @@ export default function EstimateDetailScreen() {
                     </View>
                     <View style={styles.lineItemRight}>
                       <Text style={styles.lineItemTotal}>${(li.unitPrice * li.quantity).toFixed(2)}</Text>
-                      <Pressable onPress={() => removeLineItem(li.id)}>
+                      <Pressable accessibilityRole="button" accessibilityLabel="Activate action" onPress={() => removeLineItem(li.id)}>
                         <Text style={styles.lineItemRemove}>✕</Text>
                       </Pressable>
                     </View>
                   </View>
                 ))}
-                <Pressable style={styles.addServiceBtn} onPress={() => setServicePickerVisible(true)}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Add service line item" style={styles.addServiceBtn} onPress={() => setServicePickerVisible(true)}>
                   <Text style={styles.addServiceBtnText}>+ Add Service</Text>
                 </Pressable>
               </View>
@@ -292,7 +292,7 @@ export default function EstimateDetailScreen() {
               {/* Tax Rate */}
               <View style={styles.field}>
                 <Text style={styles.label}>Tax Rate (%)</Text>
-                <TextInput
+                <TextInput accessibilityRole="text" accessibilityLabel="Text input"
                   style={styles.input}
                   value={form.taxRate}
                   onChangeText={setField('taxRate')}
@@ -327,16 +327,16 @@ export default function EstimateDetailScreen() {
               {/* Notes */}
               <Field label="Notes / Terms" value={form.notes} onChange={setField('notes')} multiline placeholder="e.g. Estimate valid for 30 days" />
 
-              <Pressable style={styles.saveBtn} onPress={handleSave}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Save changes" style={styles.saveBtn} onPress={handleSave}>
                 <Text style={styles.saveBtnText}>{isNew ? 'Create Estimate' : 'Save Changes'}</Text>
               </Pressable>
               {!isNew && (
-                <Pressable style={styles.cancelBtn} onPress={() => setEditing(false)}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Cancel changes" style={styles.cancelBtn} onPress={() => setEditing(false)}>
                   <Text style={styles.cancelBtnText}>Cancel</Text>
                 </Pressable>
               )}
               {isNew && (
-                <Pressable style={styles.cancelBtn} onPress={() => router.back()}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Cancel changes" style={styles.cancelBtn} onPress={() => router.back()}>
                   <Text style={styles.cancelBtnText}>Cancel</Text>
                 </Pressable>
               )}
@@ -389,7 +389,7 @@ export default function EstimateDetailScreen() {
               {(form.status === 'draft' || form.status === 'sent') && (
                 <>
                   <Text style={styles.sectionTitle}>Share</Text>
-                  <Pressable
+                  <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
                     style={[styles.actionBtn, { backgroundColor: '#7C3AED' }]}
                     onPress={async () => {
                       const est = getEstimateById(id!);
@@ -407,7 +407,7 @@ export default function EstimateDetailScreen() {
                   >
                     <Text style={styles.actionBtnText}>📤 Share Estimate</Text>
                   </Pressable>
-                  <Pressable
+                  <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
                     style={[styles.actionBtn, { backgroundColor: '#6B7280' }]}
                     onPress={async () => {
                       const est = getEstimateById(id!);
@@ -429,37 +429,37 @@ export default function EstimateDetailScreen() {
               {/* Status Actions */}
               <Text style={styles.sectionTitle}>Actions</Text>
               {form.status === 'draft' && (
-                <Pressable style={[styles.actionBtn, { backgroundColor: '#3B82F6' }]} onPress={() => handleStatusChange('sent')}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={[styles.actionBtn, { backgroundColor: '#3B82F6' }]} onPress={() => handleStatusChange('sent')}>
                   <Text style={styles.actionBtnText}>✉ Mark as Sent</Text>
                 </Pressable>
               )}
               {form.status === 'sent' && (
                 <>
-                  <Pressable style={[styles.actionBtn, { backgroundColor: '#10B981' }]} onPress={() => handleStatusChange('accepted')}>
+                  <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={[styles.actionBtn, { backgroundColor: '#10B981' }]} onPress={() => handleStatusChange('accepted')}>
                     <Text style={styles.actionBtnText}>✓ Mark Accepted</Text>
                   </Pressable>
-                  <Pressable style={[styles.actionBtn, { backgroundColor: '#EF4444' }]} onPress={() => handleStatusChange('declined')}>
+                  <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={[styles.actionBtn, { backgroundColor: '#EF4444' }]} onPress={() => handleStatusChange('declined')}>
                     <Text style={styles.actionBtnText}>✕ Mark Declined</Text>
                   </Pressable>
                 </>
               )}
               {form.status === 'accepted' && !getEstimateById(id!)?.jobId && (
-                <Pressable style={[styles.actionBtn, { backgroundColor: '#EA580C' }]} onPress={handleConvertToJob}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={[styles.actionBtn, { backgroundColor: '#EA580C' }]} onPress={handleConvertToJob}>
                   <Text style={styles.actionBtnText}>🔧 Convert to Job</Text>
                 </Pressable>
               )}
               {form.status === 'accepted' && (
-                <Pressable style={[styles.actionBtn, { backgroundColor: '#7C3AED' }]} onPress={() => router.push({ pathname: '/invoice/[id]', params: { id: 'new', fromEstimate: id } })}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={[styles.actionBtn, { backgroundColor: '#7C3AED' }]} onPress={() => router.push({ pathname: '/invoice/[id]', params: { id: 'new', fromEstimate: id } })}>
                   <Text style={styles.actionBtnText}>📄 Create Invoice</Text>
                 </Pressable>
               )}
               {(form.status === 'declined' || form.status === 'expired') && (
-                <Pressable style={[styles.actionBtn, { backgroundColor: '#6B7280' }]} onPress={() => handleStatusChange('draft')}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={[styles.actionBtn, { backgroundColor: '#6B7280' }]} onPress={() => handleStatusChange('draft')}>
                   <Text style={styles.actionBtnText}>↻ Revert to Draft</Text>
                 </Pressable>
               )}
 
-              <Pressable style={styles.deleteBtn} onPress={handleDelete}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Delete record" style={styles.deleteBtn} onPress={handleDelete}>
                 <Text style={styles.deleteBtnText}>Delete Estimate</Text>
               </Pressable>
             </>
@@ -471,13 +471,13 @@ export default function EstimateDetailScreen() {
       <Modal visible={customerPickerVisible} animationType="slide" presentationStyle="pageSheet">
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Pressable onPress={() => { setCustomerPickerVisible(false); setCustomerSearch(''); }}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Close customer picker" onPress={() => { setCustomerPickerVisible(false); setCustomerSearch(''); }}>
               <Text style={styles.headerBtn}>Close</Text>
             </Pressable>
             <Text style={styles.modalTitle}>Select Customer</Text>
             <View style={{ width: 50 }} />
           </View>
-          <TextInput
+          <TextInput accessibilityRole="text" accessibilityLabel="Text input"
             style={styles.searchInput}
             placeholder="Search customers..."
             value={customerSearch}
@@ -488,7 +488,7 @@ export default function EstimateDetailScreen() {
             data={filteredCustomers}
             keyExtractor={(c) => c.id}
             renderItem={({ item }) => (
-              <Pressable
+              <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
                 style={styles.pickerRow}
                 onPress={() => {
                   setForm((f) => ({ ...f, customerId: item.id }));
@@ -509,7 +509,7 @@ export default function EstimateDetailScreen() {
       <Modal visible={servicePickerVisible} animationType="slide" presentationStyle="pageSheet">
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Pressable onPress={() => setServicePickerVisible(false)}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Close service picker" onPress={() => setServicePickerVisible(false)}>
               <Text style={styles.headerBtn}>Close</Text>
             </Pressable>
             <Text style={styles.modalTitle}>Add Service</Text>
@@ -519,7 +519,7 @@ export default function EstimateDetailScreen() {
             data={activeServices}
             keyExtractor={(s) => s.id}
             renderItem={({ item }) => (
-              <Pressable
+              <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
                 style={styles.pickerRow}
                 onPress={() => {
                   addLineItemFromService(item.id);
@@ -547,7 +547,7 @@ function Field({
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput
+      <TextInput accessibilityRole="text" accessibilityLabel="Text input"
         style={[styles.input, multiline && styles.inputMultiline]}
         value={value}
         onChangeText={onChange}
