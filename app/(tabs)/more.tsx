@@ -1,8 +1,12 @@
-import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSettings } from '../../contexts/SettingsContext';
+import { useCustomers } from '../../contexts/CustomerContext';
+import { useJobs } from '../../contexts/JobContext';
+import { useInvoices } from '../../contexts/InvoiceContext';
 import { verticals } from '../../constants/verticals';
 import { theme } from '../../lib/theme';
+import { customersToCSV, jobsToCSV, invoicesToCSV, shareCSV } from '../../lib/csvExport';
 
 const menuItems = [
   { label: 'Estimates', icon: '📝', route: '/estimate/new' as const, description: 'Create and manage estimates' },
@@ -14,7 +18,30 @@ const menuItems = [
 export default function MoreScreen() {
   const router = useRouter();
   const { settings } = useSettings();
+  const { customers } = useCustomers();
+  const { jobs } = useJobs();
+  const { invoices } = useInvoices();
   const vertical = verticals.find((v) => v.id === settings.selectedVertical);
+
+  const customerMap: Record<string, string> = {};
+  for (const c of customers) {
+    customerMap[c.id] = `${c.firstName} ${c.lastName}`.trim();
+  }
+
+  const handleExport = async (type: 'customers' | 'jobs' | 'invoices') => {
+    try {
+      const date = new Date().toISOString().split('T')[0];
+      if (type === 'customers') {
+        await shareCSV(customersToCSV(customers), `customers-${date}.csv`);
+      } else if (type === 'jobs') {
+        await shareCSV(jobsToCSV(jobs, customerMap), `jobs-${date}.csv`);
+      } else {
+        await shareCSV(invoicesToCSV(invoices, customerMap), `invoices-${date}.csv`);
+      }
+    } catch {
+      Alert.alert('Export Failed', 'Unable to export data. Please try again.');
+    }
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -42,6 +69,25 @@ export default function MoreScreen() {
           <Text style={styles.chevron}>›</Text>
         </Pressable>
       ))}
+
+      <Text style={styles.sectionHeader}>Export Data</Text>
+      <View style={styles.exportRow}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Export customers CSV" style={styles.exportBtn} onPress={() => handleExport('customers')}>
+          <Text style={styles.exportIcon}>👥</Text>
+          <Text style={styles.exportLabel}>Customers</Text>
+          <Text style={styles.exportCount}>{customers.length}</Text>
+        </Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel="Export jobs CSV" style={styles.exportBtn} onPress={() => handleExport('jobs')}>
+          <Text style={styles.exportIcon}>🔧</Text>
+          <Text style={styles.exportLabel}>Jobs</Text>
+          <Text style={styles.exportCount}>{jobs.length}</Text>
+        </Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel="Export invoices CSV" style={styles.exportBtn} onPress={() => handleExport('invoices')}>
+          <Text style={styles.exportIcon}>📄</Text>
+          <Text style={styles.exportLabel}>Invoices</Text>
+          <Text style={styles.exportCount}>{invoices.length}</Text>
+        </Pressable>
+      </View>
     </ScrollView>
   );
 }
@@ -69,4 +115,16 @@ const styles = StyleSheet.create({
   menuLabel: { fontSize: 17, fontWeight: '600', color: theme.colors.text },
   menuDesc: { fontSize: 14, color: theme.colors.textMuted, marginTop: 2 },
   chevron: { fontSize: 24, color: '#999', fontWeight: '300' },
+
+  // Export section
+  sectionHeader: { fontSize: 13, fontWeight: '700', color: theme.colors.gray400, textTransform: 'uppercase', letterSpacing: 1, marginTop: theme.spacing.xl, marginBottom: theme.spacing.md },
+  exportRow: { flexDirection: 'row', gap: 10 },
+  exportBtn: {
+    flex: 1, alignItems: 'center', padding: theme.spacing.lg,
+    backgroundColor: theme.colors.background, borderRadius: theme.radius.md,
+    borderWidth: 1, borderColor: theme.colors.border,
+  },
+  exportIcon: { fontSize: 24, marginBottom: 6 },
+  exportLabel: { fontSize: 14, fontWeight: '600', color: theme.colors.text },
+  exportCount: { fontSize: 12, color: theme.colors.gray400, marginTop: 2 },
 });
