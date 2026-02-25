@@ -9,12 +9,12 @@ let mockSettings: Record<string, string> = {};
 let mockInvoiceCounter = 1;
 
 const mockDb = {
-  execSync: jest.fn(),
-  runSync: jest.fn((sql: string, params?: any[]) => {
+  execSync: vi.fn(),
+  runSync: vi.fn((sql: string, params?: any[]) => {
     // Track for assertions
     return { changes: 1 };
   }),
-  getFirstSync: jest.fn((sql: string, params?: any[]) => {
+  getFirstSync: vi.fn((sql: string, params?: any[]) => {
     if (sql.includes('schema_version')) {
       return mockSettings['schema_version'] ? { value: mockSettings['schema_version'] } : null;
     }
@@ -23,15 +23,15 @@ const mockDb = {
     }
     return null;
   }),
-  getAllSync: jest.fn((sql: string, params?: any[]) => {
+  getAllSync: vi.fn((sql: string, params?: any[]) => {
     return [];
   }),
-  withTransactionSync: jest.fn((fn: () => void) => fn()),
-  closeSync: jest.fn(),
+  withTransactionSync: vi.fn((fn: () => void) => fn()),
+  closeSync: vi.fn(),
 };
 
-jest.mock('expo-sqlite', () => ({
-  openDatabaseSync: jest.fn(() => mockDb),
+vi.mock('expo-sqlite', () => ({
+  openDatabaseSync: vi.fn(() => mockDb),
 }));
 
 import { initializeDatabase, getDatabase, closeDatabase, _resetDb } from '../lib/db/database';

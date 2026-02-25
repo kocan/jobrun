@@ -44,7 +44,7 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci --legacy-peer-deps
-      - run: npx jest --ci
+      - run: npx vitest run
 
   lint-and-typecheck-web:
     name: Web — Lint & Typecheck
