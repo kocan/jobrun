@@ -30,7 +30,7 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci --legacy-peer-deps
-      - run: npm audit --audit-level=high
+      - run: npm audit --audit-level=high --legacy-peer-deps
       - run: npx tsc --noEmit
 
   test-mobile:
@@ -59,5 +59,31 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
+      - run: npm audit --audit-level=high
       - run: npm run lint
       - run: npx tsc --noEmit
+
+  build-web:
+    name: Web — Build
+    runs-on: ubuntu-latest
+    needs: [lint-and-typecheck-web]
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: Cache Next.js build
+        uses: actions/cache@v5
+        with:
+          path: web/.next/cache
+          key: nextjs-web-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}-${{ hashFiles('web/src/**') }}
+          restore-keys: |
+            nextjs-web-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}-
+            nextjs-web-${{ runner.os }}-
+      - run: npm run build
