@@ -5,14 +5,14 @@ import {
   filterInvoicesByDateRange,
   isValidInvoiceStatusTransition,
   calculateInvoiceTotals,
-} from '../lib/storage/invoices';
+} from '../lib/db/repositories/invoices';
 import {
   filterJobsByCustomer,
   filterJobsByStatus,
   filterJobsByDate,
   isValidStatusTransition,
-} from '../lib/storage/jobs';
-import { filterCustomers } from '../lib/storage/customers';
+} from '../lib/db/repositories/jobs';
+import { filterCustomers } from '../lib/db/repositories/customers';
 import type { Invoice, Job, Customer, InvoiceStatus, JobStatus } from '../lib/types';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────

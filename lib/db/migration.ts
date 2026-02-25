@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getDatabase } from './database';
 import { Customer, Job, Estimate, Invoice, PriceBookService } from '../types';
-import { AppSettings, defaultSettings } from '../storage/settings';
+import { AppSettings, defaultSettings } from '../db/repositories/settings';
 
 const MIGRATION_DONE_KEY = '@jobrun_sqlite_migrated';
 

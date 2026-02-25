@@ -5,7 +5,7 @@ import {
   filterInvoicesByDateRange,
   isValidInvoiceStatusTransition,
   calculateInvoiceTotals,
-} from '../lib/storage/invoices';
+} from '../lib/db/repositories/invoices';
 import type { Invoice, InvoiceStatus } from '../lib/types';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────

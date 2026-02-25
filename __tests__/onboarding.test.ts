@@ -1,6 +1,6 @@
 import { verticals } from '../constants/verticals';
-import { buildServicesFromDefaults } from '../lib/storage/priceBook';
-import { defaultSettings } from '../lib/storage/settings';
+import { buildServicesFromDefaults } from '../lib/db/repositories/priceBook';
+import { defaultSettings } from '../lib/db/repositories/settings';
 
 describe('Onboarding - Price Book Initialization', () => {
   test('each vertical has default services', () => {

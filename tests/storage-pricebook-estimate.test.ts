@@ -5,13 +5,13 @@ import {
   getActiveServices,
   calculateLineItemTotal,
   calculateTotal,
-} from '../lib/storage/priceBook';
+} from '../lib/db/repositories/priceBook';
 import {
   filterEstimatesByCustomer,
   filterEstimatesByStatus,
   isValidEstimateStatusTransition,
   calculateEstimateTotals,
-} from '../lib/storage/estimates';
+} from '../lib/db/repositories/estimates';
 import type { PriceBookService, DefaultServiceTemplate, Estimate, EstimateStatus } from '../lib/types';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
