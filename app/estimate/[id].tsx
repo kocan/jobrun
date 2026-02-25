@@ -1,4 +1,4 @@
-import { View, Text, TextInput, ScrollView, Pressable, Alert, StyleSheet, KeyboardAvoidingView, Platform, Modal, FlatList, Share } from 'react-native';
+import { View, Text, TextInput, ScrollView, Pressable, Alert, KeyboardAvoidingView, Platform, Modal, FlatList, Share } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useState, useEffect, useMemo } from 'react';
 import * as Crypto from 'expo-crypto';
@@ -12,6 +12,10 @@ import { EstimateStatus, LineItem } from '../../lib/types';
 import { isValidEstimateStatusTransition, calculateEstimateTotals } from '../../lib/db/repositories/estimates';
 import { buildShareUrl, buildShareMessage } from '../../lib/estimateSharing';
 import { useSettings } from '../../contexts/SettingsContext';
+import {
+  InfoRow, Field, StatusBadge, ActionButton, SectionTitle,
+  SaveButton, CancelButton, DeleteButton, detailStyles as styles,
+} from '../../components/DetailScreen';
 
 const STATUS_LABELS: Record<EstimateStatus, string> = {
   'draft': 'Draft',
@@ -296,16 +300,7 @@ export default function EstimateDetailScreen() {
               </View>
 
               {/* Tax Rate */}
-              <View style={styles.field}>
-                <Text style={styles.label}>Tax Rate (%)</Text>
-                <TextInput accessibilityRole="text" accessibilityLabel="Text input"
-                  style={styles.input}
-                  value={form.taxRate}
-                  onChangeText={setField('taxRate')}
-                  keyboardType="numeric"
-                  placeholder="0"
-                />
-              </View>
+              <Field label="Tax Rate (%)" value={form.taxRate} onChange={setField('taxRate')} keyboardType="numeric" placeholder="0" />
 
               {/* Totals */}
               {form.lineItems.length > 0 && (
@@ -327,39 +322,22 @@ export default function EstimateDetailScreen() {
                 </View>
               )}
 
-              {/* Expiration Date */}
               <Field label="Expires (YYYY-MM-DD)" value={form.expiresAt} onChange={setField('expiresAt')} />
-
-              {/* Notes */}
               <Field label="Notes / Terms" value={form.notes} onChange={setField('notes')} multiline placeholder="e.g. Estimate valid for 30 days" />
 
-              <Pressable accessibilityRole="button" accessibilityLabel="Save changes" style={styles.saveBtn} onPress={handleSave}>
-                <Text style={styles.saveBtnText}>{isNew ? 'Create Estimate' : 'Save Changes'}</Text>
-              </Pressable>
-              {!isNew && (
-                <Pressable accessibilityRole="button" accessibilityLabel="Cancel changes" style={styles.cancelBtn} onPress={() => setEditing(false)}>
-                  <Text style={styles.cancelBtnText}>Cancel</Text>
-                </Pressable>
-              )}
-              {isNew && (
-                <Pressable accessibilityRole="button" accessibilityLabel="Cancel changes" style={styles.cancelBtn} onPress={() => router.back()}>
-                  <Text style={styles.cancelBtnText}>Cancel</Text>
-                </Pressable>
-              )}
+              <SaveButton label={isNew ? 'Create Estimate' : 'Save Changes'} onPress={handleSave} />
+              <CancelButton onPress={() => isNew ? router.back() : setEditing(false)} />
             </>
           ) : (
             <>
-              {/* Status Badge */}
-              <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[form.status] }]}>  
-                <Text style={styles.statusBadgeText}>{STATUS_LABELS[form.status]}</Text>
-              </View>
+              <StatusBadge label={STATUS_LABELS[form.status]} color={STATUS_COLORS[form.status]} />
 
               <InfoRow label="Customer" value={customerName} />
 
               {/* Line Items Table */}
               {form.lineItems.length > 0 && (
                 <View style={styles.field}>
-                  <Text style={styles.sectionTitle}>Line Items</Text>
+                  <SectionTitle title="Line Items" />
                   {form.lineItems.map((li) => (
                     <View key={li.id} style={styles.viewLineItem}>
                       <View style={styles.viewLineItemLeft}>
@@ -394,80 +372,54 @@ export default function EstimateDetailScreen() {
               {/* Share Actions */}
               {(form.status === 'draft' || form.status === 'sent') && (
                 <>
-                  <Text style={styles.sectionTitle}>Share</Text>
-                  <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
-                    style={[styles.actionBtn, { backgroundColor: '#7C3AED' }]}
-                    onPress={async () => {
-                      const est = getEstimateById(id!);
-                      if (!est) return;
-                      const name = customerName;
-                      const message = buildShareMessage(est, name, appSettings.businessName || undefined);
-                      try {
-                        await Share.share({ message });
-                        if (est.status === 'draft') {
-                          await updateEstimate(id!, { status: 'sent' });
-                          setForm((f) => ({ ...f, status: 'sent' }));
-                        }
-                      } catch {}
-                    }}
-                  >
-                    <Text style={styles.actionBtnText}>📤 Share Estimate</Text>
-                  </Pressable>
-                  <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
-                    style={[styles.actionBtn, { backgroundColor: '#6B7280' }]}
-                    onPress={async () => {
-                      const est = getEstimateById(id!);
-                      if (!est) return;
-                      const url = buildShareUrl(est, customerName);
-                      try {
-                        await Clipboard.setStringAsync(url);
-                        Alert.alert('Copied', 'Estimate link copied to clipboard');
-                      } catch {
-                        Alert.alert('Link', url);
+                  <SectionTitle title="Share" />
+                  <ActionButton label="📤 Share Estimate" color="#7C3AED" onPress={async () => {
+                    const est = getEstimateById(id!);
+                    if (!est) return;
+                    const message = buildShareMessage(est, customerName, appSettings.businessName || undefined);
+                    try {
+                      await Share.share({ message });
+                      if (est.status === 'draft') {
+                        await updateEstimate(id!, { status: 'sent' });
+                        setForm((f) => ({ ...f, status: 'sent' }));
                       }
-                    }}
-                  >
-                    <Text style={styles.actionBtnText}>🔗 Copy Link</Text>
-                  </Pressable>
+                    } catch {}
+                  }} />
+                  <ActionButton label="🔗 Copy Link" color="#6B7280" onPress={async () => {
+                    const est = getEstimateById(id!);
+                    if (!est) return;
+                    const url = buildShareUrl(est, customerName);
+                    try {
+                      await Clipboard.setStringAsync(url);
+                      Alert.alert('Copied', 'Estimate link copied to clipboard');
+                    } catch {
+                      Alert.alert('Link', url);
+                    }
+                  }} />
                 </>
               )}
 
-              {/* Status Actions */}
-              <Text style={styles.sectionTitle}>Actions</Text>
+              <SectionTitle title="Actions" />
               {form.status === 'draft' && (
-                <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={[styles.actionBtn, { backgroundColor: '#3B82F6' }]} onPress={() => handleStatusChange('sent')}>
-                  <Text style={styles.actionBtnText}>✉ Mark as Sent</Text>
-                </Pressable>
+                <ActionButton label="✉ Mark as Sent" color="#3B82F6" onPress={() => handleStatusChange('sent')} />
               )}
               {form.status === 'sent' && (
                 <>
-                  <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={[styles.actionBtn, { backgroundColor: '#10B981' }]} onPress={() => handleStatusChange('accepted')}>
-                    <Text style={styles.actionBtnText}>✓ Mark Accepted</Text>
-                  </Pressable>
-                  <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={[styles.actionBtn, { backgroundColor: '#EF4444' }]} onPress={() => handleStatusChange('declined')}>
-                    <Text style={styles.actionBtnText}>✕ Mark Declined</Text>
-                  </Pressable>
+                  <ActionButton label="✓ Mark Accepted" color="#10B981" onPress={() => handleStatusChange('accepted')} />
+                  <ActionButton label="✕ Mark Declined" color="#EF4444" onPress={() => handleStatusChange('declined')} />
                 </>
               )}
               {form.status === 'accepted' && !getEstimateById(id!)?.jobId && (
-                <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={[styles.actionBtn, { backgroundColor: '#EA580C' }]} onPress={handleConvertToJob}>
-                  <Text style={styles.actionBtnText}>🔧 Convert to Job</Text>
-                </Pressable>
+                <ActionButton label="🔧 Convert to Job" color="#EA580C" onPress={handleConvertToJob} />
               )}
               {form.status === 'accepted' && (
-                <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={[styles.actionBtn, { backgroundColor: '#7C3AED' }]} onPress={() => router.push({ pathname: '/invoice/[id]', params: { id: 'new', fromEstimate: id } })}>
-                  <Text style={styles.actionBtnText}>📄 Create Invoice</Text>
-                </Pressable>
+                <ActionButton label="📄 Create Invoice" color="#7C3AED" onPress={() => router.push({ pathname: '/invoice/[id]', params: { id: 'new', fromEstimate: id } })} />
               )}
               {(form.status === 'declined' || form.status === 'expired') && (
-                <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={[styles.actionBtn, { backgroundColor: '#6B7280' }]} onPress={() => handleStatusChange('draft')}>
-                  <Text style={styles.actionBtnText}>↻ Revert to Draft</Text>
-                </Pressable>
+                <ActionButton label="↻ Revert to Draft" color="#6B7280" onPress={() => handleStatusChange('draft')} />
               )}
 
-              <Pressable accessibilityRole="button" accessibilityLabel="Delete record" style={styles.deleteBtn} onPress={handleDelete}>
-                <Text style={styles.deleteBtnText}>Delete Estimate</Text>
-              </Pressable>
+              <DeleteButton label="Delete Estimate" onPress={handleDelete} />
             </>
           )}
         </ScrollView>
@@ -475,7 +427,7 @@ export default function EstimateDetailScreen() {
 
       {/* Customer Picker Modal */}
       <Modal visible={customerPickerVisible} animationType="slide" presentationStyle="pageSheet">
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, Platform.OS === 'android' && styles.modalContainerAndroid]}>
           <View style={styles.modalHeader}>
             <Pressable accessibilityRole="button" accessibilityLabel="Close customer picker" onPress={() => { setCustomerPickerVisible(false); setCustomerSearch(''); }}>
               <Text style={styles.headerBtn}>Close</Text>
@@ -513,7 +465,7 @@ export default function EstimateDetailScreen() {
 
       {/* Service Picker Modal */}
       <Modal visible={servicePickerVisible} animationType="slide" presentationStyle="pageSheet">
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, Platform.OS === 'android' && styles.modalContainerAndroid]}>
           <View style={styles.modalHeader}>
             <Pressable accessibilityRole="button" accessibilityLabel="Close service picker" onPress={() => setServicePickerVisible(false)}>
               <Text style={styles.headerBtn}>Close</Text>
@@ -543,124 +495,3 @@ export default function EstimateDetailScreen() {
     </>
   );
 }
-
-function Field({
-  label, value, onChange, multiline, placeholder,
-}: {
-  label: string; value: string; onChange: (v: string) => void;
-  multiline?: boolean; placeholder?: string;
-}) {
-  return (
-    <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput accessibilityRole="text" accessibilityLabel="Text input"
-        style={[styles.input, multiline && styles.inputMultiline]}
-        value={value}
-        onChangeText={onChange}
-        multiline={multiline}
-        numberOfLines={multiline ? 3 : 1}
-        placeholder={placeholder}
-      />
-    </View>
-  );
-}
-
-function InfoRow({ label, value }: { label: string; value?: string }) {
-  if (!value) return null;
-  return (
-    <View style={styles.infoRow}>
-      <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.infoValue}>{value}</Text>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: '#fff' },
-  content: { padding: 16, paddingBottom: 40 },
-  headerBtn: { color: '#EA580C', fontSize: 17, fontWeight: '600' },
-  field: { marginBottom: 16 },
-  label: { fontSize: 13, fontWeight: '600', color: '#666', marginBottom: 6, textTransform: 'uppercase' },
-  input: {
-    borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8,
-    padding: 12, fontSize: 16, color: '#111', backgroundColor: '#F9FAFB',
-  },
-  inputMultiline: { minHeight: 80, textAlignVertical: 'top' },
-  pickerBtn: {
-    borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8,
-    padding: 12, backgroundColor: '#F9FAFB',
-  },
-  pickerText: { fontSize: 16, color: '#111' },
-  pickerPlaceholder: { color: '#999' },
-  statusBadge: { alignSelf: 'flex-start', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, marginBottom: 16 },
-  statusBadgeText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  saveBtn: { backgroundColor: '#EA580C', padding: 16, borderRadius: 10, alignItems: 'center', marginTop: 8 },
-  saveBtnText: { color: '#fff', fontSize: 17, fontWeight: '600' },
-  cancelBtn: { padding: 16, alignItems: 'center', marginTop: 4 },
-  cancelBtnText: { color: '#666', fontSize: 17 },
-  deleteBtn: { padding: 16, alignItems: 'center', marginTop: 24 },
-  deleteBtnText: { color: '#EF4444', fontSize: 17, fontWeight: '600' },
-  infoRow: { paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB' },
-  infoLabel: { fontSize: 13, color: '#666', textTransform: 'uppercase', marginBottom: 4 },
-  infoValue: { fontSize: 17, color: '#111' },
-  sectionTitle: { fontSize: 20, fontWeight: '700', color: '#111', marginTop: 24, marginBottom: 12 },
-  actionBtn: { padding: 14, borderRadius: 10, alignItems: 'center', marginBottom: 10 },
-  actionBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  modalContainer: { flex: 1, backgroundColor: '#fff', paddingTop: Platform.OS === 'ios' ? 60 : 20 },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 12 },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: '#111' },
-  searchInput: {
-    marginHorizontal: 16, marginBottom: 8, borderWidth: 1, borderColor: '#D1D5DB',
-    borderRadius: 8, padding: 12, fontSize: 16, backgroundColor: '#F9FAFB',
-  },
-  pickerRow: { paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB' },
-  pickerRowName: { fontSize: 17, color: '#111' },
-  pickerRowSub: { fontSize: 14, color: '#666', marginTop: 2 },
-  emptyText: { textAlign: 'center', padding: 24, color: '#999', fontSize: 16 },
-  lineItemRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB',
-  },
-  lineItemInfo: { flex: 1 },
-  lineItemName: { fontSize: 16, color: '#111', fontWeight: '500' },
-  lineItemControls: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
-  lineItemLabel: { fontSize: 14, color: '#666', marginRight: 4 },
-  lineItemQtyInput: {
-    borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 6,
-    paddingHorizontal: 8, paddingVertical: 4, width: 48, fontSize: 14, textAlign: 'center', marginRight: 8,
-  },
-  lineItemPriceInput: {
-    borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 6,
-    paddingHorizontal: 8, paddingVertical: 4, width: 72, fontSize: 14, textAlign: 'right',
-  },
-  lineItemRight: { alignItems: 'flex-end', marginLeft: 12 },
-  lineItemTotal: { fontSize: 16, fontWeight: '600', color: '#111' },
-  lineItemRemoveButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  lineItemRemove: { fontSize: 18, color: '#EF4444' },
-  addServiceBtn: {
-    paddingVertical: 12, alignItems: 'center', borderWidth: 1, borderColor: '#EA580C',
-    borderRadius: 8, borderStyle: 'dashed', marginTop: 8,
-  },
-  addServiceBtnText: { color: '#EA580C', fontSize: 16, fontWeight: '600' },
-  totalsBox: { marginTop: 12, backgroundColor: '#F9FAFB', borderRadius: 8, padding: 12 },
-  totalsRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
-  totalsLabel: { fontSize: 15, color: '#666' },
-  totalsValue: { fontSize: 15, color: '#111' },
-  totalRowFinal: { borderTopWidth: 2, borderTopColor: '#111', marginTop: 4, paddingTop: 8 },
-  totalLabel: { fontSize: 18, fontWeight: '700', color: '#111' },
-  totalValue: { fontSize: 18, fontWeight: '700', color: '#111' },
-  viewLineItem: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB',
-  },
-  viewLineItemLeft: { flex: 1 },
-  viewLineItemName: { fontSize: 16, color: '#111', fontWeight: '500' },
-  viewLineItemDetail: { fontSize: 14, color: '#666', marginTop: 2 },
-  viewLineItemTotal: { fontSize: 16, fontWeight: '600', color: '#111', marginLeft: 12 },
-});

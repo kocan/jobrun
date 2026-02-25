@@ -1,4 +1,4 @@
-import { View, Text, TextInput, ScrollView, Pressable, Alert, StyleSheet, KeyboardAvoidingView, Platform, Modal, FlatList, Share } from 'react-native';
+import { View, Text, TextInput, ScrollView, Pressable, Alert, KeyboardAvoidingView, Platform, Modal, FlatList, Share } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useState, useEffect, useMemo } from 'react';
 import * as Crypto from 'expo-crypto';
@@ -12,6 +12,11 @@ import { InvoiceStatus, LineItem } from '../../lib/types';
 import { isValidInvoiceStatusTransition, calculateInvoiceTotals } from '../../lib/db/repositories/invoices';
 import { buildInvoiceShareUrl, buildInvoiceShareMessage } from '../../lib/invoiceSharing';
 import { useSettings } from '../../contexts/SettingsContext';
+import {
+  InfoRow, Field, StatusBadge, ActionButton, SectionTitle,
+  SaveButton, CancelButton, DeleteButton, detailStyles as styles,
+} from '../../components/DetailScreen';
+import { theme } from '../../lib/theme';
 
 const STATUS_LABELS: Record<InvoiceStatus, string> = {
   'draft': 'Draft',
@@ -266,7 +271,7 @@ export default function InvoiceDetailScreen() {
               {!isNew && invoiceNumber ? (
                 <View style={styles.field}>
                   <Text style={styles.label}>Invoice Number</Text>
-                  <Text style={styles.invoiceNumberText}>{invoiceNumber}</Text>
+                  <Text style={{ fontSize: 18, fontWeight: '700', color: theme.colors.primary }}>{invoiceNumber}</Text>
                 </View>
               ) : null}
 
@@ -324,16 +329,7 @@ export default function InvoiceDetailScreen() {
               </View>
 
               {/* Tax Rate */}
-              <View style={styles.field}>
-                <Text style={styles.label}>Tax Rate (%)</Text>
-                <TextInput accessibilityRole="text" accessibilityLabel="Text input"
-                  style={styles.input}
-                  value={form.taxRate}
-                  onChangeText={setField('taxRate')}
-                  keyboardType="numeric"
-                  placeholder="0"
-                />
-              </View>
+              <Field label="Tax Rate (%)" value={form.taxRate} onChange={setField('taxRate')} keyboardType="numeric" placeholder="0" />
 
               {/* Totals */}
               {form.lineItems.length > 0 && (
@@ -358,14 +354,14 @@ export default function InvoiceDetailScreen() {
               {/* Payment Terms */}
               <View style={styles.field}>
                 <Text style={styles.label}>Payment Terms</Text>
-                <View style={styles.termsRow}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                   {PAYMENT_TERMS_OPTIONS.map((term) => (
                     <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
                       key={term}
-                      style={[styles.termChip, form.paymentTerms === term && styles.termChipActive]}
+                      style={[{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#D1D5DB' }, form.paymentTerms === term && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
                       onPress={() => setForm((f) => ({ ...f, paymentTerms: term }))}
                     >
-                      <Text style={[styles.termChipText, form.paymentTerms === term && styles.termChipTextActive]}>
+                      <Text style={[{ fontSize: 14, color: '#666' }, form.paymentTerms === term && { color: '#fff', fontWeight: '600' }]}>
                         {term}
                       </Text>
                     </Pressable>
@@ -373,25 +369,15 @@ export default function InvoiceDetailScreen() {
                 </View>
               </View>
 
-              {/* Due Date */}
               <Field label="Due Date (YYYY-MM-DD)" value={form.dueDate} onChange={setField('dueDate')} />
-
-              {/* Notes */}
               <Field label="Notes" value={form.notes} onChange={setField('notes')} multiline placeholder="e.g. Thank you for your business" />
 
-              <Pressable accessibilityRole="button" accessibilityLabel="Save changes" style={styles.saveBtn} onPress={handleSave}>
-                <Text style={styles.saveBtnText}>{isNew ? 'Create Invoice' : 'Save Changes'}</Text>
-              </Pressable>
-              <Pressable accessibilityRole="button" accessibilityLabel="Cancel changes" style={styles.cancelBtn} onPress={() => isNew ? router.back() : setEditing(false)}>
-                <Text style={styles.cancelBtnText}>Cancel</Text>
-              </Pressable>
+              <SaveButton label={isNew ? 'Create Invoice' : 'Save Changes'} onPress={handleSave} />
+              <CancelButton onPress={() => isNew ? router.back() : setEditing(false)} />
             </>
           ) : (
             <>
-              {/* Status Badge */}
-              <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[form.status] }]}>
-                <Text style={styles.statusBadgeText}>{STATUS_LABELS[form.status]}</Text>
-              </View>
+              <StatusBadge label={STATUS_LABELS[form.status]} color={STATUS_COLORS[form.status]} />
 
               <InfoRow label="Invoice #" value={invoiceNumber} />
               <InfoRow label="Customer" value={customerName} />
@@ -401,7 +387,7 @@ export default function InvoiceDetailScreen() {
               {/* Line Items Table */}
               {form.lineItems.length > 0 && (
                 <View style={styles.field}>
-                  <Text style={styles.sectionTitle}>Line Items</Text>
+                  <SectionTitle title="Line Items" />
                   {form.lineItems.map((li) => (
                     <View key={li.id} style={styles.viewLineItem}>
                       <View style={styles.viewLineItemLeft}>
@@ -435,92 +421,69 @@ export default function InvoiceDetailScreen() {
               {/* Share Actions */}
               {(form.status === 'draft' || form.status === 'sent') && (
                 <>
-                  <Text style={styles.sectionTitle}>Share</Text>
-                  <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
-                    style={[styles.actionBtn, { backgroundColor: '#7C3AED' }]}
-                    onPress={async () => {
-                      const inv = getInvoiceById(id!);
-                      if (!inv) return;
-                      const message = buildInvoiceShareMessage(inv, customerName, appSettings.businessName || undefined);
-                      try {
-                        await Share.share({ message });
-                        if (inv.status === 'draft') {
-                          await updateInvoice(id!, { status: 'sent' });
-                          setForm((f) => ({ ...f, status: 'sent' }));
-                        }
-                      } catch {}
-                    }}
-                  >
-                    <Text style={styles.actionBtnText}>📤 Share Invoice</Text>
-                  </Pressable>
-                  <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
-                    style={[styles.actionBtn, { backgroundColor: '#6B7280' }]}
-                    onPress={async () => {
-                      const inv = getInvoiceById(id!);
-                      if (!inv) return;
-                      const url = buildInvoiceShareUrl(inv, customerName);
-                      try {
-                        await Clipboard.setStringAsync(url);
-                        Alert.alert('Copied', 'Invoice link copied to clipboard');
-                      } catch {
-                        Alert.alert('Link', url);
+                  <SectionTitle title="Share" />
+                  <ActionButton label="📤 Share Invoice" color="#7C3AED" onPress={async () => {
+                    const inv = getInvoiceById(id!);
+                    if (!inv) return;
+                    const message = buildInvoiceShareMessage(inv, customerName, appSettings.businessName || undefined);
+                    try {
+                      await Share.share({ message });
+                      if (inv.status === 'draft') {
+                        await updateInvoice(id!, { status: 'sent' });
+                        setForm((f) => ({ ...f, status: 'sent' }));
                       }
-                    }}
-                  >
-                    <Text style={styles.actionBtnText}>🔗 Copy Link</Text>
-                  </Pressable>
+                    } catch {}
+                  }} />
+                  <ActionButton label="🔗 Copy Link" color="#6B7280" onPress={async () => {
+                    const inv = getInvoiceById(id!);
+                    if (!inv) return;
+                    const url = buildInvoiceShareUrl(inv, customerName);
+                    try {
+                      await Clipboard.setStringAsync(url);
+                      Alert.alert('Copied', 'Invoice link copied to clipboard');
+                    } catch {
+                      Alert.alert('Link', url);
+                    }
+                  }} />
                 </>
               )}
 
-              {/* Status Actions */}
-              <Text style={styles.sectionTitle}>Actions</Text>
+              <SectionTitle title="Actions" />
               {form.status === 'draft' && (
-                <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={[styles.actionBtn, { backgroundColor: '#3B82F6' }]} onPress={async () => {
+                <ActionButton label="✉ Mark as Sent" color="#3B82F6" onPress={async () => {
                   await updateInvoice(id!, { status: 'sent' });
                   setForm((f) => ({ ...f, status: 'sent' }));
-                }}>
-                  <Text style={styles.actionBtnText}>✉ Mark as Sent</Text>
-                </Pressable>
+                }} />
               )}
               {(form.status === 'sent' || form.status === 'viewed' || form.status === 'overdue') && (
-                <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={[styles.actionBtn, { backgroundColor: '#10B981' }]} onPress={handleMarkAsPaid}>
-                  <Text style={styles.actionBtnText}>💰 Mark as Paid</Text>
-                </Pressable>
+                <ActionButton label="💰 Mark as Paid" color="#10B981" onPress={handleMarkAsPaid} />
               )}
               {(form.status === 'sent' || form.status === 'viewed') && (
-                <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={[styles.actionBtn, { backgroundColor: '#EF4444' }]} onPress={async () => {
+                <ActionButton label="⚠ Mark Overdue" color="#EF4444" onPress={async () => {
                   await updateInvoice(id!, { status: 'overdue' });
                   setForm((f) => ({ ...f, status: 'overdue' }));
-                }}>
-                  <Text style={styles.actionBtnText}>⚠ Mark Overdue</Text>
-                </Pressable>
+                }} />
               )}
               {form.status !== 'paid' && form.status !== 'cancelled' && (
-                <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={[styles.actionBtn, { backgroundColor: '#9CA3AF' }]} onPress={async () => {
+                <ActionButton label="✕ Cancel Invoice" color="#9CA3AF" onPress={async () => {
                   await updateInvoice(id!, { status: 'cancelled' });
                   setForm((f) => ({ ...f, status: 'cancelled' }));
-                }}>
-                  <Text style={styles.actionBtnText}>✕ Cancel Invoice</Text>
-                </Pressable>
+                }} />
               )}
               {form.status === 'cancelled' && (
-                <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={[styles.actionBtn, { backgroundColor: '#6B7280' }]} onPress={async () => {
+                <ActionButton label="↻ Revert to Draft" color="#6B7280" onPress={async () => {
                   await updateInvoice(id!, { status: 'draft' });
                   setForm((f) => ({ ...f, status: 'draft' }));
-                }}>
-                  <Text style={styles.actionBtnText}>↻ Revert to Draft</Text>
-                </Pressable>
+                }} />
               )}
 
               {form.status === 'paid' && (
-                <View style={styles.paidBanner}>
-                  <Text style={styles.paidBannerText}>✓ Paid {getInvoiceById(id!)?.paidAt?.split('T')[0]}</Text>
+                <View style={{ backgroundColor: '#D1FAE5', padding: 16, borderRadius: 10, alignItems: 'center', marginBottom: 10 }}>
+                  <Text style={{ color: '#065F46', fontSize: 16, fontWeight: '600' }}>✓ Paid {getInvoiceById(id!)?.paidAt?.split('T')[0]}</Text>
                 </View>
               )}
 
-              <Pressable accessibilityRole="button" accessibilityLabel="Delete record" style={styles.deleteBtn} onPress={handleDelete}>
-                <Text style={styles.deleteBtnText}>Delete Invoice</Text>
-              </Pressable>
+              <DeleteButton label="Delete Invoice" onPress={handleDelete} />
             </>
           )}
         </ScrollView>
@@ -528,7 +491,7 @@ export default function InvoiceDetailScreen() {
 
       {/* Customer Picker Modal */}
       <Modal visible={customerPickerVisible} animationType="slide" presentationStyle="pageSheet">
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, Platform.OS === 'android' && styles.modalContainerAndroid]}>
           <View style={styles.modalHeader}>
             <Pressable accessibilityRole="button" accessibilityLabel="Close customer picker" onPress={() => { setCustomerPickerVisible(false); setCustomerSearch(''); }}>
               <Text style={styles.headerBtn}>Close</Text>
@@ -566,7 +529,7 @@ export default function InvoiceDetailScreen() {
 
       {/* Service Picker Modal */}
       <Modal visible={servicePickerVisible} animationType="slide" presentationStyle="pageSheet">
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, Platform.OS === 'android' && styles.modalContainerAndroid]}>
           <View style={styles.modalHeader}>
             <Pressable accessibilityRole="button" accessibilityLabel="Close service picker" onPress={() => setServicePickerVisible(false)}>
               <Text style={styles.headerBtn}>Close</Text>
@@ -596,135 +559,3 @@ export default function InvoiceDetailScreen() {
     </>
   );
 }
-
-function Field({
-  label, value, onChange, multiline, placeholder,
-}: {
-  label: string; value: string; onChange: (v: string) => void;
-  multiline?: boolean; placeholder?: string;
-}) {
-  return (
-    <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput accessibilityRole="text" accessibilityLabel="Text input"
-        style={[styles.input, multiline && styles.inputMultiline]}
-        value={value}
-        onChangeText={onChange}
-        multiline={multiline}
-        numberOfLines={multiline ? 3 : 1}
-        placeholder={placeholder}
-      />
-    </View>
-  );
-}
-
-function InfoRow({ label, value }: { label: string; value?: string }) {
-  if (!value) return null;
-  return (
-    <View style={styles.infoRow}>
-      <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.infoValue}>{value}</Text>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: '#fff' },
-  content: { padding: 16, paddingBottom: 40 },
-  headerBtn: { color: '#EA580C', fontSize: 17, fontWeight: '600' },
-  field: { marginBottom: 16 },
-  label: { fontSize: 13, fontWeight: '600', color: '#666', marginBottom: 6, textTransform: 'uppercase' },
-  input: {
-    borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8,
-    padding: 12, fontSize: 16, color: '#111', backgroundColor: '#F9FAFB',
-  },
-  inputMultiline: { minHeight: 80, textAlignVertical: 'top' },
-  invoiceNumberText: { fontSize: 18, fontWeight: '700', color: '#EA580C' },
-  pickerBtn: {
-    borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8,
-    padding: 12, backgroundColor: '#F9FAFB',
-  },
-  pickerText: { fontSize: 16, color: '#111' },
-  pickerPlaceholder: { color: '#999' },
-  statusBadge: { alignSelf: 'flex-start', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, marginBottom: 16 },
-  statusBadgeText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  termsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  termChip: {
-    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20,
-    backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#D1D5DB',
-  },
-  termChipActive: { backgroundColor: '#EA580C', borderColor: '#EA580C' },
-  termChipText: { fontSize: 14, color: '#666' },
-  termChipTextActive: { color: '#fff', fontWeight: '600' },
-  saveBtn: { backgroundColor: '#EA580C', padding: 16, borderRadius: 10, alignItems: 'center', marginTop: 8 },
-  saveBtnText: { color: '#fff', fontSize: 17, fontWeight: '600' },
-  cancelBtn: { padding: 16, alignItems: 'center', marginTop: 4 },
-  cancelBtnText: { color: '#666', fontSize: 17 },
-  deleteBtn: { padding: 16, alignItems: 'center', marginTop: 24 },
-  deleteBtnText: { color: '#EF4444', fontSize: 17, fontWeight: '600' },
-  infoRow: { paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB' },
-  infoLabel: { fontSize: 13, color: '#666', textTransform: 'uppercase', marginBottom: 4 },
-  infoValue: { fontSize: 17, color: '#111' },
-  sectionTitle: { fontSize: 20, fontWeight: '700', color: '#111', marginTop: 24, marginBottom: 12 },
-  actionBtn: { padding: 14, borderRadius: 10, alignItems: 'center', marginBottom: 10 },
-  actionBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  paidBanner: { backgroundColor: '#D1FAE5', padding: 16, borderRadius: 10, alignItems: 'center', marginBottom: 10 },
-  paidBannerText: { color: '#065F46', fontSize: 16, fontWeight: '600' },
-  modalContainer: { flex: 1, backgroundColor: '#fff', paddingTop: Platform.OS === 'ios' ? 60 : 20 },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 12 },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: '#111' },
-  searchInput: {
-    marginHorizontal: 16, marginBottom: 8, borderWidth: 1, borderColor: '#D1D5DB',
-    borderRadius: 8, padding: 12, fontSize: 16, backgroundColor: '#F9FAFB',
-  },
-  pickerRow: { paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB' },
-  pickerRowName: { fontSize: 17, color: '#111' },
-  pickerRowSub: { fontSize: 14, color: '#666', marginTop: 2 },
-  emptyText: { textAlign: 'center', padding: 24, color: '#999', fontSize: 16 },
-  lineItemRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB',
-  },
-  lineItemInfo: { flex: 1 },
-  lineItemName: { fontSize: 16, color: '#111', fontWeight: '500' },
-  lineItemControls: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
-  lineItemLabel: { fontSize: 14, color: '#666', marginRight: 4 },
-  lineItemQtyInput: {
-    borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 6,
-    paddingHorizontal: 8, paddingVertical: 4, width: 48, fontSize: 14, textAlign: 'center', marginRight: 8,
-  },
-  lineItemPriceInput: {
-    borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 6,
-    paddingHorizontal: 8, paddingVertical: 4, width: 72, fontSize: 14, textAlign: 'right',
-  },
-  lineItemRight: { alignItems: 'flex-end', marginLeft: 12 },
-  lineItemTotal: { fontSize: 16, fontWeight: '600', color: '#111' },
-  lineItemRemoveButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  lineItemRemove: { fontSize: 18, color: '#EF4444' },
-  addServiceBtn: {
-    paddingVertical: 12, alignItems: 'center', borderWidth: 1, borderColor: '#EA580C',
-    borderRadius: 8, borderStyle: 'dashed', marginTop: 8,
-  },
-  addServiceBtnText: { color: '#EA580C', fontSize: 16, fontWeight: '600' },
-  totalsBox: { marginTop: 12, backgroundColor: '#F9FAFB', borderRadius: 8, padding: 12 },
-  totalsRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
-  totalsLabel: { fontSize: 15, color: '#666' },
-  totalsValue: { fontSize: 15, color: '#111' },
-  totalRowFinal: { borderTopWidth: 2, borderTopColor: '#111', marginTop: 4, paddingTop: 8 },
-  totalLabel: { fontSize: 18, fontWeight: '700', color: '#111' },
-  totalValue: { fontSize: 18, fontWeight: '700', color: '#111' },
-  viewLineItem: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB',
-  },
-  viewLineItemLeft: { flex: 1 },
-  viewLineItemName: { fontSize: 16, color: '#111', fontWeight: '500' },
-  viewLineItemDetail: { fontSize: 14, color: '#666', marginTop: 2 },
-  viewLineItemTotal: { fontSize: 16, fontWeight: '600', color: '#111', marginLeft: 12 },
-});
