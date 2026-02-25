@@ -1,4 +1,4 @@
-import { View, Text, TextInput, ScrollView, Pressable, Alert, KeyboardAvoidingView, Platform, Modal, FlatList, Share } from 'react-native';
+import { View, Text, ScrollView, Pressable, Alert, KeyboardAvoidingView, Platform, Share } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useState, useEffect, useMemo } from 'react';
 import * as Crypto from 'expo-crypto';
@@ -16,6 +16,9 @@ import {
   InfoRow, Field, StatusBadge, ActionButton, SectionTitle,
   SaveButton, CancelButton, DeleteButton, detailStyles as styles,
 } from '../../components/DetailScreen';
+import { CustomerPicker } from '../../components/CustomerPicker';
+import { ServicePicker } from '../../components/ServicePicker';
+import { LineItemEditor, TotalsView, LineItemsView } from '../../components/LineItemEditor';
 import { theme } from '../../lib/theme';
 
 const STATUS_LABELS: Record<InvoiceStatus, string> = {
@@ -76,7 +79,6 @@ export default function InvoiceDetailScreen() {
   const { getActiveServices } = usePriceBook();
   const [servicePickerVisible, setServicePickerVisible] = useState(false);
   const [customerPickerVisible, setCustomerPickerVisible] = useState(false);
-  const [customerSearch, setCustomerSearch] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
 
   const isNew = id === 'new';
@@ -175,14 +177,6 @@ export default function InvoiceDetailScreen() {
   const removeLineItem = (liId: string) => {
     setForm((f) => ({ ...f, lineItems: f.lineItems.filter((li) => li.id !== liId) }));
   };
-
-  const filteredCustomers = useMemo(() => {
-    if (!customerSearch.trim()) return customers;
-    const q = customerSearch.toLowerCase();
-    return customers.filter(
-      (c) => c.firstName.toLowerCase().includes(q) || c.lastName.toLowerCase().includes(q) || (c.phone && c.phone.includes(q))
-    );
-  }, [customers, customerSearch]);
 
   const handleSave = async () => {
     if (!form.customerId) {
@@ -285,70 +279,19 @@ export default function InvoiceDetailScreen() {
                 </Pressable>
               </View>
 
-              {/* Line Items */}
-              <View style={styles.field}>
-                <Text style={styles.label}>Line Items *</Text>
-                {form.lineItems.map((li) => (
-                  <View key={li.id} style={styles.lineItemRow}>
-                    <View style={styles.lineItemInfo}>
-                      <Text style={styles.lineItemName}>{li.name}</Text>
-                      <View style={styles.lineItemControls}>
-                        <Text style={styles.lineItemLabel}>Qty:</Text>
-                        <TextInput accessibilityRole="text" accessibilityLabel="Text input"
-                          style={styles.lineItemQtyInput}
-                          value={String(li.quantity)}
-                          onChangeText={(v) => updateLineItem(li.id, { quantity: parseInt(v) || 1 })}
-                          keyboardType="number-pad"
-                        />
-                        <Text style={styles.lineItemLabel}>@ $</Text>
-                        <TextInput accessibilityRole="text" accessibilityLabel="Text input"
-                          style={styles.lineItemPriceInput}
-                          value={String(li.unitPrice)}
-                          onChangeText={(v) => updateLineItem(li.id, { unitPrice: parseFloat(v) || 0 })}
-                          keyboardType="numeric"
-                        />
-                      </View>
-                    </View>
-                    <View style={styles.lineItemRight}>
-                      <Text style={styles.lineItemTotal}>${(li.unitPrice * li.quantity).toFixed(2)}</Text>
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel="Remove line item"
-                        style={styles.lineItemRemoveButton}
-                        hitSlop={8}
-                        onPress={() => removeLineItem(li.id)}
-                      >
-                        <Text style={styles.lineItemRemove}>✕</Text>
-                      </Pressable>
-                    </View>
-                  </View>
-                ))}
-                <Pressable accessibilityRole="button" accessibilityLabel="Add service line item" style={styles.addServiceBtn} onPress={() => setServicePickerVisible(true)}>
-                  <Text style={styles.addServiceBtnText}>+ Add Service</Text>
-                </Pressable>
-              </View>
+              <LineItemEditor
+                lineItems={form.lineItems}
+                onUpdateItem={updateLineItem}
+                onRemoveItem={removeLineItem}
+                onAddService={() => setServicePickerVisible(true)}
+                required
+              />
 
               {/* Tax Rate */}
               <Field label="Tax Rate (%)" value={form.taxRate} onChange={setField('taxRate')} keyboardType="numeric" placeholder="0" />
 
-              {/* Totals */}
               {form.lineItems.length > 0 && (
-                <View style={styles.totalsBox}>
-                  <View style={styles.totalsRow}>
-                    <Text style={styles.totalsLabel}>Subtotal</Text>
-                    <Text style={styles.totalsValue}>${totals.subtotal.toFixed(2)}</Text>
-                  </View>
-                  {taxRate > 0 && (
-                    <View style={styles.totalsRow}>
-                      <Text style={styles.totalsLabel}>Tax ({taxRate}%)</Text>
-                      <Text style={styles.totalsValue}>${totals.taxAmount.toFixed(2)}</Text>
-                    </View>
-                  )}
-                  <View style={[styles.totalsRow, styles.totalRowFinal]}>
-                    <Text style={styles.totalLabel}>Total</Text>
-                    <Text style={styles.totalValue}>${totals.total.toFixed(2)}</Text>
-                  </View>
-                </View>
+                <TotalsView subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
               )}
 
               {/* Payment Terms */}
@@ -384,35 +327,11 @@ export default function InvoiceDetailScreen() {
               <InfoRow label="Payment Terms" value={form.paymentTerms} />
               <InfoRow label="Due Date" value={form.dueDate} />
 
-              {/* Line Items Table */}
               {form.lineItems.length > 0 && (
                 <View style={styles.field}>
                   <SectionTitle title="Line Items" />
-                  {form.lineItems.map((li) => (
-                    <View key={li.id} style={styles.viewLineItem}>
-                      <View style={styles.viewLineItemLeft}>
-                        <Text style={styles.viewLineItemName}>{li.name}</Text>
-                        <Text style={styles.viewLineItemDetail}>{li.quantity} × ${li.unitPrice.toFixed(2)}</Text>
-                      </View>
-                      <Text style={styles.viewLineItemTotal}>${(li.unitPrice * li.quantity).toFixed(2)}</Text>
-                    </View>
-                  ))}
-                  <View style={styles.totalsBox}>
-                    <View style={styles.totalsRow}>
-                      <Text style={styles.totalsLabel}>Subtotal</Text>
-                      <Text style={styles.totalsValue}>${totals.subtotal.toFixed(2)}</Text>
-                    </View>
-                    {taxRate > 0 && (
-                      <View style={styles.totalsRow}>
-                        <Text style={styles.totalsLabel}>Tax ({taxRate}%)</Text>
-                        <Text style={styles.totalsValue}>${totals.taxAmount.toFixed(2)}</Text>
-                      </View>
-                    )}
-                    <View style={[styles.totalsRow, styles.totalRowFinal]}>
-                      <Text style={styles.totalLabel}>Total</Text>
-                      <Text style={styles.totalValue}>${totals.total.toFixed(2)}</Text>
-                    </View>
-                  </View>
+                  <LineItemsView lineItems={form.lineItems} />
+                  <TotalsView subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
                 </View>
               )}
 
@@ -489,73 +408,25 @@ export default function InvoiceDetailScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Customer Picker Modal */}
-      <Modal visible={customerPickerVisible} animationType="slide" presentationStyle="pageSheet">
-        <View style={[styles.modalContainer, Platform.OS === 'android' && styles.modalContainerAndroid]}>
-          <View style={styles.modalHeader}>
-            <Pressable accessibilityRole="button" accessibilityLabel="Close customer picker" onPress={() => { setCustomerPickerVisible(false); setCustomerSearch(''); }}>
-              <Text style={styles.headerBtn}>Close</Text>
-            </Pressable>
-            <Text style={styles.modalTitle}>Select Customer</Text>
-            <View style={{ width: 50 }} />
-          </View>
-          <TextInput accessibilityRole="text" accessibilityLabel="Text input"
-            style={styles.searchInput}
-            placeholder="Search customers..."
-            value={customerSearch}
-            onChangeText={setCustomerSearch}
-            autoFocus
-          />
-          <FlatList
-            data={filteredCustomers}
-            keyExtractor={(c) => c.id}
-            renderItem={({ item }) => (
-              <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
-                style={styles.pickerRow}
-                onPress={() => {
-                  setForm((f) => ({ ...f, customerId: item.id }));
-                  setCustomerPickerVisible(false);
-                  setCustomerSearch('');
-                }}
-              >
-                <Text style={styles.pickerRowName}>{item.firstName} {item.lastName}</Text>
-                {item.phone ? <Text style={styles.pickerRowSub}>{item.phone}</Text> : null}
-              </Pressable>
-            )}
-            ListEmptyComponent={<Text style={styles.emptyText}>No customers found</Text>}
-          />
-        </View>
-      </Modal>
+      <CustomerPicker
+        visible={customerPickerVisible}
+        customers={customers}
+        onSelect={(c) => {
+          setForm((f) => ({ ...f, customerId: c.id }));
+          setCustomerPickerVisible(false);
+        }}
+        onClose={() => setCustomerPickerVisible(false)}
+      />
 
-      {/* Service Picker Modal */}
-      <Modal visible={servicePickerVisible} animationType="slide" presentationStyle="pageSheet">
-        <View style={[styles.modalContainer, Platform.OS === 'android' && styles.modalContainerAndroid]}>
-          <View style={styles.modalHeader}>
-            <Pressable accessibilityRole="button" accessibilityLabel="Close service picker" onPress={() => setServicePickerVisible(false)}>
-              <Text style={styles.headerBtn}>Close</Text>
-            </Pressable>
-            <Text style={styles.modalTitle}>Add Service</Text>
-            <View style={{ width: 50 }} />
-          </View>
-          <FlatList
-            data={activeServices}
-            keyExtractor={(s) => s.id}
-            renderItem={({ item }) => (
-              <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
-                style={styles.pickerRow}
-                onPress={() => {
-                  addLineItemFromService(item.id);
-                  setServicePickerVisible(false);
-                }}
-              >
-                <Text style={styles.pickerRowName}>{item.name}</Text>
-                <Text style={styles.pickerRowSub}>${item.price.toFixed(2)} · {item.estimatedDuration}min</Text>
-              </Pressable>
-            )}
-            ListEmptyComponent={<Text style={styles.emptyText}>No active services. Add some in Price Book.</Text>}
-          />
-        </View>
-      </Modal>
+      <ServicePicker
+        visible={servicePickerVisible}
+        services={activeServices}
+        onSelect={(svc) => {
+          addLineItemFromService(svc.id);
+          setServicePickerVisible(false);
+        }}
+        onClose={() => setServicePickerVisible(false)}
+      />
     </>
   );
 }
