@@ -59,13 +59,20 @@ function formatEndTime(time?: string, durationMin?: number): string {
 export default function TodayScreen() {
   const router = useRouter();
   const { jobs, loading, refreshJobs, updateJob } = useJobs();
-  const { getCustomerById } = useCustomers();
+  const { customers } = useCustomers();
   const [refreshing, setRefreshing] = useState(false);
   const [tomorrowExpanded, setTomorrowExpanded] = useState(false);
   const [refreshError, setRefreshError] = useState<string | null>(null);
 
   const today = getLocalDateString();
   const tomorrow = getTomorrowDateString();
+  const customerMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const customer of customers) {
+      map[customer.id] = `${customer.firstName} ${customer.lastName}`.trim();
+    }
+    return map;
+  }, [customers]);
 
   const todayJobs = useMemo(
     () =>
@@ -109,11 +116,8 @@ export default function TodayScreen() {
   );
 
   const renderJobCard = (job: Job) => {
-    const customer = getCustomerById(job.customerId);
-    const customerName = customer
-      ? `${customer.firstName} ${customer.lastName}`
-      : 'Unknown Customer';
-    const address = job.address || customer?.address;
+    const customerName = customerMap[job.customerId] || 'Unknown Customer';
+    const address = job.address;
     const timeStr = formatTime(job.scheduledTime);
     const endStr = formatEndTime(job.scheduledTime, job.estimatedDuration);
     const timeRange = endStr ? `${timeStr} — ${endStr}` : timeStr;
@@ -164,21 +168,17 @@ export default function TodayScreen() {
           </Text>
           <Text style={styles.chevron}>{tomorrowExpanded ? '▲' : '▼'}</Text>
         </Pressable>
-        {preview.map((job) => {
-          const customer = getCustomerById(job.customerId);
-          const name = customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown';
-          return (
-            <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
-              key={job.id}
-              style={styles.tomorrowCard}
-              onPress={() => router.push(`/job/${job.id}`)}
-            >
-              <Text style={styles.tomorrowTime}>{formatTime(job.scheduledTime)}</Text>
-              <Text style={styles.tomorrowName} numberOfLines={1}>{name}</Text>
-              <Text style={styles.tomorrowAmount}>${job.total.toFixed(2)}</Text>
-            </Pressable>
-          );
-        })}
+        {preview.map((job) => (
+          <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+            key={job.id}
+            style={styles.tomorrowCard}
+            onPress={() => router.push(`/job/${job.id}`)}
+          >
+            <Text style={styles.tomorrowTime}>{formatTime(job.scheduledTime)}</Text>
+            <Text style={styles.tomorrowName} numberOfLines={1}>{customerMap[job.customerId] || 'Unknown'}</Text>
+            <Text style={styles.tomorrowAmount}>${job.total.toFixed(2)}</Text>
+          </Pressable>
+        ))}
         {!tomorrowExpanded && tomorrowJobs.length > 3 && (
           <Pressable accessibilityRole="button" accessibilityLabel="Show more tomorrow jobs" onPress={() => setTomorrowExpanded(true)}>
             <Text style={styles.showMore}>+{tomorrowJobs.length - 3} more</Text>

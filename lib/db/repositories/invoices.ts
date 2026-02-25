@@ -23,6 +23,21 @@ function getLineItems(db: ReturnType<typeof getDatabase>, invoiceId: string): Li
   return db.getAllSync<InvoiceLineItemRow>('SELECT * FROM invoice_line_items WHERE invoice_id = ? ORDER BY sort_order', [invoiceId]).map(rowToLineItem);
 }
 
+function getLineItemsForInvoices(db: ReturnType<typeof getDatabase>, invoiceIds: string[]): Record<string, LineItem[]> {
+  if (invoiceIds.length === 0) return {};
+  const placeholders = invoiceIds.map(() => '?').join(', ');
+  const rows = db.getAllSync<InvoiceLineItemRow>(
+    `SELECT * FROM invoice_line_items WHERE invoice_id IN (${placeholders}) ORDER BY invoice_id, sort_order`,
+    invoiceIds
+  );
+  const grouped: Record<string, LineItem[]> = {};
+  for (const row of rows) {
+    if (!grouped[row.invoice_id]) grouped[row.invoice_id] = [];
+    grouped[row.invoice_id].push(rowToLineItem(row));
+  }
+  return grouped;
+}
+
 function saveLineItems(db: ReturnType<typeof getDatabase>, invoiceId: string, lineItems: LineItem[]): void {
   db.runSync('DELETE FROM invoice_line_items WHERE invoice_id = ?', [invoiceId]);
   lineItems.forEach((li, i) => {
@@ -34,7 +49,8 @@ function saveLineItems(db: ReturnType<typeof getDatabase>, invoiceId: string, li
 export function getInvoices(): Invoice[] {
   const db = getDatabase();
   const rows = db.getAllSync<InvoiceRow>('SELECT * FROM invoices WHERE deleted_at IS NULL ORDER BY created_at DESC');
-  return rows.map((r) => rowToInvoice(r, getLineItems(db, r.id)));
+  const lineItemsByInvoiceId = getLineItemsForInvoices(db, rows.map((r) => r.id));
+  return rows.map((r) => rowToInvoice(r, lineItemsByInvoiceId[r.id] ?? []));
 }
 
 export function getInvoiceById(id: string): Invoice | null {

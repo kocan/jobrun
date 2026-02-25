@@ -19,6 +19,21 @@ function getLineItems(db: ReturnType<typeof getDatabase>, estimateId: string): L
   return db.getAllSync<EstimateLineItemRow>('SELECT * FROM estimate_line_items WHERE estimate_id = ? ORDER BY sort_order', [estimateId]).map(rowToLineItem);
 }
 
+function getLineItemsForEstimates(db: ReturnType<typeof getDatabase>, estimateIds: string[]): Record<string, LineItem[]> {
+  if (estimateIds.length === 0) return {};
+  const placeholders = estimateIds.map(() => '?').join(', ');
+  const rows = db.getAllSync<EstimateLineItemRow>(
+    `SELECT * FROM estimate_line_items WHERE estimate_id IN (${placeholders}) ORDER BY estimate_id, sort_order`,
+    estimateIds
+  );
+  const grouped: Record<string, LineItem[]> = {};
+  for (const row of rows) {
+    if (!grouped[row.estimate_id]) grouped[row.estimate_id] = [];
+    grouped[row.estimate_id].push(rowToLineItem(row));
+  }
+  return grouped;
+}
+
 function saveLineItems(db: ReturnType<typeof getDatabase>, estimateId: string, lineItems: LineItem[]): void {
   db.runSync('DELETE FROM estimate_line_items WHERE estimate_id = ?', [estimateId]);
   lineItems.forEach((li, i) => {
@@ -30,7 +45,8 @@ function saveLineItems(db: ReturnType<typeof getDatabase>, estimateId: string, l
 export function getEstimates(): Estimate[] {
   const db = getDatabase();
   const rows = db.getAllSync<EstimateRow>('SELECT * FROM estimates WHERE deleted_at IS NULL ORDER BY created_at DESC');
-  return rows.map((r) => rowToEstimate(r, getLineItems(db, r.id)));
+  const lineItemsByEstimateId = getLineItemsForEstimates(db, rows.map((r) => r.id));
+  return rows.map((r) => rowToEstimate(r, lineItemsByEstimateId[r.id] ?? []));
 }
 
 export function getEstimateById(id: string): Estimate | null {

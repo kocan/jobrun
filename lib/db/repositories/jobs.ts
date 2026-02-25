@@ -40,6 +40,21 @@ function getLineItemsForJob(db: ReturnType<typeof getDatabase>, jobId: string): 
   return db.getAllSync<JobLineItemRow>('SELECT * FROM job_line_items WHERE job_id = ? ORDER BY sort_order', [jobId]).map(rowToLineItem);
 }
 
+function getLineItemsForJobs(db: ReturnType<typeof getDatabase>, jobIds: string[]): Record<string, LineItem[]> {
+  if (jobIds.length === 0) return {};
+  const placeholders = jobIds.map(() => '?').join(', ');
+  const rows = db.getAllSync<JobLineItemRow>(
+    `SELECT * FROM job_line_items WHERE job_id IN (${placeholders}) ORDER BY job_id, sort_order`,
+    jobIds
+  );
+  const grouped: Record<string, LineItem[]> = {};
+  for (const row of rows) {
+    if (!grouped[row.job_id]) grouped[row.job_id] = [];
+    grouped[row.job_id].push(rowToLineItem(row));
+  }
+  return grouped;
+}
+
 function saveLineItems(db: ReturnType<typeof getDatabase>, jobId: string, lineItems: LineItem[]): void {
   db.runSync('DELETE FROM job_line_items WHERE job_id = ?', [jobId]);
   lineItems.forEach((li, i) => {
@@ -53,7 +68,8 @@ function saveLineItems(db: ReturnType<typeof getDatabase>, jobId: string, lineIt
 export function getJobs(): Job[] {
   const db = getDatabase();
   const rows = db.getAllSync<JobRow>('SELECT * FROM jobs WHERE deleted_at IS NULL ORDER BY scheduled_date DESC');
-  return rows.map((row) => rowToJob(row, getLineItemsForJob(db, row.id)));
+  const lineItemsByJobId = getLineItemsForJobs(db, rows.map((row) => row.id));
+  return rows.map((row) => rowToJob(row, lineItemsByJobId[row.id] ?? []));
 }
 
 export function getJobById(id: string): Job | null {
