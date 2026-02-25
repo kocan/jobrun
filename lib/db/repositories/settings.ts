@@ -1,5 +1,6 @@
 import { getDatabase } from '../database';
 import { VerticalId } from '../../types';
+import { SettingsRow } from '../types';
 
 export interface AppSettings {
   selectedVertical: VerticalId | 'custom' | null;
@@ -19,7 +20,7 @@ export const defaultSettings: AppSettings = {
 
 export function getSettings(): AppSettings {
   const db = getDatabase();
-  const rows = db.getAllSync("SELECT key, value FROM settings WHERE key LIKE 'app_%'") as { key: string; value: string }[];
+  const rows = db.getAllSync<SettingsRow>("SELECT key, value FROM settings WHERE key LIKE 'app_%'");
   const map = new Map(rows.map((r) => [r.key, r.value]));
   return {
     selectedVertical: (map.get('app_selectedVertical') as VerticalId | 'custom' | null) ?? defaultSettings.selectedVertical,

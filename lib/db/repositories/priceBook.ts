@@ -1,7 +1,8 @@
 import { getDatabase } from '../database';
 import { PriceBookService, DefaultServiceTemplate } from '../../types';
+import { PriceBookServiceRow } from '../types';
 
-function rowToService(row: any): PriceBookService {
+function rowToService(row: PriceBookServiceRow): PriceBookService {
   return {
     id: row.id, name: row.name, description: row.description || undefined,
     price: row.price, estimatedDuration: row.estimated_duration, category: row.category,
@@ -12,7 +13,7 @@ function rowToService(row: any): PriceBookService {
 
 export function getServices(): PriceBookService[] {
   const db = getDatabase();
-  return db.getAllSync('SELECT * FROM price_book_services WHERE deleted_at IS NULL ORDER BY sort_order').map(rowToService);
+  return db.getAllSync<PriceBookServiceRow>('SELECT * FROM price_book_services WHERE deleted_at IS NULL ORDER BY sort_order').map(rowToService);
 }
 
 export function addService(service: PriceBookService): PriceBookService {
@@ -26,7 +27,7 @@ export function addService(service: PriceBookService): PriceBookService {
 
 export function updateService(id: string, updates: Partial<PriceBookService>): PriceBookService | null {
   const db = getDatabase();
-  const row = db.getFirstSync('SELECT * FROM price_book_services WHERE id = ? AND deleted_at IS NULL', [id]);
+  const row = db.getFirstSync<PriceBookServiceRow>('SELECT * FROM price_book_services WHERE id = ? AND deleted_at IS NULL', [id]);
   if (!row) return null;
   const existing = rowToService(row);
   const merged = { ...existing, ...updates, updatedAt: new Date().toISOString() };

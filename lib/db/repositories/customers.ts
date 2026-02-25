@@ -1,7 +1,8 @@
 import { getDatabase } from '../database';
 import { Customer } from '../../types';
+import { CustomerRow } from '../types';
 
-function rowToCustomer(row: any): Customer {
+function rowToCustomer(row: CustomerRow): Customer {
   return {
     id: row.id,
     firstName: row.first_name,
@@ -21,13 +22,13 @@ function rowToCustomer(row: any): Customer {
 
 export function getCustomers(): Customer[] {
   const db = getDatabase();
-  const rows = db.getAllSync('SELECT * FROM customers WHERE deleted_at IS NULL ORDER BY last_name, first_name');
+  const rows = db.getAllSync<CustomerRow>('SELECT * FROM customers WHERE deleted_at IS NULL ORDER BY last_name, first_name');
   return rows.map(rowToCustomer);
 }
 
 export function getCustomerById(id: string): Customer | null {
   const db = getDatabase();
-  const row = db.getFirstSync('SELECT * FROM customers WHERE id = ? AND deleted_at IS NULL', [id]);
+  const row = db.getFirstSync<CustomerRow>('SELECT * FROM customers WHERE id = ? AND deleted_at IS NULL', [id]);
   return row ? rowToCustomer(row) : null;
 }
 

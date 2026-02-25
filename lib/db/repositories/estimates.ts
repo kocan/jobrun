@@ -1,11 +1,12 @@
 import { getDatabase } from '../database';
 import { Estimate, EstimateStatus, LineItem } from '../../types';
+import { EstimateLineItemRow, EstimateRow } from '../types';
 
-function rowToLineItem(row: any): LineItem {
+function rowToLineItem(row: EstimateLineItemRow): LineItem {
   return { id: row.id, serviceId: row.service_id || undefined, name: row.name, description: row.description || undefined, quantity: row.quantity, unitPrice: row.unit_price, total: row.total };
 }
 
-function rowToEstimate(row: any, lineItems: LineItem[]): Estimate {
+function rowToEstimate(row: EstimateRow, lineItems: LineItem[]): Estimate {
   return {
     id: row.id, customerId: row.customer_id, jobId: row.job_id || undefined, lineItems,
     subtotal: row.subtotal, taxRate: row.tax_rate, taxAmount: row.tax_amount, total: row.total,
@@ -15,7 +16,7 @@ function rowToEstimate(row: any, lineItems: LineItem[]): Estimate {
 }
 
 function getLineItems(db: ReturnType<typeof getDatabase>, estimateId: string): LineItem[] {
-  return db.getAllSync('SELECT * FROM estimate_line_items WHERE estimate_id = ? ORDER BY sort_order', [estimateId]).map(rowToLineItem);
+  return db.getAllSync<EstimateLineItemRow>('SELECT * FROM estimate_line_items WHERE estimate_id = ? ORDER BY sort_order', [estimateId]).map(rowToLineItem);
 }
 
 function saveLineItems(db: ReturnType<typeof getDatabase>, estimateId: string, lineItems: LineItem[]): void {
@@ -28,13 +29,13 @@ function saveLineItems(db: ReturnType<typeof getDatabase>, estimateId: string, l
 
 export function getEstimates(): Estimate[] {
   const db = getDatabase();
-  const rows = db.getAllSync('SELECT * FROM estimates WHERE deleted_at IS NULL ORDER BY created_at DESC');
-  return rows.map((r: any) => rowToEstimate(r, getLineItems(db, r.id)));
+  const rows = db.getAllSync<EstimateRow>('SELECT * FROM estimates WHERE deleted_at IS NULL ORDER BY created_at DESC');
+  return rows.map((r) => rowToEstimate(r, getLineItems(db, r.id)));
 }
 
 export function getEstimateById(id: string): Estimate | null {
   const db = getDatabase();
-  const row = db.getFirstSync('SELECT * FROM estimates WHERE id = ? AND deleted_at IS NULL', [id]) as any;
+  const row = db.getFirstSync<EstimateRow>('SELECT * FROM estimates WHERE id = ? AND deleted_at IS NULL', [id]);
   if (!row) return null;
   return rowToEstimate(row, getLineItems(db, id));
 }

@@ -1,11 +1,12 @@
 import { getDatabase } from '../database';
 import { Invoice, InvoiceStatus, LineItem, Payment } from '../../types';
+import { InvoiceLineItemRow, InvoiceRow } from '../types';
 
-function rowToLineItem(row: any): LineItem {
+function rowToLineItem(row: InvoiceLineItemRow): LineItem {
   return { id: row.id, serviceId: row.service_id || undefined, name: row.name, description: row.description || undefined, quantity: row.quantity, unitPrice: row.unit_price, total: row.total };
 }
 
-function rowToInvoice(row: any, lineItems: LineItem[]): Invoice {
+function rowToInvoice(row: InvoiceRow, lineItems: LineItem[]): Invoice {
   return {
     id: row.id, invoiceNumber: row.invoice_number, customerId: row.customer_id,
     jobId: row.job_id || undefined, estimateId: row.estimate_id || undefined, lineItems,
@@ -19,7 +20,7 @@ function rowToInvoice(row: any, lineItems: LineItem[]): Invoice {
 }
 
 function getLineItems(db: ReturnType<typeof getDatabase>, invoiceId: string): LineItem[] {
-  return db.getAllSync('SELECT * FROM invoice_line_items WHERE invoice_id = ? ORDER BY sort_order', [invoiceId]).map(rowToLineItem);
+  return db.getAllSync<InvoiceLineItemRow>('SELECT * FROM invoice_line_items WHERE invoice_id = ? ORDER BY sort_order', [invoiceId]).map(rowToLineItem);
 }
 
 function saveLineItems(db: ReturnType<typeof getDatabase>, invoiceId: string, lineItems: LineItem[]): void {
@@ -32,13 +33,13 @@ function saveLineItems(db: ReturnType<typeof getDatabase>, invoiceId: string, li
 
 export function getInvoices(): Invoice[] {
   const db = getDatabase();
-  const rows = db.getAllSync('SELECT * FROM invoices WHERE deleted_at IS NULL ORDER BY created_at DESC');
-  return rows.map((r: any) => rowToInvoice(r, getLineItems(db, r.id)));
+  const rows = db.getAllSync<InvoiceRow>('SELECT * FROM invoices WHERE deleted_at IS NULL ORDER BY created_at DESC');
+  return rows.map((r) => rowToInvoice(r, getLineItems(db, r.id)));
 }
 
 export function getInvoiceById(id: string): Invoice | null {
   const db = getDatabase();
-  const row = db.getFirstSync('SELECT * FROM invoices WHERE id = ? AND deleted_at IS NULL', [id]) as any;
+  const row = db.getFirstSync<InvoiceRow>('SELECT * FROM invoices WHERE id = ? AND deleted_at IS NULL', [id]);
   if (!row) return null;
   return rowToInvoice(row, getLineItems(db, id));
 }
