@@ -148,3 +148,14 @@ export interface Photo {
   caption?: string;
   createdAt: string;
 }
+
+export type CommunicationType = 'call' | 'text' | 'email' | 'note' | 'visit';
+
+export interface CommunicationEntry {
+  id: string;
+  customerId: string;
+  type: CommunicationType;
+  summary: string;
+  notes?: string;
+  createdAt: string;
+}

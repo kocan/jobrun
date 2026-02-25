@@ -1,5 +1,5 @@
 import * as SQLite from 'expo-sqlite';
-import { SCHEMA_VERSION, MIGRATION_001 } from './schema';
+import { SCHEMA_VERSION, MIGRATION_001, MIGRATION_002 } from './schema';
 
 const DB_NAME = 'jobrun.db';
 
@@ -17,25 +17,34 @@ export function getDatabase(): SQLite.SQLiteDatabase {
 export function initializeDatabase(): void {
   const db = getDatabase();
 
-  // Check current schema version
-  try {
-    const row = db.getFirstSync<{ value: string }>(
-      "SELECT value FROM settings WHERE key = 'schema_version'"
-    );
-    const currentVersion = row ? parseInt(row.value, 10) : 0;
-    if (currentVersion >= SCHEMA_VERSION) return;
-  } catch {
-    // settings table doesn't exist yet — run migrations
-  }
+  const currentVersion = (() => {
+    try {
+      const row = db.getFirstSync<{ value: string }>(
+        "SELECT value FROM settings WHERE key = 'schema_version'"
+      );
+      return row ? parseInt(row.value, 10) : 0;
+    } catch {
+      return 0;
+    }
+  })();
 
-  // Run migration 001
-  const statements = MIGRATION_001.split(';')
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0 && !s.startsWith('--'));
+  if (currentVersion >= SCHEMA_VERSION) return;
 
-  db.withTransactionSync(() => {
+  const runMigration = (sql: string) => {
+    const statements = sql.split(';')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0 && !s.startsWith('--'));
     for (const stmt of statements) {
       db.runSync(stmt);
+    }
+  };
+
+  db.withTransactionSync(() => {
+    if (currentVersion < 1) {
+      runMigration(MIGRATION_001);
+    }
+    if (currentVersion < 2) {
+      runMigration(MIGRATION_002);
     }
     // Store schema version
     db.runSync(
