@@ -16,6 +16,7 @@ import {
 import { CustomerPicker } from '../../components/CustomerPicker';
 import { ServicePicker } from '../../components/ServicePicker';
 import { LineItemEditor } from '../../components/LineItemEditor';
+import { DatePickerField, TimePickerField } from '../../components/DateTimePicker';
 
 const STATUS_OPTIONS: JobStatus[] = ['scheduled', 'in-progress', 'completed', 'cancelled'];
 const STATUS_LABELS: Record<JobStatus, string> = {
@@ -267,13 +268,13 @@ export default function JobDetailScreen() {
                 </View>
               </View>
 
-              <Field
-                label="Date (YYYY-MM-DD)"
+              <DatePickerField
+                label="Date"
                 value={form.scheduledDate}
                 onChange={setField('scheduledDate')}
                 error={errors.scheduledDate}
               />
-              <Field label="Time (HH:MM)" value={form.scheduledTime} onChange={setField('scheduledTime')} />
+              <TimePickerField label="Time" value={form.scheduledTime} onChange={setField('scheduledTime')} />
               <Field label="Duration (minutes)" value={form.estimatedDuration} onChange={setField('estimatedDuration')} keyboardType="number-pad" />
               <FormSectionHeader title="Line Items" />
               <LineItemEditor

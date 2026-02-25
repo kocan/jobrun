@@ -19,8 +19,8 @@ import {
 import { CustomerPicker } from '../../components/CustomerPicker';
 import { ServicePicker } from '../../components/ServicePicker';
 import { LineItemEditor } from '../../components/LineItemEditor';
-import { TotalsView } from '../../components/LineItemEditor';
-import { LineItemsView } from '../../components/LineItemEditor';
+import { TotalsView, LineItemsView } from '../../components/LineItemEditor';
+import { DatePickerField } from '../../components/DateTimePicker';
 
 const STATUS_LABELS: Record<EstimateStatus, string> = {
   'draft': 'Draft',
@@ -269,7 +269,7 @@ export default function EstimateDetailScreen() {
               )}
 
               <FormSectionHeader title="Notes" />
-              <Field label="Expires (YYYY-MM-DD)" value={form.expiresAt} onChange={setField('expiresAt')} />
+              <DatePickerField label="Expires" value={form.expiresAt} onChange={setField('expiresAt')} />
               <Field label="Notes / Terms" value={form.notes} onChange={setField('notes')} multiline placeholder="e.g. Estimate valid for 30 days" />
 
               <SaveButton label={isNew ? 'Create Estimate' : 'Save Changes'} onPress={handleSave} />

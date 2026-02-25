@@ -19,6 +19,7 @@ import {
 import { CustomerPicker } from '../../components/CustomerPicker';
 import { ServicePicker } from '../../components/ServicePicker';
 import { LineItemEditor, TotalsView, LineItemsView } from '../../components/LineItemEditor';
+import { DatePickerField } from '../../components/DateTimePicker';
 import { theme } from '../../lib/theme';
 
 const STATUS_LABELS: Record<InvoiceStatus, string> = {
@@ -313,7 +314,7 @@ export default function InvoiceDetailScreen() {
                 </View>
               </View>
 
-              <Field label="Due Date (YYYY-MM-DD)" value={form.dueDate} onChange={setField('dueDate')} />
+              <DatePickerField label="Due Date" value={form.dueDate} onChange={setField('dueDate')} />
               <FormSectionHeader title="Notes" />
               <Field label="Notes" value={form.notes} onChange={setField('notes')} multiline placeholder="e.g. Thank you for your business" />
 
