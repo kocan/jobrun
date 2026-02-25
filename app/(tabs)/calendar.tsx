@@ -7,7 +7,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { useJobs } from '../../contexts/JobContext';
 import { useCustomers } from '../../contexts/CustomerContext';
 import { Job, JobStatus } from '../../lib/types';
@@ -58,6 +58,22 @@ export default function CalendarScreen() {
   const [refreshError, setRefreshError] = useState<string | null>(null);
 
   const today = getLocalDateString();
+
+  // Current time tracker — updates every minute for the red "now" line
+  const [nowMinutes, setNowMinutes] = useState(() => {
+    const n = new Date();
+    return n.getHours() * 60 + n.getMinutes();
+  });
+  useEffect(() => {
+    const update = () => {
+      const n = new Date();
+      setNowMinutes(n.getHours() * 60 + n.getMinutes());
+    };
+    const id = setInterval(update, 60_000);
+    return () => clearInterval(id);
+  }, []);
+  const nowLineTop = (nowMinutes - START_HOUR * 60) * (HOUR_HEIGHT / 60);
+  const showNowLine = nowMinutes >= START_HOUR * 60 && nowMinutes <= END_HOUR * 60;
 
   const weekDays = useMemo(() => getWeekDays(currentDate), [currentDate]);
   const weekStart = weekDays[0];
@@ -244,6 +260,13 @@ export default function CalendarScreen() {
                 <View style={styles.timeSlotLine} />
               </View>
             ))}
+            {/* Current time red line */}
+            {selectedDate === today && showNowLine && (
+              <View style={[styles.nowLine, { top: nowLineTop }]} pointerEvents="none">
+                <View style={styles.nowDot} />
+                <View style={styles.nowRule} />
+              </View>
+            )}
             {/* Job blocks */}
             {selectedDayJobs.map((job) => {
               if (!job.scheduledTime) return null;
@@ -372,6 +395,11 @@ const styles = StyleSheet.create({
   timeBlock: { position: 'absolute', left: 60, right: 16, borderLeftWidth: 4, borderRadius: 6, padding: 6, overflow: 'hidden' },
   timeBlockTime: { fontSize: 11, fontWeight: '600', color: theme.colors.gray500 },
   timeBlockTitle: { fontSize: 13, fontWeight: '600', color: theme.colors.text },
+
+  // Current time line
+  nowLine: { position: 'absolute', left: 0, right: 0, flexDirection: 'row', alignItems: 'center', zIndex: 10 },
+  nowDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444', marginLeft: 48 },
+  nowRule: { flex: 1, height: 2, backgroundColor: '#EF4444' },
 
   // FAB
   fab: { position: 'absolute', bottom: 24, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center', elevation: 4, shadowColor: theme.colors.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 },
