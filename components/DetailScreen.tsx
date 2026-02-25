@@ -6,6 +6,18 @@ import { theme } from '../lib/theme';
  * Extracted to reduce duplication across the three detail views.
  */
 
+/* ── FormSectionHeader (visual divider for long forms) ── */
+
+export function FormSectionHeader({ title }: { title: string }) {
+  return (
+    <View style={detailStyles.formSectionHeader}>
+      <View style={detailStyles.formSectionLine} />
+      <Text style={detailStyles.formSectionText}>{title}</Text>
+      <View style={detailStyles.formSectionLine} />
+    </View>
+  );
+}
+
 /* ── InfoRow (read-only detail) ────────────────────────── */
 
 export function InfoRow({ label, value }: { label: string; value?: string }) {
@@ -129,6 +141,11 @@ export const detailStyles = StyleSheet.create({
   flex: { flex: 1 },
   container: { flex: 1, backgroundColor: theme.colors.white },
   content: { padding: 16, paddingBottom: 40 },
+
+  // Form section header
+  formSectionHeader: { flexDirection: 'row', alignItems: 'center', marginTop: 20, marginBottom: 16 },
+  formSectionLine: { flex: 1, height: 1, backgroundColor: theme.colors.gray200 },
+  formSectionText: { paddingHorizontal: 12, fontSize: 13, fontWeight: '700', color: theme.colors.gray400, textTransform: 'uppercase', letterSpacing: 1 },
   headerBtn: { color: theme.colors.primary, fontSize: 17, fontWeight: '600' },
 
   // Fields

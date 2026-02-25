@@ -14,7 +14,7 @@ import { buildShareUrl, buildShareMessage } from '../../lib/estimateSharing';
 import { useSettings } from '../../contexts/SettingsContext';
 import {
   InfoRow, Field, StatusBadge, ActionButton, SectionTitle,
-  SaveButton, CancelButton, DeleteButton, detailStyles as styles,
+  SaveButton, CancelButton, DeleteButton, FormSectionHeader, detailStyles as styles,
 } from '../../components/DetailScreen';
 import { CustomerPicker } from '../../components/CustomerPicker';
 import { ServicePicker } from '../../components/ServicePicker';
@@ -242,7 +242,7 @@ export default function EstimateDetailScreen() {
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
           {editing ? (
             <>
-              {/* Customer Picker */}
+              <FormSectionHeader title="Customer Info" />
               <View style={styles.field}>
                 <Text style={styles.label}>Customer *</Text>
                 <Pressable accessibilityRole="button" accessibilityLabel="Open customer picker" style={styles.pickerBtn} onPress={() => setCustomerPickerVisible(true)}>
@@ -252,6 +252,7 @@ export default function EstimateDetailScreen() {
                 </Pressable>
               </View>
 
+              <FormSectionHeader title="Line Items" />
               <LineItemEditor
                 lineItems={form.lineItems}
                 onUpdateItem={updateLineItem}
@@ -267,6 +268,7 @@ export default function EstimateDetailScreen() {
                 <TotalsView subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
               )}
 
+              <FormSectionHeader title="Notes" />
               <Field label="Expires (YYYY-MM-DD)" value={form.expiresAt} onChange={setField('expiresAt')} />
               <Field label="Notes / Terms" value={form.notes} onChange={setField('notes')} multiline placeholder="e.g. Estimate valid for 30 days" />
 

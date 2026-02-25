@@ -11,7 +11,7 @@ import { isValidStatusTransition } from '../../lib/db/repositories/jobs';
 import { calculateTotal } from '../../lib/db/repositories/priceBook';
 import {
   InfoRow, Field, StatusBadge, ActionButton, SectionTitle,
-  SaveButton, CancelButton, DeleteButton, detailStyles as styles,
+  SaveButton, CancelButton, DeleteButton, FormSectionHeader, detailStyles as styles,
 } from '../../components/DetailScreen';
 import { CustomerPicker } from '../../components/CustomerPicker';
 import { ServicePicker } from '../../components/ServicePicker';
@@ -230,7 +230,7 @@ export default function JobDetailScreen() {
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
           {editing ? (
             <>
-              {/* Customer Picker */}
+              <FormSectionHeader title="Customer Info" />
               <View style={styles.field}>
                 <Text style={styles.label}>Customer *</Text>
                 <Pressable
@@ -249,7 +249,7 @@ export default function JobDetailScreen() {
               <Field label="Title *" value={form.title} onChange={setField('title')} autoFocus={isNew} />
               <Field label="Description" value={form.description} onChange={setField('description')} multiline />
 
-              {/* Status */}
+              <FormSectionHeader title="Schedule" />
               <View style={styles.field}>
                 <Text style={styles.label}>Status</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -275,6 +275,7 @@ export default function JobDetailScreen() {
               />
               <Field label="Time (HH:MM)" value={form.scheduledTime} onChange={setField('scheduledTime')} />
               <Field label="Duration (minutes)" value={form.estimatedDuration} onChange={setField('estimatedDuration')} keyboardType="number-pad" />
+              <FormSectionHeader title="Line Items" />
               <LineItemEditor
                 lineItems={form.lineItems}
                 onUpdateItem={updateLineItem}
@@ -288,6 +289,7 @@ export default function JobDetailScreen() {
                 </View>
               )}
 
+              <FormSectionHeader title="Notes" />
               <Field label="Notes" value={form.notes} onChange={setField('notes')} multiline />
 
               <SaveButton label={isNew ? 'Create Job' : 'Save Changes'} onPress={handleSave} />

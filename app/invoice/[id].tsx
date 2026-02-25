@@ -14,7 +14,7 @@ import { buildInvoiceShareUrl, buildInvoiceShareMessage } from '../../lib/invoic
 import { useSettings } from '../../contexts/SettingsContext';
 import {
   InfoRow, Field, StatusBadge, ActionButton, SectionTitle,
-  SaveButton, CancelButton, DeleteButton, detailStyles as styles,
+  SaveButton, CancelButton, DeleteButton, FormSectionHeader, detailStyles as styles,
 } from '../../components/DetailScreen';
 import { CustomerPicker } from '../../components/CustomerPicker';
 import { ServicePicker } from '../../components/ServicePicker';
@@ -269,7 +269,7 @@ export default function InvoiceDetailScreen() {
                 </View>
               ) : null}
 
-              {/* Customer Picker */}
+              <FormSectionHeader title="Customer Info" />
               <View style={styles.field}>
                 <Text style={styles.label}>Customer *</Text>
                 <Pressable accessibilityRole="button" accessibilityLabel="Open customer picker" style={styles.pickerBtn} onPress={() => setCustomerPickerVisible(true)}>
@@ -279,6 +279,7 @@ export default function InvoiceDetailScreen() {
                 </Pressable>
               </View>
 
+              <FormSectionHeader title="Line Items" />
               <LineItemEditor
                 lineItems={form.lineItems}
                 onUpdateItem={updateLineItem}
@@ -294,7 +295,7 @@ export default function InvoiceDetailScreen() {
                 <TotalsView subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
               )}
 
-              {/* Payment Terms */}
+              <FormSectionHeader title="Payment" />
               <View style={styles.field}>
                 <Text style={styles.label}>Payment Terms</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -313,6 +314,7 @@ export default function InvoiceDetailScreen() {
               </View>
 
               <Field label="Due Date (YYYY-MM-DD)" value={form.dueDate} onChange={setField('dueDate')} />
+              <FormSectionHeader title="Notes" />
               <Field label="Notes" value={form.notes} onChange={setField('notes')} multiline placeholder="e.g. Thank you for your business" />
 
               <SaveButton label={isNew ? 'Create Invoice' : 'Save Changes'} onPress={handleSave} />
