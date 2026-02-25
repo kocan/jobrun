@@ -2,9 +2,9 @@
  * Tests for network state handling
  */
 
-jest.mock('@react-native-community/netinfo', () => ({
-  addEventListener: jest.fn((cb: (state: any) => void) => {
-    return jest.fn(); // unsubscribe
+vi.mock('@react-native-community/netinfo', () => ({
+  addEventListener: vi.fn((cb: (state: any) => void) => {
+    return vi.fn(); // unsubscribe
   }),
 }));
 

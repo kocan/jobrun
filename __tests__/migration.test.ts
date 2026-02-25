@@ -3,25 +3,25 @@
  */
 
 const mockDb = {
-  execSync: jest.fn(),
-  runSync: jest.fn(() => ({ changes: 1 })),
-  getFirstSync: jest.fn((sql: string) => {
+  execSync: vi.fn(),
+  runSync: vi.fn(() => ({ changes: 1 })),
+  getFirstSync: vi.fn((sql: string) => {
     if (sql.includes('schema_version')) return { value: '1' };
     return null;
   }),
-  getAllSync: jest.fn(() => []),
-  withTransactionSync: jest.fn((fn: () => void) => fn()),
-  closeSync: jest.fn(),
+  getAllSync: vi.fn(() => []),
+  withTransactionSync: vi.fn((fn: () => void) => fn()),
+  closeSync: vi.fn(),
 };
 
-jest.mock('expo-sqlite', () => ({
-  openDatabaseSync: jest.fn(() => mockDb),
+vi.mock('expo-sqlite', () => ({
+  openDatabaseSync: vi.fn(() => mockDb),
 }));
 
 let asyncStore: Record<string, string> = {};
-jest.mock('@react-native-async-storage/async-storage', () => ({
-  getItem: jest.fn((key: string) => Promise.resolve(asyncStore[key] || null)),
-  setItem: jest.fn((key: string, value: string) => {
+vi.mock('@react-native-async-storage/async-storage', () => ({
+  getItem: vi.fn((key: string) => Promise.resolve(asyncStore[key] || null)),
+  setItem: vi.fn((key: string, value: string) => {
     asyncStore[key] = value;
     return Promise.resolve();
   }),

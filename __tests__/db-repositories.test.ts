@@ -7,8 +7,8 @@ let storedRows: Record<string, any[]> = {};
 let deletedIds: Set<string> = new Set();
 
 const mockDb = {
-  execSync: jest.fn(),
-  runSync: jest.fn((sql: string, params?: any[]) => {
+  execSync: vi.fn(),
+  runSync: vi.fn((sql: string, params?: any[]) => {
     const sqlLower = sql.toLowerCase();
     if (sqlLower.startsWith('insert')) {
       // Extract table name
@@ -33,7 +33,7 @@ const mockDb = {
     }
     return { changes: 0 };
   }),
-  getFirstSync: jest.fn((sql: string, params?: any[]) => {
+  getFirstSync: vi.fn((sql: string, params?: any[]) => {
     if (sql.includes('schema_version')) return { value: '1' };
     if (sql.includes('invoice_counter')) return { next_number: 1 };
     if (sql.includes('customers') && params?.[0] === 'test-1') {
@@ -54,7 +54,7 @@ const mockDb = {
     if (sql.includes('COUNT')) return { count: 3 };
     return null;
   }),
-  getAllSync: jest.fn((sql: string) => {
+  getAllSync: vi.fn((sql: string) => {
     if (sql.includes('customers')) {
       return [
         {
@@ -83,12 +83,12 @@ const mockDb = {
     if (sql.includes('price_book_services')) return [];
     return [];
   }),
-  withTransactionSync: jest.fn((fn: () => void) => fn()),
-  closeSync: jest.fn(),
+  withTransactionSync: vi.fn((fn: () => void) => fn()),
+  closeSync: vi.fn(),
 };
 
-jest.mock('expo-sqlite', () => ({
-  openDatabaseSync: jest.fn(() => mockDb),
+vi.mock('expo-sqlite', () => ({
+  openDatabaseSync: vi.fn(() => mockDb),
 }));
 
 import * as customerRepo from '../lib/db/repositories/customers';

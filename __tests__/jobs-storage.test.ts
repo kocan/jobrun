@@ -2,19 +2,19 @@ import { getJobs, saveJobs, addJob, updateJob, deleteJob, getJobById, filterJobs
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Job, JobStatus } from '../lib/types';
 
-jest.mock('@react-native-async-storage/async-storage', () => {
+vi.mock('@react-native-async-storage/async-storage', () => {
   let store: Record<string, string> = {};
   return {
-    getItem: jest.fn((key: string) => Promise.resolve(store[key] || null)),
-    setItem: jest.fn((key: string, value: string) => {
+    getItem: vi.fn((key: string) => Promise.resolve(store[key] || null)),
+    setItem: vi.fn((key: string, value: string) => {
       store[key] = value;
       return Promise.resolve();
     }),
-    removeItem: jest.fn((key: string) => {
+    removeItem: vi.fn((key: string) => {
       delete store[key];
       return Promise.resolve();
     }),
-    clear: jest.fn(() => {
+    clear: vi.fn(() => {
       store = {};
       return Promise.resolve();
     }),
@@ -41,7 +41,7 @@ const makeJob = (overrides: Partial<Job> = {}): Job => ({
 
 beforeEach(() => {
   (AsyncStorage as any).__resetStore();
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 describe('Job Storage CRUD', () => {

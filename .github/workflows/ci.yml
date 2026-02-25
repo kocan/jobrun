@@ -30,6 +30,7 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci --legacy-peer-deps
+      - run: npx eslint . --ext .ts,.tsx
       - run: npm audit --audit-level=high --legacy-peer-deps
       - run: npx eslint . --ext .ts,.tsx --max-warnings=0
       - run: npx tsc --noEmit
@@ -44,7 +45,7 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci --legacy-peer-deps
-      - run: npx jest --ci
+      - run: npx vitest run
 
   lint-and-typecheck-web:
     name: Web — Lint & Typecheck
