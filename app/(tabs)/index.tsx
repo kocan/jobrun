@@ -10,8 +10,9 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState, useCallback } from 'react';
 import { useJobs } from '../../contexts/JobContext';
 import { useCustomers } from '../../contexts/CustomerContext';
+import { useInvoices } from '../../contexts/InvoiceContext';
 import { Job, JobStatus } from '../../lib/types';
-import { getLocalDateString, getTomorrowDateString, computeStats } from '../../lib/dateUtils';
+import { getLocalDateString, getTomorrowDateString, getWeekStart, computeStats } from '../../lib/dateUtils';
 import { theme } from '../../lib/theme';
 import { LoadingState } from '../../components/LoadingState';
 import { EmptyState } from '../../components/EmptyState';
@@ -64,6 +65,8 @@ export default function TodayScreen() {
   const [tomorrowExpanded, setTomorrowExpanded] = useState(false);
   const [refreshError, setRefreshError] = useState<string | null>(null);
 
+  const { invoices } = useInvoices();
+
   const today = getLocalDateString();
   const tomorrow = getTomorrowDateString();
   const customerMap = useMemo(() => {
@@ -91,6 +94,34 @@ export default function TodayScreen() {
   );
 
   const stats = useMemo(() => computeStats(todayJobs), [todayJobs]);
+
+  const dashboard = useMemo(() => {
+    const now = new Date();
+    const thisWeekStart = getLocalDateString(getWeekStart(now));
+    const lastWeekDate = new Date(now);
+    lastWeekDate.setDate(lastWeekDate.getDate() - 7);
+    const lastWeekStart = getLocalDateString(getWeekStart(lastWeekDate));
+    const lastWeekEnd = getLocalDateString(new Date(getWeekStart(lastWeekDate).getTime() + 6 * 86400000));
+
+    // Revenue this week from paid invoices
+    const thisWeekRevenue = invoices
+      .filter((i) => i.status === 'paid' && i.paidAt && i.paidAt.slice(0, 10) >= thisWeekStart && i.paidAt.slice(0, 10) <= today)
+      .reduce((sum, i) => sum + i.total, 0);
+
+    const lastWeekRevenue = invoices
+      .filter((i) => i.status === 'paid' && i.paidAt && i.paidAt.slice(0, 10) >= lastWeekStart && i.paidAt.slice(0, 10) <= lastWeekEnd)
+      .reduce((sum, i) => sum + i.total, 0);
+
+    const trend = lastWeekRevenue > 0
+      ? Math.round(((thisWeekRevenue - lastWeekRevenue) / lastWeekRevenue) * 100)
+      : thisWeekRevenue > 0 ? 100 : 0;
+
+    // Outstanding invoices (sent, viewed, overdue)
+    const outstanding = invoices.filter((i) => i.status === 'sent' || i.status === 'viewed' || i.status === 'overdue');
+    const outstandingTotal = outstanding.reduce((sum, i) => sum + i.total, 0);
+
+    return { thisWeekRevenue, trend, outstandingCount: outstanding.length, outstandingTotal };
+  }, [invoices, today]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -192,13 +223,17 @@ export default function TodayScreen() {
     return <LoadingState message="Loading today’s jobs..." accessibilityLabel="Loading today's jobs" />;
   }
 
+  const trendColor = dashboard.trend > 0 ? '#10B981' : dashboard.trend < 0 ? '#EF4444' : theme.colors.gray400;
+  const trendLabel = dashboard.trend > 0 ? `+${dashboard.trend}%` : dashboard.trend < 0 ? `${dashboard.trend}%` : '—';
+
   const header = (
     <>
       <Text style={styles.dateHeader}>{formatDateHeader(today)}</Text>
+      {/* Today's quick stats */}
       <View style={styles.statsRow}>
         <View style={styles.statBox}>
           <Text style={styles.statValue}>{stats.total}</Text>
-          <Text style={styles.statLabel}>Jobs</Text>
+          <Text style={styles.statLabel}>Jobs Today</Text>
         </View>
         <View style={styles.statBox}>
           <Text style={styles.statValue}>{stats.completed}</Text>
@@ -206,7 +241,20 @@ export default function TodayScreen() {
         </View>
         <View style={styles.statBox}>
           <Text style={styles.statValue}>${stats.revenue.toFixed(0)}</Text>
-          <Text style={styles.statLabel}>Revenue</Text>
+          <Text style={styles.statLabel}>Today Rev.</Text>
+        </View>
+      </View>
+      {/* Weekly dashboard */}
+      <View style={styles.dashboardRow}>
+        <View style={styles.dashCard}>
+          <Text style={styles.dashValue}>${dashboard.thisWeekRevenue.toFixed(0)}</Text>
+          <Text style={styles.dashLabel}>This Week</Text>
+          <Text style={[styles.dashTrend, { color: trendColor }]}>{trendLabel} vs last</Text>
+        </View>
+        <View style={styles.dashCard}>
+          <Text style={styles.dashValue}>{dashboard.outstandingCount}</Text>
+          <Text style={styles.dashLabel}>Outstanding</Text>
+          <Text style={styles.dashSub}>${dashboard.outstandingTotal.toFixed(0)} owed</Text>
         </View>
       </View>
     </>
@@ -339,4 +387,23 @@ const styles = StyleSheet.create({
   tomorrowName: { flex: 1, fontSize: 15, color: theme.colors.gray700 },
   tomorrowAmount: { fontSize: 14, fontWeight: '600', color: theme.colors.text },
   showMore: { textAlign: 'center', color: theme.colors.primary, fontSize: 14, fontWeight: '500', marginTop: 4 },
+
+  // Dashboard
+  dashboardRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
+  dashCard: {
+    flex: 1,
+    backgroundColor: theme.colors.white,
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+    shadowColor: theme.colors.black,
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  dashValue: { fontSize: 22, fontWeight: 'bold', color: theme.colors.text },
+  dashLabel: { fontSize: 12, color: theme.colors.textMuted, marginTop: 2 },
+  dashTrend: { fontSize: 12, fontWeight: '600', marginTop: 4 },
+  dashSub: { fontSize: 12, color: theme.colors.gray400, marginTop: 4 },
 });
