@@ -36,6 +36,8 @@ type FormData = {
   lineItems: LineItem[];
 };
 
+type FormErrors = Partial<Record<keyof FormData, string>>;
+
 const emptyForm: FormData = {
   customerId: '',
   title: '',
@@ -66,6 +68,7 @@ export default function JobDetailScreen() {
   }));
   const [customerPickerVisible, setCustomerPickerVisible] = useState(false);
   const [customerSearch, setCustomerSearch] = useState('');
+  const [errors, setErrors] = useState<FormErrors>({});
 
   useEffect(() => {
     if (!isNew && id) {
@@ -132,16 +135,29 @@ export default function JobDetailScreen() {
   const filteredCustomers = useMemo(() => {
     if (!customerSearch.trim()) return customers;
     const q = customerSearch.toLowerCase();
+    const phoneDigits = q.replace(/\D/g, '');
     return customers.filter(
-      (c) => c.firstName.toLowerCase().includes(q) || c.lastName.toLowerCase().includes(q) || (c.phone && c.phone.includes(q))
+      (c) =>
+        c.firstName.toLowerCase().includes(q) ||
+        c.lastName.toLowerCase().includes(q) ||
+        (phoneDigits.length > 0 && c.phone ? c.phone.replace(/\D/g, '').includes(phoneDigits) : false)
     );
   }, [customers, customerSearch]);
 
-  const handleSave = async () => {
+  const validateForm = (): boolean => {
+    const nextErrors: FormErrors = {};
     if (!form.customerId) {
-      Alert.alert('Error', 'Please select a customer');
-      return;
+      nextErrors.customerId = 'Please select a customer.';
     }
+    if (!form.scheduledDate.trim()) {
+      nextErrors.scheduledDate = 'Please enter a scheduled date.';
+    }
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validateForm()) return;
     if (!form.title.trim()) {
       Alert.alert('Error', 'Please enter a job title');
       return;
@@ -195,7 +211,10 @@ export default function JobDetailScreen() {
     ]);
   };
 
-  const setField = (key: keyof FormData) => (value: string) => setForm((f) => ({ ...f, [key]: value }));
+  const setField = (key: keyof FormData) => (value: string) => {
+    setForm((f) => ({ ...f, [key]: value }));
+    setErrors((prev) => ({ ...prev, [key]: undefined }));
+  };
 
   const customerName = selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}`.trim() : 'Select Customer';
   const title = isNew ? 'New Job' : editing ? 'Edit Job' : form.title || 'Job Details';
@@ -220,11 +239,17 @@ export default function JobDetailScreen() {
               {/* Customer Picker */}
               <View style={styles.field}>
                 <Text style={styles.label}>Customer *</Text>
-                <Pressable accessibilityRole="button" accessibilityLabel="Open customer picker" style={styles.pickerBtn} onPress={() => setCustomerPickerVisible(true)}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Open customer picker"
+                  style={[styles.pickerBtn, errors.customerId && styles.inputError]}
+                  onPress={() => setCustomerPickerVisible(true)}
+                >
                   <Text style={[styles.pickerText, !form.customerId && styles.pickerPlaceholder]}>
                     {customerName}
                   </Text>
                 </Pressable>
+                {errors.customerId ? <Text style={styles.fieldError}>{errors.customerId}</Text> : null}
               </View>
 
               <Field label="Title *" value={form.title} onChange={setField('title')} autoFocus={isNew} />
@@ -248,7 +273,12 @@ export default function JobDetailScreen() {
                 </View>
               </View>
 
-              <Field label="Date (YYYY-MM-DD)" value={form.scheduledDate} onChange={setField('scheduledDate')} />
+              <Field
+                label="Date (YYYY-MM-DD)"
+                value={form.scheduledDate}
+                onChange={setField('scheduledDate')}
+                error={errors.scheduledDate}
+              />
               <Field label="Time (HH:MM)" value={form.scheduledTime} onChange={setField('scheduledTime')} />
               <Field label="Duration (minutes)" value={form.estimatedDuration} onChange={setField('estimatedDuration')} keyboardType="number-pad" />
               {/* Line Items */}
@@ -404,6 +434,7 @@ export default function JobDetailScreen() {
                 style={styles.customerRow}
                 onPress={() => {
                   setForm((f) => ({ ...f, customerId: item.id }));
+                  setErrors((prev) => ({ ...prev, customerId: undefined }));
                   setCustomerPickerVisible(false);
                   setCustomerSearch('');
                 }}
@@ -451,17 +482,18 @@ export default function JobDetailScreen() {
 }
 
 function Field({
-  label, value, onChange, multiline, autoFocus, keyboardType,
+  label, value, onChange, multiline, autoFocus, keyboardType, error,
 }: {
   label: string; value: string; onChange: (v: string) => void;
   multiline?: boolean; autoFocus?: boolean;
   keyboardType?: 'default' | 'number-pad' | 'numeric';
+  error?: string;
 }) {
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
       <TextInput accessibilityRole="text" accessibilityLabel="Text input"
-        style={[styles.input, multiline && styles.inputMultiline]}
+        style={[styles.input, multiline && styles.inputMultiline, error && styles.inputError]}
         value={value}
         onChangeText={onChange}
         multiline={multiline}
@@ -469,6 +501,7 @@ function Field({
         autoFocus={autoFocus}
         keyboardType={keyboardType}
       />
+      {error ? <Text style={styles.fieldError}>{error}</Text> : null}
     </View>
   );
 }
@@ -493,6 +526,14 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8,
     padding: 12, fontSize: 16, color: '#111', backgroundColor: '#F9FAFB',
+  },
+  inputError: {
+    borderColor: '#DC2626',
+  },
+  fieldError: {
+    color: '#DC2626',
+    fontSize: 13,
+    marginTop: 6,
   },
   inputMultiline: { minHeight: 80, textAlignVertical: 'top' },
   pickerBtn: {
