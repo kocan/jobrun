@@ -1,54 +1,51 @@
-# Dependabot configuration
-# https://docs.github.com/en/code-security/dependabot
-
 version: 2
 updates:
-  # Mobile (Expo/React Native) npm dependencies
-  - package-ecosystem: "npm"
+  - package-ecosystem: npm
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "America/New_York"
+      interval: weekly
+      day: monday
+      timezone: America/New_York
     open-pull-requests-limit: 10
-    # Group minor/patch updates to reduce PR noise
+    labels:
+      - dependencies
     groups:
-      dev-dependencies:
-        dependency-type: "development"
+      production-minor-patch:
+        dependency-type: production
         update-types:
-          - "minor"
-          - "patch"
-      production-minor:
-        dependency-type: "production"
+          - minor
+          - patch
+      development-minor-patch:
+        dependency-type: development
         update-types:
-          - "minor"
-          - "patch"
-    # Security updates always get individual PRs (default behavior)
+          - minor
+          - patch
+      expo-ecosystem:
+        patterns:
+          - expo
+          - expo-*
 
-  # Web (Next.js) npm dependencies
-  - package-ecosystem: "npm"
+  - package-ecosystem: npm
     directory: "/web"
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "America/New_York"
+      interval: weekly
+      day: monday
+      timezone: America/New_York
     open-pull-requests-limit: 10
+    labels:
+      - dependencies
     groups:
-      web-dev-dependencies:
-        dependency-type: "development"
+      production-minor-patch:
+        dependency-type: production
         update-types:
-          - "minor"
-          - "patch"
-      web-production-minor:
-        dependency-type: "production"
+          - minor
+          - patch
+      development-minor-patch:
+        dependency-type: development
         update-types:
-          - "minor"
-          - "patch"
-
-  # GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
+          - minor
+          - patch
+      expo-ecosystem:
+        patterns:
+          - expo
+          - expo-*
