@@ -36,15 +36,6 @@ export const theme = {
     xxl: 24,
     xxxl: 32,
   },
-  borderRadius: {
-    sm: 6,
-    md: 8,
-    lg: 10,
-    xl: 12,
-    pill: 16,
-    full: 999,
-    fab: 28,
-  },
   radius: {
     sm: 8,
     md: 12,
