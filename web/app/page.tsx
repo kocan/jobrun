@@ -117,7 +117,7 @@ export default function Home() {
             <div className="mt-8">
               <WaitlistForm />
             </div>
-            <p className="mt-4 text-sm text-gray-400 dark:text-slate-500">
+            <p className="mt-4 text-sm text-gray-400 dark:text-gray-500">
               Join 100+ solo operators already on the waitlist.
             </p>
           </div>
@@ -126,7 +126,7 @@ export default function Home() {
           <div className="flex justify-center lg:justify-end">
             <div className="relative w-[280px] h-[560px] bg-gray-900 rounded-[3rem] p-3 shadow-2xl">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-gray-900 rounded-b-2xl z-10" />
-              <div className="w-full h-full bg-gradient-to-br from-orange-50 to-white dark:from-slate-800 dark:to-slate-900 rounded-[2.25rem] overflow-hidden flex flex-col">
+              <div className="w-full h-full bg-gradient-to-br from-orange-50 to-white dark:from-gray-800 dark:to-gray-900 rounded-[2.25rem] overflow-hidden flex flex-col">
                 <div className="bg-orange-600 text-white px-5 pt-10 pb-4">
                   <p className="text-xs opacity-75">Today</p>
                   <p className="text-lg font-bold">3 Jobs Scheduled</p>
@@ -140,7 +140,7 @@ export default function Home() {
                     <div key={j.time} className="bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm border border-gray-100 dark:border-gray-700">
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="text-xs text-gray-400 dark:text-slate-400">{j.time}</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-400">{j.time}</p>
                           <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{j.job}</p>
                           <p className="text-xs text-gray-500 dark:text-gray-300">{j.customer}</p>
                         </div>
@@ -285,7 +285,7 @@ export default function Home() {
               <details key={faq.q} className="group border-b border-gray-200 dark:border-gray-700 pb-4">
                 <summary className="flex items-center justify-between cursor-pointer py-2 text-lg font-medium text-gray-900 dark:text-gray-100 hover:text-orange-600 transition-colors">
                   {faq.q}
-                  <span className="text-gray-400 dark:text-slate-400 group-open:rotate-45 transition-transform text-xl">+</span>
+                  <span className="text-gray-400 dark:text-gray-400 group-open:rotate-45 transition-transform text-xl">+</span>
                 </summary>
                 <p className="mt-2 text-gray-600 dark:text-gray-300 leading-relaxed">{faq.a}</p>
               </details>

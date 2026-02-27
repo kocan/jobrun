@@ -169,10 +169,10 @@ export default function CustomerInvoiceView() {
             {!isPaid && (
               <div className="space-y-3 print:hidden">
                 {payClicked ? (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-                    <p className="text-lg font-semibold text-blue-800 mb-2">💳 Online Payment Coming Soon</p>
-                    <p className="text-blue-600 text-sm">
-                      Online payments will be available shortly. Please contact us to arrange payment.
+                  <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-6 text-center">
+                    <p className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">📞 Pay by Phone</p>
+                    <p className="text-blue-600 dark:text-blue-300 text-sm">
+                      Call or text to arrange payment. Online payments coming soon.
                     </p>
                   </div>
                 ) : (
