@@ -25,6 +25,17 @@ vi.mock('@react-native-async-storage/async-storage', () => ({
     asyncStore[key] = value;
     return Promise.resolve();
   }),
+  default: {
+    getItem: vi.fn((key: string) => Promise.resolve(asyncStore[key] || null)),
+    setItem: vi.fn((key: string, value: string) => {
+      asyncStore[key] = value;
+      return Promise.resolve();
+    }),
+    removeItem: vi.fn(),
+    multiGet: vi.fn(),
+    multiRemove: vi.fn(),
+    getAllKeys: vi.fn(),
+  },
 }));
 
 import { migrateFromAsyncStorage } from '../lib/db/migration';
