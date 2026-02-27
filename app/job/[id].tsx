@@ -255,8 +255,11 @@ export default function JobDetailScreen() {
                 <Text style={styles.label}>Status</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                   {STATUS_OPTIONS.map((s) => (
-                    <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+                    <Pressable
                       key={s}
+                      accessibilityRole="radio"
+                      accessibilityLabel={STATUS_LABELS[s]}
+                      accessibilityState={{ selected: form.status === s }}
                       style={[{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#D1D5DB' }, form.status === s && { backgroundColor: STATUS_COLORS[s] }]}
                       onPress={() => setForm((f) => ({ ...f, status: s }))}
                     >
