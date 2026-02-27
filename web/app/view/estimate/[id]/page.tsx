@@ -48,7 +48,7 @@ export default function CustomerEstimateView() {
 
   if (!data) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Invalid Estimate Link</h1>
           <p className="text-gray-600">This estimate link is invalid or has expired.</p>
@@ -58,10 +58,10 @@ export default function CustomerEstimateView() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 print:bg-white">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 print:bg-white">
       <div className="max-w-2xl mx-auto p-4 sm:p-8">
         {/* Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden print:shadow-none print:border-none">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden print:shadow-none print:border-none">
           {/* Business Header */}
           <div className="bg-gradient-to-r from-orange-600 to-orange-500 px-6 py-8 text-white print:bg-orange-600">
             {data.bn && <p className="text-lg font-semibold mb-2">{data.bn}</p>}
@@ -82,11 +82,11 @@ export default function CustomerEstimateView() {
               <div className="sm:text-right">
                 <div className="mb-2">
                   <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">Date</p>
-                  <p className="text-gray-900">{formatDate(data.dt)}</p>
+                  <p className="text-gray-900 dark:text-gray-100">{formatDate(data.dt)}</p>
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">Valid Until</p>
-                  <p className="text-gray-900">{formatDate(data.ex)}</p>
+                  <p className="text-gray-900 dark:text-gray-100">{formatDate(data.ex)}</p>
                 </div>
               </div>
             </div>
@@ -94,10 +94,10 @@ export default function CustomerEstimateView() {
             {/* Line Items */}
             <div>
               <h2 className="text-sm uppercase tracking-wider text-gray-500 font-semibold mb-3">Services</h2>
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
                 <table className="w-full">
                   <thead>
-                    <tr className="bg-gray-50 text-left text-xs uppercase tracking-wider text-gray-500">
+                    <tr className="bg-gray-50 dark:bg-gray-700 text-left text-xs uppercase tracking-wider text-gray-500 dark:text-gray-300">
                       <th className="px-4 py-3 font-semibold">Service</th>
                       <th className="px-4 py-3 font-semibold text-center">Qty</th>
                       <th className="px-4 py-3 font-semibold text-right">Price</th>
@@ -119,13 +119,13 @@ export default function CustomerEstimateView() {
             </div>
 
             {/* Totals */}
-            <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-              <div className="flex justify-between text-gray-600">
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-2">
+              <div className="flex justify-between text-gray-600 dark:text-gray-300">
                 <span>Subtotal</span>
                 <span>{formatCurrency(data.st)}</span>
               </div>
               {data.tr > 0 && (
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between text-gray-600 dark:text-gray-300">
                   <span>Tax ({data.tr}%)</span>
                   <span>{formatCurrency(data.ta)}</span>
                 </div>

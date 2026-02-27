@@ -301,8 +301,11 @@ export default function InvoiceDetailScreen() {
                 <Text style={styles.label}>Payment Terms</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                   {PAYMENT_TERMS_OPTIONS.map((term) => (
-                    <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+                    <Pressable
                       key={term}
+                      accessibilityRole="radio"
+                      accessibilityLabel={term}
+                      accessibilityState={{ selected: form.paymentTerms === term }}
                       style={[{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#D1D5DB' }, form.paymentTerms === term && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
                       onPress={() => setForm((f) => ({ ...f, paymentTerms: term }))}
                     >
