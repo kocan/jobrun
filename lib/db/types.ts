@@ -132,6 +132,13 @@ export interface PriceBookServiceRow {
   deleted_at: string | null;
 }
 
+export interface CustomerNoteRow {
+  id: string;
+  customer_id: string;
+  note_text: string;
+  created_at: string;
+}
+
 export interface SettingsRow {
   key: string;
   value: string;

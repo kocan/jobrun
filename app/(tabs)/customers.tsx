@@ -54,7 +54,8 @@ export default function CustomersScreen() {
             <EmptyState
               icon="👥"
               title="No customers yet"
-              subtitle="Tap + to add your first customer"
+              subtitle="Add your first customer — they'll appear here with their job history."
+              ctaLabel="+ Add Customer"
             />
           </View>
         }

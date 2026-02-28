@@ -197,4 +197,19 @@ CREATE INDEX IF NOT EXISTS idx_comlog_customer ON communication_log(customer_id)
 export const MIGRATION_003 = `
 -- Add reminder_sent flag to jobs for SMS appointment reminders
 ALTER TABLE jobs ADD COLUMN reminder_sent INTEGER NOT NULL DEFAULT 0;
+-- Customer notes for timeline
+CREATE TABLE IF NOT EXISTS customer_notes (
+  id TEXT PRIMARY KEY NOT NULL,
+  customer_id TEXT NOT NULL,
+  note_text TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_customer_notes_customer ON customer_notes(customer_id);
+-- Add sync_retry_count to all syncable tables for exponential backoff tracking
+ALTER TABLE customers ADD COLUMN sync_retry_count INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE jobs ADD COLUMN sync_retry_count INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE estimates ADD COLUMN sync_retry_count INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE invoices ADD COLUMN sync_retry_count INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE price_book_services ADD COLUMN sync_retry_count INTEGER NOT NULL DEFAULT 0;
 `;

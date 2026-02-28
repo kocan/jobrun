@@ -150,6 +150,25 @@ export interface Photo {
   createdAt: string;
 }
 
+export interface CustomerNote {
+  id: string;
+  customerId: string;
+  noteText: string;
+  createdAt: string;
+}
+
+export type TimelineItemType = 'job' | 'estimate' | 'invoice' | 'note';
+
+export interface TimelineItem {
+  id: string;
+  type: TimelineItemType;
+  title: string;
+  subtitle: string;
+  date: string;
+  status?: string;
+  entityId: string;
+}
+
 export type CommunicationType = 'call' | 'text' | 'email' | 'note' | 'visit';
 
 export interface CommunicationEntry {
