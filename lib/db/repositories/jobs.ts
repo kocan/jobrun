@@ -19,6 +19,7 @@ function rowToJob(row: JobRow, lineItems: LineItem[]): Job {
     photos: JSON.parse(row.photos || '[]') as Photo[],
     estimateId: row.estimate_id || undefined,
     invoiceId: row.invoice_id || undefined,
+    reminderSent: row.reminder_sent === 1,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -118,6 +119,26 @@ export function deleteJob(id: string): boolean {
   const now = new Date().toISOString();
   const result = db.runSync("UPDATE jobs SET deleted_at=?, sync_status='pending', updated_at=? WHERE id=? AND deleted_at IS NULL", [now, now, id]);
   return result.changes > 0;
+}
+
+export function markReminderSent(id: string): boolean {
+  const db = getDatabase();
+  const now = new Date().toISOString();
+  const result = db.runSync(
+    "UPDATE jobs SET reminder_sent=1, sync_status='pending', updated_at=? WHERE id=? AND deleted_at IS NULL",
+    [now, id]
+  );
+  return result.changes > 0;
+}
+
+export function getJobsForReminderDate(date: string): Job[] {
+  const db = getDatabase();
+  const rows = db.getAllSync<JobRow>(
+    "SELECT * FROM jobs WHERE scheduled_date = ? AND status = 'scheduled' AND reminder_sent = 0 AND deleted_at IS NULL ORDER BY scheduled_time",
+    [date]
+  );
+  const lineItemsByJobId = getLineItemsForJobs(db, rows.map((row) => row.id));
+  return rows.map((row) => rowToJob(row, lineItemsByJobId[row.id] ?? []));
 }
 
 export function filterJobsByCustomer(jobs: Job[], customerId: string): Job[] {

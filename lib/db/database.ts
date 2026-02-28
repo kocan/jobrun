@@ -1,5 +1,5 @@
 import * as SQLite from 'expo-sqlite';
-import { SCHEMA_VERSION, MIGRATION_001, MIGRATION_002 } from './schema';
+import { SCHEMA_VERSION, MIGRATION_001, MIGRATION_002, MIGRATION_003 } from './schema';
 
 const DB_NAME = 'jobrun.db';
 
@@ -45,6 +45,9 @@ export function initializeDatabase(): void {
     }
     if (currentVersion < 2) {
       runMigration(MIGRATION_002);
+    }
+    if (currentVersion < 3) {
+      runMigration(MIGRATION_003);
     }
     // Store schema version
     db.runSync(
