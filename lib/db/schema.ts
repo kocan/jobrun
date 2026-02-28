@@ -1,6 +1,6 @@
 // SQL schema for JobRun local-first database
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export const MIGRATION_001 = `
 -- Customers
@@ -192,4 +192,16 @@ CREATE TABLE IF NOT EXISTS communication_log (
   FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS idx_comlog_customer ON communication_log(customer_id);
+`;
+
+export const MIGRATION_003 = `
+-- Customer notes for timeline
+CREATE TABLE IF NOT EXISTS customer_notes (
+  id TEXT PRIMARY KEY NOT NULL,
+  customer_id TEXT NOT NULL,
+  note_text TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_customer_notes_customer ON customer_notes(customer_id);
 `;
