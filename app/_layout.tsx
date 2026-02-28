@@ -10,9 +10,11 @@ import { EstimateProvider } from '../contexts/EstimateContext';
 import { InvoiceProvider } from '../contexts/InvoiceContext';
 import { SettingsProvider, useSettings } from '../contexts/SettingsContext';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
+import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { NetworkProvider } from '../lib/network';
 import { OfflineBanner } from '../components/OfflineBanner';
 import { initializeDatabase } from '../lib/db/database';
+import { initSentry } from '../lib/sentry';
 import { migrateFromAsyncStorage } from '../lib/db/migration';
 import { registerForPushNotifications } from '../lib/notifications';
 import { NotificationType } from '../lib/types';
@@ -20,6 +22,7 @@ import { NotificationType } from '../lib/types';
 function RootNavigator() {
   const { isOnboardingComplete, loading } = useSettings();
   const { user, loading: authLoading, skippedAuth, isConfigured } = useAuth();
+  const { colors, isDark } = useTheme();
   const segments = useSegments();
   const router = useRouter();
   const responseListener = useRef<EventSubscription | undefined>(undefined);
@@ -75,10 +78,17 @@ function RootNavigator() {
 
   if (loading || authLoading) return null;
 
+  const screenOptions = {
+    headerStyle: { backgroundColor: colors.surface },
+    headerTintColor: colors.text,
+    headerTitleStyle: { color: colors.text },
+    contentStyle: { backgroundColor: colors.background },
+  };
+
   return (
     <>
       <OfflineBanner />
-      <Stack>
+      <Stack screenOptions={screenOptions}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="auth" options={{ headerShown: false }} />
@@ -99,6 +109,7 @@ function DatabaseInitializer({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
+      initSentry();
       initializeDatabase();
       await migrateFromAsyncStorage();
       setReady(true);
@@ -120,21 +131,23 @@ export default function RootLayout() {
   return (
     <DatabaseInitializer>
       <NetworkProvider>
-        <SettingsProvider>
-          <AuthProvider>
-            <CustomerProvider>
-              <JobProvider>
-                <PriceBookProvider>
-                  <EstimateProvider>
-                    <InvoiceProvider>
-                      <RootNavigator />
-                    </InvoiceProvider>
-                  </EstimateProvider>
-                </PriceBookProvider>
-              </JobProvider>
-            </CustomerProvider>
-          </AuthProvider>
-        </SettingsProvider>
+        <ThemeProvider>
+          <SettingsProvider>
+            <AuthProvider>
+              <CustomerProvider>
+                <JobProvider>
+                  <PriceBookProvider>
+                    <EstimateProvider>
+                      <InvoiceProvider>
+                        <RootNavigator />
+                      </InvoiceProvider>
+                    </EstimateProvider>
+                  </PriceBookProvider>
+                </JobProvider>
+              </CustomerProvider>
+            </AuthProvider>
+          </SettingsProvider>
+        </ThemeProvider>
       </NetworkProvider>
     </DatabaseInitializer>
   );

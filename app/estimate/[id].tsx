@@ -1,26 +1,27 @@
 import { View, Text, ScrollView, Pressable, Alert, KeyboardAvoidingView, Platform, Share } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useState, useEffect, useMemo } from 'react';
-import * as Crypto from 'expo-crypto';
 import * as Clipboard from 'expo-clipboard';
 import { useEstimates } from '../../contexts/EstimateContext';
-import { useCustomers } from '../../contexts/CustomerContext';
 import { useJobs } from '../../contexts/JobContext';
-import { usePriceBook } from '../../contexts/PriceBookContext';
 import { useInvoices } from '../../contexts/InvoiceContext';
-import { EstimateStatus, LineItem } from '../../lib/types';
+import { EstimateStatus } from '../../lib/types';
 import { isValidEstimateStatusTransition, calculateEstimateTotals } from '../../lib/db/repositories/estimates';
 import { buildShareUrl, buildShareMessage } from '../../lib/estimateSharing';
 import { useSettings } from '../../contexts/SettingsContext';
 import {
-  InfoRow, Field, StatusBadge, ActionButton, SectionTitle,
-  SaveButton, CancelButton, DeleteButton, FormSectionHeader, detailStyles as styles,
+  StatusBadge, ActionButton, SectionTitle,
+  SaveButton, CancelButton, DeleteButton, FormSectionHeader,
 } from '../../components/DetailScreen';
+import { detailStyles as styles } from '../../styles/detailScreen';
+import { Field } from '../../components/shared/Field';
+import { InfoRow } from '../../components/shared/InfoRow';
+import { LineItemEditor, LineItemsView } from '../../components/shared/LineItemEditor';
+import { TotalsBox } from '../../components/shared/TotalsBox';
 import { CustomerPicker } from '../../components/CustomerPicker';
 import { ServicePicker } from '../../components/ServicePicker';
-import { LineItemEditor } from '../../components/LineItemEditor';
-import { TotalsView, LineItemsView } from '../../components/LineItemEditor';
 import { DatePickerField } from '../../components/DateTimePicker';
+import { useLineItems } from '../../hooks/useLineItems';
 
 const STATUS_LABELS: Record<EstimateStatus, string> = {
   'draft': 'Draft',
@@ -42,7 +43,6 @@ const STATUS_COLORS: Record<EstimateStatus, string> = {
 type FormData = {
   customerId: string;
   status: EstimateStatus;
-  lineItems: LineItem[];
   taxRate: string;
   notes: string;
   expiresAt: string;
@@ -57,7 +57,6 @@ function defaultExpiresAt(): string {
 const emptyForm: FormData = {
   customerId: '',
   status: 'draft',
-  lineItems: [],
   taxRate: '0',
   notes: '',
   expiresAt: defaultExpiresAt(),
@@ -67,13 +66,9 @@ export default function EstimateDetailScreen() {
   const { id, customerId: preselectedCustomerId } = useLocalSearchParams<{ id: string; customerId?: string }>();
   const router = useRouter();
   const { getEstimateById, addEstimate, updateEstimate, deleteEstimate } = useEstimates();
-  const { customers, getCustomerById, addCustomer } = useCustomers();
   const { addJob } = useJobs();
-  const { getActiveServices } = usePriceBook();
   const { getInvoiceByJobId } = useInvoices();
   const { settings: appSettings } = useSettings();
-  const [servicePickerVisible, setServicePickerVisible] = useState(false);
-  const [customerPickerVisible, setCustomerPickerVisible] = useState(false);
 
   const isNew = id === 'new';
   const [editing, setEditing] = useState(isNew);
@@ -81,6 +76,14 @@ export default function EstimateDetailScreen() {
     ...emptyForm,
     customerId: preselectedCustomerId || '',
   }));
+  const [lineItems, setLineItemsRaw] = useState<import('../../lib/types').LineItem[]>([]);
+
+  const setLineItems = (updater: (items: import('../../lib/types').LineItem[]) => import('../../lib/types').LineItem[]) => {
+    setLineItemsRaw(updater);
+  };
+
+  const li = useLineItems(lineItems, setLineItems);
+  const customerName = useCustomerName(form.customerId);
 
   useEffect(() => {
     if (!isNew && id) {
@@ -89,65 +92,27 @@ export default function EstimateDetailScreen() {
         setForm({
           customerId: est.customerId,
           status: est.status,
-          lineItems: est.lineItems,
           taxRate: String(est.taxRate),
           notes: est.notes || '',
           expiresAt: est.expiresAt.split('T')[0],
         });
+        setLineItemsRaw(est.lineItems);
       }
     }
   }, [id, isNew, getEstimateById]);
 
-  const selectedCustomer = useMemo(
-    () => form.customerId ? getCustomerById(form.customerId) : undefined,
-    [form.customerId, getCustomerById]
-  );
-
   const taxRate = parseFloat(form.taxRate) || 0;
   const totals = useMemo(
-    () => calculateEstimateTotals(form.lineItems, taxRate),
-    [form.lineItems, taxRate]
+    () => calculateEstimateTotals(lineItems, taxRate),
+    [lineItems, taxRate]
   );
-
-  const activeServices = useMemo(() => getActiveServices(), [getActiveServices]);
-
-  const addLineItemFromService = (serviceId: string) => {
-    const svc = activeServices.find((s) => s.id === serviceId);
-    if (!svc) return;
-    const li: LineItem = {
-      id: Crypto.randomUUID(),
-      serviceId: svc.id,
-      name: svc.name,
-      description: svc.description,
-      quantity: 1,
-      unitPrice: svc.price,
-      total: svc.price,
-    };
-    setForm((f) => ({ ...f, lineItems: [...f.lineItems, li] }));
-  };
-
-  const updateLineItem = (liId: string, updates: Partial<LineItem>) => {
-    setForm((f) => ({
-      ...f,
-      lineItems: f.lineItems.map((li) => {
-        if (li.id !== liId) return li;
-        const updated = { ...li, ...updates };
-        updated.total = Math.round(updated.unitPrice * updated.quantity * 100) / 100;
-        return updated;
-      }),
-    }));
-  };
-
-  const removeLineItem = (liId: string) => {
-    setForm((f) => ({ ...f, lineItems: f.lineItems.filter((li) => li.id !== liId) }));
-  };
 
   const handleSave = async () => {
     if (!form.customerId) {
       Alert.alert('Error', 'Please select a customer');
       return;
     }
-    if (form.lineItems.length === 0) {
+    if (lineItems.length === 0) {
       Alert.alert('Error', 'Please add at least one line item');
       return;
     }
@@ -155,7 +120,7 @@ export default function EstimateDetailScreen() {
     const data = {
       customerId: form.customerId,
       status: form.status,
-      lineItems: form.lineItems,
+      lineItems,
       subtotal: totals.subtotal,
       taxRate,
       taxAmount: totals.taxAmount,
@@ -195,7 +160,7 @@ export default function EstimateDetailScreen() {
             title: `Job from Estimate`,
             status: 'scheduled',
             scheduledDate: new Date().toISOString().split('T')[0],
-            lineItems: form.lineItems,
+            lineItems,
             total: totals.total,
             photos: [],
             estimateId: id!,
@@ -222,7 +187,6 @@ export default function EstimateDetailScreen() {
   };
 
   const setField = (key: keyof FormData) => (value: string) => setForm((f) => ({ ...f, [key]: value }));
-  const customerName = selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}`.trim() : 'Select Customer';
   const title = isNew ? 'New Estimate' : editing ? 'Edit Estimate' : 'Estimate';
 
   return (
@@ -243,21 +207,17 @@ export default function EstimateDetailScreen() {
           {editing ? (
             <>
               <FormSectionHeader title="Customer Info" />
-              <View style={styles.field}>
-                <Text style={styles.label}>Customer *</Text>
-                <Pressable accessibilityRole="button" accessibilityLabel="Open customer picker" style={styles.pickerBtn} onPress={() => setCustomerPickerVisible(true)}>
-                  <Text style={[styles.pickerText, !form.customerId && styles.pickerPlaceholder]}>
-                    {customerName}
-                  </Text>
-                </Pressable>
-              </View>
+              <CustomerPickerField
+                customerId={form.customerId}
+                onSelect={(cId) => setForm((f) => ({ ...f, customerId: cId }))}
+              />
 
               <FormSectionHeader title="Line Items" />
               <LineItemEditor
-                lineItems={form.lineItems}
-                onUpdateItem={updateLineItem}
-                onRemoveItem={removeLineItem}
-                onAddService={() => setServicePickerVisible(true)}
+                lineItems={lineItems}
+                onUpdateItem={li.updateItem}
+                onRemoveItem={li.removeItem}
+                onAddService={li.openServicePicker}
                 required
               />
 
@@ -265,7 +225,7 @@ export default function EstimateDetailScreen() {
               <Field label="Tax Rate (%)" value={form.taxRate} onChange={setField('taxRate')} keyboardType="numeric" placeholder="0" />
 
               {form.lineItems.length > 0 && (
-                <TotalsView subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
+                <TotalsBox subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
               )}
 
               <FormSectionHeader title="Notes" />
@@ -281,11 +241,11 @@ export default function EstimateDetailScreen() {
 
               <InfoRow label="Customer" value={customerName} />
 
-              {form.lineItems.length > 0 && (
+              {lineItems.length > 0 && (
                 <View style={styles.field}>
                   <SectionTitle title="Line Items" />
                   <LineItemsView lineItems={form.lineItems} />
-                  <TotalsView subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
+                  <TotalsBox subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
                 </View>
               )}
 
@@ -348,25 +308,11 @@ export default function EstimateDetailScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <CustomerPicker
-        visible={customerPickerVisible}
-        customers={customers}
-        onSelect={(c) => {
-          setForm((f) => ({ ...f, customerId: c.id }));
-          setCustomerPickerVisible(false);
-        }}
-        onClose={() => setCustomerPickerVisible(false)}
-        onAddCustomer={async (data) => addCustomer(data)}
-      />
-
-      <ServicePicker
-        visible={servicePickerVisible}
-        services={activeServices}
-        onSelect={(svc) => {
-          addLineItemFromService(svc.id);
-          setServicePickerVisible(false);
-        }}
-        onClose={() => setServicePickerVisible(false)}
+      <ServicePickerModal
+        visible={li.servicePickerVisible}
+        services={li.activeServices}
+        onSelect={li.handleServiceSelect}
+        onClose={li.closeServicePicker}
       />
     </>
   );

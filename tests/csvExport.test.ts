@@ -10,7 +10,9 @@ vi.mock('expo-sharing', () => ({
   shareAsync: vi.fn(),
 }))
 
-import { customersToCSV, jobsToCSV, invoicesToCSV } from '../lib/csvExport'
+import { customersToCSV, jobsToCSV, invoicesToCSV, shareCSV } from '../lib/csvExport'
+import * as FileSystem from 'expo-file-system'
+import * as Sharing from 'expo-sharing'
 
 function makeCustomer(overrides: Record<string, any> = {}) {
   return {
@@ -169,5 +171,47 @@ describe('invoicesToCSV', () => {
   it('handles undefined paidAt gracefully', () => {
     const csv = invoicesToCSV([makeInvoice({ paidAt: undefined })] as any, {})
     expect(csv.split('\n')).toHaveLength(2)
+  })
+})
+
+describe('shareCSV', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('writes file and opens share sheet', async () => {
+    await shareCSV('a,b\n1,2', 'test.csv')
+    expect(FileSystem.writeAsStringAsync).toHaveBeenCalledWith(
+      '/tmp/test.csv',
+      'a,b\n1,2',
+      { encoding: FileSystem.EncodingType.UTF8 }
+    )
+    expect(Sharing.shareAsync).toHaveBeenCalledWith(
+      '/tmp/test.csv',
+      { mimeType: 'text/csv', dialogTitle: 'Export test.csv' }
+    )
+  })
+
+  it('uses correct filename in path and dialog', async () => {
+    await shareCSV('data', 'customers-2026-02-28.csv')
+    expect(FileSystem.writeAsStringAsync).toHaveBeenCalledWith(
+      '/tmp/customers-2026-02-28.csv',
+      'data',
+      expect.any(Object)
+    )
+    expect(Sharing.shareAsync).toHaveBeenCalledWith(
+      '/tmp/customers-2026-02-28.csv',
+      expect.objectContaining({ dialogTitle: 'Export customers-2026-02-28.csv' })
+    )
+  })
+
+  it('propagates errors from file system', async () => {
+    vi.mocked(FileSystem.writeAsStringAsync).mockRejectedValueOnce(new Error('disk full'))
+    await expect(shareCSV('data', 'fail.csv')).rejects.toThrow('disk full')
+  })
+
+  it('propagates errors from sharing', async () => {
+    vi.mocked(Sharing.shareAsync).mockRejectedValueOnce(new Error('cancelled'))
+    await expect(shareCSV('data', 'fail.csv')).rejects.toThrow('cancelled')
   })
 })

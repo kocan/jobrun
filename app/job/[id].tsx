@@ -1,22 +1,24 @@
 import { View, Text, ScrollView, Pressable, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useState, useEffect, useMemo } from 'react';
-import * as Crypto from 'expo-crypto';
 import { useJobs } from '../../contexts/JobContext';
 import { useCustomers } from '../../contexts/CustomerContext';
-import { usePriceBook } from '../../contexts/PriceBookContext';
 import { useInvoices } from '../../contexts/InvoiceContext';
-import { Job, JobStatus, LineItem } from '../../lib/types';
+import { Job, JobStatus } from '../../lib/types';
 import { isValidStatusTransition } from '../../lib/db/repositories/jobs';
 import { calculateTotal } from '../../lib/db/repositories/priceBook';
 import {
-  InfoRow, Field, StatusBadge, ActionButton, SectionTitle,
-  SaveButton, CancelButton, DeleteButton, FormSectionHeader, detailStyles as styles,
+  StatusBadge, ActionButton, SectionTitle,
+  SaveButton, CancelButton, DeleteButton, FormSectionHeader,
 } from '../../components/DetailScreen';
+import { detailStyles as styles } from '../../styles/detailScreen';
+import { Field } from '../../components/shared/Field';
+import { InfoRow } from '../../components/shared/InfoRow';
+import { LineItemEditor } from '../../components/shared/LineItemEditor';
 import { CustomerPicker } from '../../components/CustomerPicker';
 import { ServicePicker } from '../../components/ServicePicker';
-import { LineItemEditor } from '../../components/LineItemEditor';
 import { DatePickerField, TimePickerField } from '../../components/DateTimePicker';
+import { useLineItems } from '../../hooks/useLineItems';
 
 const STATUS_OPTIONS: JobStatus[] = ['scheduled', 'in-progress', 'completed', 'cancelled'];
 const STATUS_LABELS: Record<JobStatus, string> = {
@@ -41,7 +43,6 @@ type FormData = {
   scheduledTime: string;
   estimatedDuration: string;
   notes: string;
-  lineItems: LineItem[];
 };
 
 type FormErrors = Partial<Record<keyof FormData, string>>;
@@ -55,17 +56,13 @@ const emptyForm: FormData = {
   scheduledTime: '09:00',
   estimatedDuration: '60',
   notes: '',
-  lineItems: [],
 };
 
 export default function JobDetailScreen() {
   const { id, customerId: preselectedCustomerId, scheduledDate: preselectedDate, date: preselectedDate2 } = useLocalSearchParams<{ id: string; customerId?: string; scheduledDate?: string; date?: string }>();
   const router = useRouter();
   const { getJobById, addJob, updateJob, deleteJob } = useJobs();
-  const { customers, getCustomerById, addCustomer } = useCustomers();
-  const { getActiveServices } = usePriceBook();
   const { getInvoiceByJobId } = useInvoices();
-  const [servicePickerVisible, setServicePickerVisible] = useState(false);
 
   const isNew = id === 'new';
   const [editing, setEditing] = useState(isNew);
@@ -74,8 +71,15 @@ export default function JobDetailScreen() {
     customerId: preselectedCustomerId || '',
     scheduledDate: preselectedDate || preselectedDate2 || emptyForm.scheduledDate,
   }));
-  const [customerPickerVisible, setCustomerPickerVisible] = useState(false);
+  const [lineItems, setLineItemsRaw] = useState<import('../../lib/types').LineItem[]>([]);
   const [errors, setErrors] = useState<FormErrors>({});
+
+  const setLineItems = (updater: (items: import('../../lib/types').LineItem[]) => import('../../lib/types').LineItem[]) => {
+    setLineItemsRaw(updater);
+  };
+
+  const li = useLineItems(lineItems, setLineItems);
+  const customerName = useCustomerName(form.customerId);
 
   useEffect(() => {
     if (!isNew && id) {
@@ -90,54 +94,16 @@ export default function JobDetailScreen() {
           scheduledTime: job.scheduledTime || '',
           estimatedDuration: String(job.estimatedDuration || 60),
           notes: job.notes || '',
-          lineItems: job.lineItems || [],
         });
+        setLineItemsRaw(job.lineItems || []);
       }
     }
   }, [id, isNew, getJobById]);
 
-  const selectedCustomer = useMemo(
-    () => form.customerId ? getCustomerById(form.customerId) : undefined,
-    [form.customerId, getCustomerById]
-  );
-
   const lineItemTotal = useMemo(
-    () => calculateTotal(form.lineItems.map((li) => ({ price: li.unitPrice, quantity: li.quantity }))),
-    [form.lineItems]
+    () => calculateTotal(lineItems.map((item) => ({ price: item.unitPrice, quantity: item.quantity }))),
+    [lineItems]
   );
-
-  const activeServices = useMemo(() => getActiveServices(), [getActiveServices]);
-
-  const addLineItemFromService = (serviceId: string) => {
-    const svc = activeServices.find((s) => s.id === serviceId);
-    if (!svc) return;
-    const li: LineItem = {
-      id: Crypto.randomUUID(),
-      serviceId: svc.id,
-      name: svc.name,
-      description: svc.description,
-      quantity: 1,
-      unitPrice: svc.price,
-      total: svc.price,
-    };
-    setForm((f) => ({ ...f, lineItems: [...f.lineItems, li] }));
-  };
-
-  const updateLineItem = (liId: string, updates: Partial<LineItem>) => {
-    setForm((f) => ({
-      ...f,
-      lineItems: f.lineItems.map((li) => {
-        if (li.id !== liId) return li;
-        const updated = { ...li, ...updates };
-        updated.total = Math.round(updated.unitPrice * updated.quantity * 100) / 100;
-        return updated;
-      }),
-    }));
-  };
-
-  const removeLineItem = (liId: string) => {
-    setForm((f) => ({ ...f, lineItems: f.lineItems.filter((li) => li.id !== liId) }));
-  };
 
   const validateForm = (): boolean => {
     const nextErrors: FormErrors = {};
@@ -167,7 +133,7 @@ export default function JobDetailScreen() {
       scheduledTime: form.scheduledTime || undefined,
       estimatedDuration: parseInt(form.estimatedDuration) || 60,
       notes: form.notes.trim() || undefined,
-      lineItems: form.lineItems,
+      lineItems,
       total: lineItemTotal,
       photos: [],
     };
@@ -211,7 +177,6 @@ export default function JobDetailScreen() {
     setErrors((prev) => ({ ...prev, [key]: undefined }));
   };
 
-  const customerName = selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}`.trim() : 'Select Customer';
   const title = isNew ? 'New Job' : editing ? 'Edit Job' : form.title || 'Job Details';
 
   return (
@@ -232,20 +197,14 @@ export default function JobDetailScreen() {
           {editing ? (
             <>
               <FormSectionHeader title="Customer Info" />
-              <View style={styles.field}>
-                <Text style={styles.label}>Customer *</Text>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Open customer picker"
-                  style={[styles.pickerBtn, errors.customerId && styles.inputError]}
-                  onPress={() => setCustomerPickerVisible(true)}
-                >
-                  <Text style={[styles.pickerText, !form.customerId && styles.pickerPlaceholder]}>
-                    {customerName}
-                  </Text>
-                </Pressable>
-                {errors.customerId ? <Text style={styles.fieldError}>{errors.customerId}</Text> : null}
-              </View>
+              <CustomerPickerField
+                customerId={form.customerId}
+                onSelect={(cId) => {
+                  setForm((f) => ({ ...f, customerId: cId }));
+                  setErrors((prev) => ({ ...prev, customerId: undefined }));
+                }}
+                error={errors.customerId}
+              />
 
               <Field label="Title *" value={form.title} onChange={setField('title')} autoFocus={isNew} />
               <Field label="Description" value={form.description} onChange={setField('description')} multiline />
@@ -281,12 +240,12 @@ export default function JobDetailScreen() {
               <Field label="Duration (minutes)" value={form.estimatedDuration} onChange={setField('estimatedDuration')} keyboardType="number-pad" />
               <FormSectionHeader title="Line Items" />
               <LineItemEditor
-                lineItems={form.lineItems}
-                onUpdateItem={updateLineItem}
-                onRemoveItem={removeLineItem}
-                onAddService={() => setServicePickerVisible(true)}
+                lineItems={lineItems}
+                onUpdateItem={li.updateItem}
+                onRemoveItem={li.removeItem}
+                onAddService={li.openServicePicker}
               />
-              {form.lineItems.length > 0 && (
+              {lineItems.length > 0 && (
                 <View style={[styles.totalsRow, styles.totalRowFinal]}>
                   <Text style={styles.totalLabel}>Total</Text>
                   <Text style={styles.totalValue}>${lineItemTotal.toFixed(2)}</Text>
@@ -343,26 +302,11 @@ export default function JobDetailScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <CustomerPicker
-        visible={customerPickerVisible}
-        customers={customers}
-        onSelect={(c) => {
-          setForm((f) => ({ ...f, customerId: c.id }));
-          setErrors((prev) => ({ ...prev, customerId: undefined }));
-          setCustomerPickerVisible(false);
-        }}
-        onClose={() => setCustomerPickerVisible(false)}
-        onAddCustomer={async (data) => addCustomer(data)}
-      />
-
-      <ServicePicker
-        visible={servicePickerVisible}
-        services={activeServices}
-        onSelect={(svc) => {
-          addLineItemFromService(svc.id);
-          setServicePickerVisible(false);
-        }}
-        onClose={() => setServicePickerVisible(false)}
+      <ServicePickerModal
+        visible={li.servicePickerVisible}
+        services={li.activeServices}
+        onSelect={li.handleServiceSelect}
+        onClose={li.closeServicePicker}
       />
     </>
   );

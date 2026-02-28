@@ -11,6 +11,7 @@ export interface AppSettings {
   notifyPaymentReceived: boolean;
   notifyEstimateAccepted: boolean;
   notifyAppointmentReminder: boolean;
+  smsRemindersEnabled: boolean;
 }
 
 export const defaultSettings: AppSettings = {
@@ -22,6 +23,7 @@ export const defaultSettings: AppSettings = {
   notifyPaymentReceived: true,
   notifyEstimateAccepted: true,
   notifyAppointmentReminder: true,
+  smsRemindersEnabled: false,
 };
 
 export function getSettings(): AppSettings {
@@ -37,6 +39,7 @@ export function getSettings(): AppSettings {
     notifyPaymentReceived: map.get('app_notifyPaymentReceived') !== 'false',
     notifyEstimateAccepted: map.get('app_notifyEstimateAccepted') !== 'false',
     notifyAppointmentReminder: map.get('app_notifyAppointmentReminder') !== 'false',
+    smsRemindersEnabled: map.get('app_smsRemindersEnabled') === 'true',
   };
 }
 
@@ -51,6 +54,7 @@ export function saveSettings(settings: AppSettings): void {
     ['app_notifyPaymentReceived', String(settings.notifyPaymentReceived)],
     ['app_notifyEstimateAccepted', String(settings.notifyEstimateAccepted)],
     ['app_notifyAppointmentReminder', String(settings.notifyAppointmentReminder)],
+    ['app_smsRemindersEnabled', String(settings.smsRemindersEnabled)],
   ];
   db.withTransactionSync(() => {
     for (const [key, value] of entries) {

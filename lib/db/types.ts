@@ -33,6 +33,7 @@ export interface JobRow {
   photos: string;
   estimate_id: string | null;
   invoice_id: string | null;
+  reminder_sent: number;
   sync_status: string;
   created_at: string;
   updated_at: string;
@@ -129,6 +130,13 @@ export interface PriceBookServiceRow {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+}
+
+export interface CustomerNoteRow {
+  id: string;
+  customer_id: string;
+  note_text: string;
+  created_at: string;
 }
 
 export interface SettingsRow {

@@ -11,19 +11,14 @@ import { useMemo, useState, useCallback } from 'react';
 import { useJobs } from '../../contexts/JobContext';
 import { useCustomers } from '../../contexts/CustomerContext';
 import { useInvoices } from '../../contexts/InvoiceContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { Job, JobStatus } from '../../lib/types';
 import { getLocalDateString, getTomorrowDateString, getWeekStart, computeStats } from '../../lib/dateUtils';
 import { theme } from '../../lib/theme';
+import { ThemeColors } from '../../lib/theme';
 import { LoadingState } from '../../components/LoadingState';
 import { EmptyState } from '../../components/EmptyState';
 import { ErrorState } from '../../components/ErrorState';
-
-const STATUS_COLORS: Record<JobStatus, string> = {
-  scheduled: theme.colors.status.scheduled,
-  'in-progress': theme.colors.status.inProgress,
-  completed: theme.colors.status.completed,
-  cancelled: theme.colors.gray400,
-};
 
 const STATUS_LABELS: Record<JobStatus, string> = {
   scheduled: 'Scheduled',
@@ -31,6 +26,15 @@ const STATUS_LABELS: Record<JobStatus, string> = {
   completed: 'Completed',
   cancelled: 'Cancelled',
 };
+
+function getStatusColors(colors: ThemeColors): Record<JobStatus, string> {
+  return {
+    scheduled: colors.status.scheduled,
+    'in-progress': colors.status.inProgress,
+    completed: colors.status.completed,
+    cancelled: colors.gray400,
+  };
+}
 
 function formatDateHeader(dateStr: string): string {
   const [year, month, day] = dateStr.split('-').map(Number);
@@ -64,6 +68,8 @@ export default function TodayScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [tomorrowExpanded, setTomorrowExpanded] = useState(false);
   const [refreshError, setRefreshError] = useState<string | null>(null);
+  const { colors } = useTheme();
+  const statusColors = useMemo(() => getStatusColors(colors), [colors]);
 
   const { invoices } = useInvoices();
 
@@ -159,22 +165,22 @@ export default function TodayScreen() {
     return (
       <Pressable accessibilityRole="button" accessibilityLabel={`View job for ${customerName}`}
         key={job.id}
-        style={styles.card}
+        style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.black }]}
         onPress={() => router.push(`/job/${job.id}`)}
       >
         <View style={styles.cardHeader}>
-          {timeRange ? <Text style={styles.cardTime}>{timeRange}</Text> : null}
-          <View style={[styles.badge, { backgroundColor: STATUS_COLORS[job.status] }]}>
+          {timeRange ? <Text style={[styles.cardTime, { color: colors.textMuted }]}>{timeRange}</Text> : null}
+          <View style={[styles.badge, { backgroundColor: statusColors[job.status] }]}>
             <Text style={styles.badgeText}>{STATUS_LABELS[job.status]}</Text>
           </View>
         </View>
-        <Text style={styles.cardCustomer}>{customerName}</Text>
-        {address ? <Text style={styles.cardAddress}>{address}</Text> : null}
+        <Text style={[styles.cardCustomer, { color: colors.text }]}>{customerName}</Text>
+        {address ? <Text style={[styles.cardAddress, { color: colors.gray400 }]}>{address}</Text> : null}
         <View style={styles.cardFooter}>
-          <Text style={styles.cardAmount}>${job.total.toFixed(2)}</Text>
+          <Text style={[styles.cardAmount, { color: colors.text }]}>${job.total.toFixed(2)}</Text>
           {canAct && (
             <Pressable accessibilityRole="button" accessibilityLabel={`${actionLabel} for ${customerName}`}
-              style={[styles.actionBtn, { backgroundColor: STATUS_COLORS[job.status === 'scheduled' ? 'in-progress' : 'completed'] }]}
+              style={[styles.actionBtn, { backgroundColor: statusColors[job.status === 'scheduled' ? 'in-progress' : 'completed'] }]}
               onPress={() => handleQuickAction(job)}
             >
               <Text style={styles.actionBtnText}>{actionLabel}</Text>
@@ -194,25 +200,25 @@ export default function TodayScreen() {
           style={styles.tomorrowHeader}
           onPress={() => setTomorrowExpanded(!tomorrowExpanded)}
         >
-          <Text style={styles.tomorrowTitle}>
+          <Text style={[styles.tomorrowTitle, { color: colors.gray700 }]}>
             Tomorrow · {tomorrowJobs.length} job{tomorrowJobs.length !== 1 ? 's' : ''}
           </Text>
-          <Text style={styles.chevron}>{tomorrowExpanded ? '▲' : '▼'}</Text>
+          <Text style={[styles.chevron, { color: colors.gray400 }]}>{tomorrowExpanded ? '▲' : '▼'}</Text>
         </Pressable>
         {preview.map((job) => (
           <Pressable accessibilityRole="button" accessibilityLabel={`View tomorrow's job for ${customerMap[job.customerId] || 'Unknown'}`}
             key={job.id}
-            style={styles.tomorrowCard}
+            style={[styles.tomorrowCard, { backgroundColor: colors.surface }]}
             onPress={() => router.push(`/job/${job.id}`)}
           >
-            <Text style={styles.tomorrowTime}>{formatTime(job.scheduledTime)}</Text>
-            <Text style={styles.tomorrowName} numberOfLines={1}>{customerMap[job.customerId] || 'Unknown'}</Text>
-            <Text style={styles.tomorrowAmount}>${job.total.toFixed(2)}</Text>
+            <Text style={[styles.tomorrowTime, { color: colors.gray400 }]}>{formatTime(job.scheduledTime)}</Text>
+            <Text style={[styles.tomorrowName, { color: colors.gray700 }]} numberOfLines={1}>{customerMap[job.customerId] || 'Unknown'}</Text>
+            <Text style={[styles.tomorrowAmount, { color: colors.text }]}>${job.total.toFixed(2)}</Text>
           </Pressable>
         ))}
         {!tomorrowExpanded && tomorrowJobs.length > 3 && (
           <Pressable accessibilityRole="button" accessibilityLabel="Show more tomorrow jobs" onPress={() => setTomorrowExpanded(true)}>
-            <Text style={styles.showMore}>+{tomorrowJobs.length - 3} more</Text>
+            <Text style={[styles.showMore, { color: colors.primary }]}>+{tomorrowJobs.length - 3} more</Text>
           </Pressable>
         )}
       </View>
@@ -220,41 +226,41 @@ export default function TodayScreen() {
   };
 
   if (loading && jobs.length === 0) {
-    return <LoadingState message="Loading today’s jobs..." accessibilityLabel="Loading today's jobs" />;
+    return <LoadingState message="Loading today's jobs..." accessibilityLabel="Loading today's jobs" />;
   }
 
-  const trendColor = dashboard.trend > 0 ? '#10B981' : dashboard.trend < 0 ? '#EF4444' : theme.colors.gray400;
+  const trendColor = dashboard.trend > 0 ? '#10B981' : dashboard.trend < 0 ? '#EF4444' : colors.gray400;
   const trendLabel = dashboard.trend > 0 ? `+${dashboard.trend}%` : dashboard.trend < 0 ? `${dashboard.trend}%` : '—';
 
   const header = (
     <>
-      <Text style={styles.dateHeader}>{formatDateHeader(today)}</Text>
+      <Text style={[styles.dateHeader, { color: colors.text }]}>{formatDateHeader(today)}</Text>
       {/* Today's quick stats */}
       <View style={styles.statsRow}>
-        <View style={styles.statBox}>
-          <Text style={styles.statValue}>{stats.total}</Text>
-          <Text style={styles.statLabel}>Jobs Today</Text>
+        <View style={[styles.statBox, { backgroundColor: colors.surface, shadowColor: colors.black }]}>
+          <Text style={[styles.statValue, { color: colors.primary }]}>{stats.total}</Text>
+          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Jobs Today</Text>
         </View>
-        <View style={styles.statBox}>
-          <Text style={styles.statValue}>{stats.completed}</Text>
-          <Text style={styles.statLabel}>Completed</Text>
+        <View style={[styles.statBox, { backgroundColor: colors.surface, shadowColor: colors.black }]}>
+          <Text style={[styles.statValue, { color: colors.primary }]}>{stats.completed}</Text>
+          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Completed</Text>
         </View>
-        <View style={styles.statBox}>
-          <Text style={styles.statValue}>${stats.revenue.toFixed(0)}</Text>
-          <Text style={styles.statLabel}>Today Rev.</Text>
+        <View style={[styles.statBox, { backgroundColor: colors.surface, shadowColor: colors.black }]}>
+          <Text style={[styles.statValue, { color: colors.primary }]}>${stats.revenue.toFixed(0)}</Text>
+          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Today Rev.</Text>
         </View>
       </View>
       {/* Weekly dashboard */}
       <View style={styles.dashboardRow}>
-        <View style={styles.dashCard}>
-          <Text style={styles.dashValue}>${dashboard.thisWeekRevenue.toFixed(0)}</Text>
-          <Text style={styles.dashLabel}>This Week</Text>
+        <View style={[styles.dashCard, { backgroundColor: colors.surface, shadowColor: colors.black }]}>
+          <Text style={[styles.dashValue, { color: colors.text }]}>${dashboard.thisWeekRevenue.toFixed(0)}</Text>
+          <Text style={[styles.dashLabel, { color: colors.textMuted }]}>This Week</Text>
           <Text style={[styles.dashTrend, { color: trendColor }]}>{trendLabel} vs last</Text>
         </View>
-        <View style={styles.dashCard}>
-          <Text style={styles.dashValue}>{dashboard.outstandingCount}</Text>
-          <Text style={styles.dashLabel}>Outstanding</Text>
-          <Text style={styles.dashSub}>${dashboard.outstandingTotal.toFixed(0)} owed</Text>
+        <View style={[styles.dashCard, { backgroundColor: colors.surface, shadowColor: colors.black }]}>
+          <Text style={[styles.dashValue, { color: colors.text }]}>{dashboard.outstandingCount}</Text>
+          <Text style={[styles.dashLabel, { color: colors.textMuted }]}>Outstanding</Text>
+          <Text style={[styles.dashSub, { color: colors.gray400 }]}>${dashboard.outstandingTotal.toFixed(0)} owed</Text>
         </View>
       </View>
     </>
@@ -268,7 +274,7 @@ export default function TodayScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {todayJobs.length === 0 ? (
         <View style={styles.centered}>
           {header}
@@ -298,12 +304,12 @@ export default function TodayScreen() {
           ListFooterComponent={footer}
           contentContainerStyle={styles.list}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           }
         />
       )}
       <Pressable accessibilityRole="button" accessibilityLabel="Create new job"
-        style={styles.fab}
+        style={[styles.fab, { backgroundColor: colors.primary, shadowColor: colors.black }]}
         onPress={() => router.push(`/job/new?scheduledDate=${today}`)}
       >
         <Text style={styles.fabText}>+</Text>
@@ -313,46 +319,42 @@ export default function TodayScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.background },
+  container: { flex: 1 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 },
   list: { padding: 16 },
-  dateHeader: { fontSize: 26, fontWeight: 'bold', color: theme.colors.text, marginBottom: 12 },
+  dateHeader: { fontSize: 26, fontWeight: 'bold', marginBottom: 12 },
   statsRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   statBox: {
     flex: 1,
-    backgroundColor: theme.colors.white,
     borderRadius: 12,
     padding: 14,
     alignItems: 'center',
-    shadowColor: theme.colors.black,
     shadowOpacity: 0.05,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
-  statValue: { fontSize: 22, fontWeight: 'bold', color: theme.colors.primary },
-  statLabel: { fontSize: 12, color: theme.colors.textMuted, marginTop: 2 },
+  statValue: { fontSize: 22, fontWeight: 'bold' },
+  statLabel: { fontSize: 12, marginTop: 2 },
   card: {
-    backgroundColor: theme.colors.white,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: theme.colors.black,
     shadowOpacity: 0.05,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  cardTime: { fontSize: 14, color: theme.colors.textMuted, fontWeight: '500' },
+  cardTime: { fontSize: 14, fontWeight: '500' },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 },
-  badgeText: { color: theme.colors.white, fontSize: 11, fontWeight: '600' },
-  cardCustomer: { fontSize: 17, fontWeight: '600', color: theme.colors.text, marginBottom: 2 },
-  cardAddress: { fontSize: 13, color: theme.colors.gray400, marginBottom: 8 },
+  badgeText: { color: '#FFFFFF', fontSize: 11, fontWeight: '600' },
+  cardCustomer: { fontSize: 17, fontWeight: '600', marginBottom: 2 },
+  cardAddress: { fontSize: 13, marginBottom: 8 },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
-  cardAmount: { fontSize: 16, fontWeight: '700', color: theme.colors.text },
+  cardAmount: { fontSize: 16, fontWeight: '700' },
   actionBtn: { paddingHorizontal: 14, paddingVertical: 12, minHeight: 44, borderRadius: 8 },
-  actionBtnText: { color: theme.colors.white, fontSize: 13, fontWeight: '600' },
+  actionBtnText: { color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
   fab: {
     position: 'absolute',
     right: 20,
@@ -360,50 +362,45 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: theme.colors.black,
     shadowOpacity: 0.2,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 3 },
     elevation: 5,
   },
-  fabText: { color: theme.colors.white, fontSize: 28, fontWeight: '300', marginTop: -2 },
+  fabText: { color: '#FFFFFF', fontSize: 28, fontWeight: '300', marginTop: -2 },
   tomorrowSection: { marginTop: 20 },
   tomorrowHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  tomorrowTitle: { fontSize: 18, fontWeight: '600', color: theme.colors.gray700 },
-  chevron: { fontSize: 14, color: theme.colors.gray400 },
+  tomorrowTitle: { fontSize: 18, fontWeight: '600' },
+  chevron: { fontSize: 14 },
   tomorrowCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.white,
     borderRadius: 10,
     padding: 12,
     marginBottom: 8,
     gap: 12,
   },
-  tomorrowTime: { fontSize: 13, color: theme.colors.gray400, width: 70 },
-  tomorrowName: { flex: 1, fontSize: 15, color: theme.colors.gray700 },
-  tomorrowAmount: { fontSize: 14, fontWeight: '600', color: theme.colors.text },
-  showMore: { textAlign: 'center', color: theme.colors.primary, fontSize: 14, fontWeight: '500', marginTop: 4 },
+  tomorrowTime: { fontSize: 13, width: 70 },
+  tomorrowName: { flex: 1, fontSize: 15 },
+  tomorrowAmount: { fontSize: 14, fontWeight: '600' },
+  showMore: { textAlign: 'center', fontSize: 14, fontWeight: '500', marginTop: 4 },
 
   // Dashboard
   dashboardRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   dashCard: {
     flex: 1,
-    backgroundColor: theme.colors.white,
     borderRadius: 12,
     padding: 14,
     alignItems: 'center',
-    shadowColor: theme.colors.black,
     shadowOpacity: 0.05,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
-  dashValue: { fontSize: 22, fontWeight: 'bold', color: theme.colors.text },
-  dashLabel: { fontSize: 12, color: theme.colors.textMuted, marginTop: 2 },
+  dashValue: { fontSize: 22, fontWeight: 'bold' },
+  dashLabel: { fontSize: 12, marginTop: 2 },
   dashTrend: { fontSize: 12, fontWeight: '600', marginTop: 4 },
-  dashSub: { fontSize: 12, color: theme.colors.gray400, marginTop: 4 },
+  dashSub: { fontSize: 12, marginTop: 4 },
 });
