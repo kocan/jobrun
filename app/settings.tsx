@@ -107,7 +107,7 @@ export default function SettingsScreen() {
           />
         </View>
         {dirty && (
-          <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={styles.saveButton} onPress={handleSaveBusiness}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Save business settings" style={styles.saveButton} onPress={handleSaveBusiness}>
             <Text style={styles.saveButtonText}>Save Changes</Text>
           </Pressable>
         )}
@@ -123,7 +123,7 @@ export default function SettingsScreen() {
         <Text style={styles.changeHint}>Tap a different industry to switch. This will reset your price book.</Text>
         <View style={styles.verticalList}>
           {verticals.map((v) => (
-            <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+            <Pressable accessibilityRole="button" accessibilityLabel={`Select ${v.name} industry`}
               key={v.id}
               style={[styles.verticalItem, settings.selectedVertical === v.id && styles.verticalItemActive]}
               onPress={() => handleChangeVertical(v.id)}
@@ -134,7 +134,7 @@ export default function SettingsScreen() {
               </Text>
             </Pressable>
           ))}
-          <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+          <Pressable accessibilityRole="button" accessibilityLabel="Select Other or Custom industry"
             style={[styles.verticalItem, settings.selectedVertical === 'custom' && styles.verticalItemActive]}
             onPress={() => handleChangeVertical('custom')}
           >
@@ -164,7 +164,7 @@ export default function SettingsScreen() {
           <>
             <Text style={styles.label}>Signed in as</Text>
             <Text style={styles.accountEmail}>{user.email}</Text>
-            <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+            <Pressable accessibilityRole="button" accessibilityLabel="Sign out of account"
               style={styles.signOutButton}
               onPress={() => {
                 Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
@@ -179,7 +179,7 @@ export default function SettingsScreen() {
         ) : (
           <>
             <Text style={styles.accountOffline}>Using app offline (no account)</Text>
-            <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+            <Pressable accessibilityRole="button" accessibilityLabel="Sign in to your account"
               style={styles.saveButton}
               onPress={() => router.push('/auth/login')}
             >
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   currentVertical: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   currentVerticalIcon: { fontSize: 28, marginRight: 10 },
   currentVerticalName: { fontSize: 18, fontWeight: '600', color: '#111' },
-  changeHint: { fontSize: 13, color: '#888', marginBottom: 16 },
+  changeHint: { fontSize: 13, color: '#6B7280', marginBottom: 16 },
   verticalList: { gap: 8 },
   verticalItem: {
     flexDirection: 'row', alignItems: 'center', padding: 12,
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   verticalItemName: { fontSize: 15, fontWeight: '500', color: '#333' },
   verticalItemNameActive: { color: '#EA580C', fontWeight: '600' },
   accountEmail: { fontSize: 16, color: '#111', fontWeight: '500', marginTop: 4, marginBottom: 16 },
-  accountOffline: { fontSize: 15, color: '#888', marginBottom: 16 },
+  accountOffline: { fontSize: 15, color: '#6B7280', marginBottom: 16 },
   signOutButton: {
     borderWidth: 1.5, borderColor: '#DC2626', borderRadius: 10,
     paddingVertical: 12, alignItems: 'center' as const,

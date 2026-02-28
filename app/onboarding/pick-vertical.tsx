@@ -32,7 +32,7 @@ export default function PickVerticalScreen() {
 
         <View style={styles.grid}>
           {verticals.map((v) => (
-            <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+            <Pressable accessibilityRole="button" accessibilityLabel={`Select ${v.name}`}
               key={v.id}
               style={[styles.card, selected === v.id && styles.cardSelected]}
               onPress={() => setSelected(v.id)}
@@ -42,7 +42,7 @@ export default function PickVerticalScreen() {
               <Text style={styles.cardDesc}>{v.defaultServices.length} services included</Text>
             </Pressable>
           ))}
-          <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+          <Pressable accessibilityRole="button" accessibilityLabel="Select Other or Custom"
             style={[styles.card, selected === 'custom' && styles.cardSelected]}
             onPress={() => setSelected('custom')}
           >
@@ -59,7 +59,7 @@ export default function PickVerticalScreen() {
           <View style={[styles.dot, styles.dotActive]} />
           <View style={styles.dot} />
         </View>
-        <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+        <Pressable accessibilityRole="button" accessibilityLabel="Continue to next step"
           style={[styles.button, !selected && styles.buttonDisabled]}
           onPress={handleNext}
           disabled={!selected}
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   cardIcon: { fontSize: 32, marginRight: 14 },
   cardName: { fontSize: 17, fontWeight: '600', color: '#111', flex: 1 },
   cardNameSelected: { color: '#EA580C' },
-  cardDesc: { fontSize: 13, color: '#888', position: 'absolute', bottom: 8, left: 62 },
+  cardDesc: { fontSize: 13, color: '#6B7280', position: 'absolute', bottom: 8, left: 62 },
   footer: { paddingHorizontal: 24, paddingBottom: 24 },
   dots: { flexDirection: 'row', justifyContent: 'center', marginBottom: 20, gap: 8 },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#E5E7EB' },

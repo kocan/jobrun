@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   summaryRowLast: { borderBottomWidth: 0 },
   summaryLabel: { fontSize: 15, color: '#666' },
   summaryValue: { fontSize: 15, fontWeight: '600', color: '#111' },
-  hint: { fontSize: 14, color: '#888', textAlign: 'center', marginTop: 20, lineHeight: 20 },
+  hint: { fontSize: 14, color: '#6B7280', textAlign: 'center', marginTop: 20, lineHeight: 20 },
   footer: { paddingHorizontal: 24, paddingBottom: 24 },
   dots: { flexDirection: 'row', justifyContent: 'center', marginBottom: 20, gap: 8 },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#E5E7EB' },

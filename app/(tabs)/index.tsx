@@ -157,7 +157,7 @@ export default function TodayScreen() {
     const actionLabel = job.status === 'scheduled' ? 'Start Job' : 'Complete Job';
 
     return (
-      <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+      <Pressable accessibilityRole="button" accessibilityLabel={`View job for ${customerName}`}
         key={job.id}
         style={styles.card}
         onPress={() => router.push(`/job/${job.id}`)}
@@ -173,7 +173,7 @@ export default function TodayScreen() {
         <View style={styles.cardFooter}>
           <Text style={styles.cardAmount}>${job.total.toFixed(2)}</Text>
           {canAct && (
-            <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+            <Pressable accessibilityRole="button" accessibilityLabel={`${actionLabel} for ${customerName}`}
               style={[styles.actionBtn, { backgroundColor: STATUS_COLORS[job.status === 'scheduled' ? 'in-progress' : 'completed'] }]}
               onPress={() => handleQuickAction(job)}
             >
@@ -190,7 +190,7 @@ export default function TodayScreen() {
     const preview = tomorrowExpanded ? tomorrowJobs : tomorrowJobs.slice(0, 3);
     return (
       <View style={styles.tomorrowSection}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+        <Pressable accessibilityRole="button" accessibilityLabel={tomorrowExpanded ? "Collapse tomorrow's jobs" : "Expand tomorrow's jobs"}
           style={styles.tomorrowHeader}
           onPress={() => setTomorrowExpanded(!tomorrowExpanded)}
         >
@@ -200,7 +200,7 @@ export default function TodayScreen() {
           <Text style={styles.chevron}>{tomorrowExpanded ? '▲' : '▼'}</Text>
         </Pressable>
         {preview.map((job) => (
-          <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+          <Pressable accessibilityRole="button" accessibilityLabel={`View tomorrow's job for ${customerMap[job.customerId] || 'Unknown'}`}
             key={job.id}
             style={styles.tomorrowCard}
             onPress={() => router.push(`/job/${job.id}`)}
@@ -302,7 +302,7 @@ export default function TodayScreen() {
           }
         />
       )}
-      <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+      <Pressable accessibilityRole="button" accessibilityLabel="Create new job"
         style={styles.fab}
         onPress={() => router.push(`/job/new?scheduledDate=${today}`)}
       >
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   cardAddress: { fontSize: 13, color: theme.colors.gray400, marginBottom: 8 },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   cardAmount: { fontSize: 16, fontWeight: '700', color: theme.colors.text },
-  actionBtn: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8 },
+  actionBtn: { paddingHorizontal: 14, paddingVertical: 12, minHeight: 44, borderRadius: 8 },
   actionBtnText: { color: theme.colors.white, fontSize: 13, fontWeight: '600' },
   fab: {
     position: 'absolute',

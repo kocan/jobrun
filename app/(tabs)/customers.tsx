@@ -16,7 +16,7 @@ export default function CustomersScreen() {
 
   const renderItem = useCallback(
     ({ item }: { item: (typeof customers)[0] }) => (
-      <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={styles.row} onPress={() => router.push(`/customer/${item.id}`)}>
+      <Pressable accessibilityRole="button" accessibilityLabel={`View customer ${item.name}`} style={styles.row} onPress={() => router.push(`/customer/${item.id}`)}>
         <View style={styles.rowLeft}>
           <Text style={styles.name}>
             {item.firstName} {item.lastName}

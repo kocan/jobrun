@@ -49,7 +49,7 @@ export default function MoreScreen() {
 
       {/* Business summary */}
       {settings.businessName ? (
-        <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={styles.businessCard} onPress={() => router.push('/settings')}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Open business settings" style={styles.businessCard} onPress={() => router.push('/settings')}>
           <Text style={styles.businessIcon}>{vertical?.icon ?? '⚙️'}</Text>
           <View style={styles.businessInfo}>
             <Text style={styles.businessName}>{settings.businessName}</Text>
@@ -60,7 +60,7 @@ export default function MoreScreen() {
       ) : null}
 
       {menuItems.map((item) => (
-        <Pressable accessibilityRole="button" accessibilityLabel="Activate action" key={item.route} style={styles.menuItem} onPress={() => router.push(item.route)}>
+        <Pressable accessibilityRole="button" accessibilityLabel={item.label} key={item.route} style={styles.menuItem} onPress={() => router.push(item.route)}>
           <Text style={styles.menuIcon}>{item.icon}</Text>
           <View style={styles.menuText}>
             <Text style={styles.menuLabel}>{item.label}</Text>
