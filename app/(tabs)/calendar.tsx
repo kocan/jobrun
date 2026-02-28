@@ -152,13 +152,13 @@ export default function CalendarScreen() {
     <View style={styles.container}>
       {/* View mode toggle */}
       <View style={styles.toggleRow}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+        <Pressable accessibilityRole="button" accessibilityLabel="Switch to week view"
           style={[styles.toggleBtn, viewMode === 'week' && styles.toggleActive]}
           onPress={() => setViewMode('week')}
         >
           <Text style={[styles.toggleText, viewMode === 'week' && styles.toggleTextActive]}>Week</Text>
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+        <Pressable accessibilityRole="button" accessibilityLabel="Switch to day view"
           style={[styles.toggleBtn, viewMode === 'day' && styles.toggleActive]}
           onPress={() => setViewMode('day')}
         >
@@ -168,23 +168,23 @@ export default function CalendarScreen() {
 
       {/* Navigation header */}
       <View style={styles.navRow}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Activate action" onPress={() => (viewMode === 'week' ? navigateWeek(-1) : navigateDay(-1))} style={styles.navBtn}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Go to previous" onPress={() => (viewMode === 'week' ? navigateWeek(-1) : navigateDay(-1))} style={styles.navBtn}>
           <Text style={styles.navArrow}>‹</Text>
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Activate action" onPress={goToday}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Go to today" onPress={goToday}>
           <Text style={styles.navTitle}>
             {viewMode === 'week'
               ? formatWeekRange(weekStart)
               : formatDayHeader(selectedDate)}
           </Text>
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Activate action" onPress={() => (viewMode === 'week' ? navigateWeek(1) : navigateDay(1))} style={styles.navBtn}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Go to next" onPress={() => (viewMode === 'week' ? navigateWeek(1) : navigateDay(1))} style={styles.navBtn}>
           <Text style={styles.navArrow}>›</Text>
         </Pressable>
       </View>
 
       {selectedDate !== today && (
-        <Pressable accessibilityRole="button" accessibilityLabel="Activate action" onPress={goToday} style={styles.todayBtn}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Jump to today" onPress={goToday} style={styles.todayBtn}>
           <Text style={styles.todayBtnText}>Today</Text>
         </Pressable>
       )}
@@ -202,7 +202,7 @@ export default function CalendarScreen() {
               const isSelected = dateStr === selectedDate;
               const jobCount = (jobsByDate[dateStr] || []).length;
               return (
-                <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+                <Pressable accessibilityRole="button" accessibilityLabel={`Select ${DAY_NAMES[i]}`}
                   key={i}
                   style={[styles.dayCol, isSelected && styles.dayColSelected]}
                   onPress={() => handleDayPress(dateStr)}
@@ -275,7 +275,7 @@ export default function CalendarScreen() {
               const height = Math.max((job.estimatedDuration || 60) * (HOUR_HEIGHT / 60), 30);
               const color = STATUS_COLORS[job.status];
               return (
-                <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+                <Pressable accessibilityRole="button" accessibilityLabel={`View job for ${customerMap[job.customerId] || 'Unknown'} at ${formatTime12(job.scheduledTime)}`}
                   key={job.id}
                   style={[styles.timeBlock, { top, height, borderLeftColor: color, backgroundColor: color + '18' }]}
                   onPress={() => handleJobPress(job)}
@@ -307,7 +307,7 @@ export default function CalendarScreen() {
 function JobCard({ job, customerName, onPress }: { job: Job; customerName?: string; onPress: (j: Job) => void }) {
   const color = STATUS_COLORS[job.status];
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel="Activate action" style={[styles.jobCard, { borderLeftColor: color }]} onPress={() => onPress(job)}>
+    <Pressable accessibilityRole="button" accessibilityLabel={`View job for ${customerName || 'Unknown'}`} style={[styles.jobCard, { borderLeftColor: color }]} onPress={() => onPress(job)}>
       <View style={styles.jobCardHeader}>
         <Text style={styles.jobCardTime}>
           {job.scheduledTime ? formatTime12(job.scheduledTime) : 'No time'}

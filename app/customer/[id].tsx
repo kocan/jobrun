@@ -255,7 +255,7 @@ export default function CustomerDetailScreen() {
                 </View>
               ) : (
                 getEstimatesByCustomer(id!).map((est) => (
-                  <Pressable accessibilityRole="button" accessibilityLabel="Activate action" key={est.id} style={styles.jobRow} onPress={() => router.push({ pathname: '/estimate/[id]', params: { id: est.id } })}>
+                  <Pressable accessibilityRole="button" accessibilityLabel={`View estimate $${est.total.toFixed(2)}`} key={est.id} style={styles.jobRow} onPress={() => router.push({ pathname: '/estimate/[id]', params: { id: est.id } })}>
                     <View style={styles.jobRowLeft}>
                       <Text style={styles.jobRowTitle}>${est.total.toFixed(2)}</Text>
                       <Text style={styles.jobRowDate}>{est.status} · {est.createdAt.split('T')[0]}</Text>
@@ -276,7 +276,7 @@ export default function CustomerDetailScreen() {
                 </View>
               ) : (
                 getJobsByCustomer(id!).map((job) => (
-                  <Pressable accessibilityRole="button" accessibilityLabel="Activate action" key={job.id} style={styles.jobRow} onPress={() => router.push({ pathname: '/job/[id]', params: { id: job.id } })}>
+                  <Pressable accessibilityRole="button" accessibilityLabel={`View job ${job.title}`} key={job.id} style={styles.jobRow} onPress={() => router.push({ pathname: '/job/[id]', params: { id: job.id } })}>
                     <View style={styles.jobRowLeft}>
                       <Text style={styles.jobRowTitle}>{job.title}</Text>
                       <Text style={styles.jobRowDate}>{job.scheduledDate}{job.scheduledTime ? ` at ${job.scheduledTime}` : ''}</Text>
@@ -297,7 +297,7 @@ export default function CustomerDetailScreen() {
                 </View>
               ) : (
                 getInvoicesByCustomer(id!).map((inv) => (
-                  <Pressable accessibilityRole="button" accessibilityLabel="Activate action" key={inv.id} style={styles.jobRow} onPress={() => router.push({ pathname: '/invoice/[id]', params: { id: inv.id } })}>
+                  <Pressable accessibilityRole="button" accessibilityLabel={`View invoice ${inv.invoiceNumber}`} key={inv.id} style={styles.jobRow} onPress={() => router.push({ pathname: '/invoice/[id]', params: { id: inv.id } })}>
                     <View style={styles.jobRowLeft}>
                       <Text style={styles.jobRowTitle}>{inv.invoiceNumber} — ${inv.total.toFixed(2)}</Text>
                       <Text style={styles.jobRowDate}>{inv.status} · {inv.createdAt.split('T')[0]}</Text>

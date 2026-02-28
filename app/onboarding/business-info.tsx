@@ -72,7 +72,7 @@ export default function BusinessInfoScreen() {
             <View style={styles.dot} />
             <View style={styles.dot} />
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+          <Pressable accessibilityRole="button" accessibilityLabel="Continue to next step"
             style={[styles.button, !canContinue && styles.buttonDisabled]}
             onPress={handleNext}
             disabled={!canContinue}

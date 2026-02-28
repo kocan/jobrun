@@ -78,7 +78,7 @@ export default function LoginScreen() {
 
             {error && <Text style={styles.error}>{error}</Text>}
 
-            <Pressable accessibilityRole="button" accessibilityLabel="Activate action"
+            <Pressable accessibilityRole="button" accessibilityLabel="Send magic link to sign in"
               style={[styles.button, sending && styles.buttonDisabled]}
               onPress={handleSend}
               disabled={sending}
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   buttonDisabled: { opacity: 0.6 },
   buttonText: { color: '#fff', fontSize: 17, fontWeight: '700' },
   skipButton: { alignItems: 'center', paddingVertical: 12 },
-  skipText: { color: '#888', fontSize: 15 },
+  skipText: { color: '#6B7280', fontSize: 15 },
   successBox: { alignItems: 'center', padding: 24, backgroundColor: '#FFF7ED', borderRadius: 16, marginBottom: 16 },
   successIcon: { fontSize: 48, marginBottom: 12 },
   successTitle: { fontSize: 20, fontWeight: '700', color: '#111', marginBottom: 8 },
