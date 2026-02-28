@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { NetworkProvider } from '../lib/network';
 import { OfflineBanner } from '../components/OfflineBanner';
 import { initializeDatabase } from '../lib/db/database';
+import { initSentry } from '../lib/sentry';
 import { migrateFromAsyncStorage } from '../lib/db/migration';
 
 function RootNavigator() {
@@ -64,6 +65,7 @@ function DatabaseInitializer({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
+      initSentry();
       initializeDatabase();
       await migrateFromAsyncStorage();
       setReady(true);
