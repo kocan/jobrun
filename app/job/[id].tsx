@@ -10,12 +10,15 @@ import { Job, JobStatus, LineItem } from '../../lib/types';
 import { isValidStatusTransition } from '../../lib/db/repositories/jobs';
 import { calculateTotal } from '../../lib/db/repositories/priceBook';
 import {
-  InfoRow, Field, StatusBadge, ActionButton, SectionTitle,
-  SaveButton, CancelButton, DeleteButton, FormSectionHeader, detailStyles as styles,
+  StatusBadge, ActionButton, SectionTitle,
+  SaveButton, CancelButton, DeleteButton, FormSectionHeader,
 } from '../../components/DetailScreen';
+import { detailStyles as styles } from '../../styles/detailScreen';
+import { Field } from '../../components/shared/Field';
+import { InfoRow } from '../../components/shared/InfoRow';
+import { LineItemEditor } from '../../components/shared/LineItemEditor';
 import { CustomerPicker } from '../../components/CustomerPicker';
 import { ServicePicker } from '../../components/ServicePicker';
-import { LineItemEditor } from '../../components/LineItemEditor';
 import { DatePickerField, TimePickerField } from '../../components/DateTimePicker';
 
 const STATUS_OPTIONS: JobStatus[] = ['scheduled', 'in-progress', 'completed', 'cancelled'];

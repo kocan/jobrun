@@ -13,12 +13,16 @@ import { isValidInvoiceStatusTransition, calculateInvoiceTotals } from '../../li
 import { buildInvoiceShareUrl, buildInvoiceShareMessage } from '../../lib/invoiceSharing';
 import { useSettings } from '../../contexts/SettingsContext';
 import {
-  InfoRow, Field, StatusBadge, ActionButton, SectionTitle,
-  SaveButton, CancelButton, DeleteButton, FormSectionHeader, detailStyles as styles,
+  StatusBadge, ActionButton, SectionTitle,
+  SaveButton, CancelButton, DeleteButton, FormSectionHeader,
 } from '../../components/DetailScreen';
+import { detailStyles as styles } from '../../styles/detailScreen';
+import { Field } from '../../components/shared/Field';
+import { InfoRow } from '../../components/shared/InfoRow';
+import { LineItemEditor, LineItemsView } from '../../components/shared/LineItemEditor';
+import { TotalsBox } from '../../components/shared/TotalsBox';
 import { CustomerPicker } from '../../components/CustomerPicker';
 import { ServicePicker } from '../../components/ServicePicker';
-import { LineItemEditor, TotalsView, LineItemsView } from '../../components/LineItemEditor';
 import { DatePickerField } from '../../components/DateTimePicker';
 import { theme } from '../../lib/theme';
 
@@ -293,7 +297,7 @@ export default function InvoiceDetailScreen() {
               <Field label="Tax Rate (%)" value={form.taxRate} onChange={setField('taxRate')} keyboardType="numeric" placeholder="0" />
 
               {form.lineItems.length > 0 && (
-                <TotalsView subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
+                <TotalsBox subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
               )}
 
               <FormSectionHeader title="Payment" />
@@ -337,7 +341,7 @@ export default function InvoiceDetailScreen() {
                 <View style={styles.field}>
                   <SectionTitle title="Line Items" />
                   <LineItemsView lineItems={form.lineItems} />
-                  <TotalsView subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
+                  <TotalsBox subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
                 </View>
               )}
 
