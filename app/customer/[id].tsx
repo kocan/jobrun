@@ -1,13 +1,11 @@
 import { View, Text, TextInput, ScrollView, Pressable, Alert, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { useState, useEffect, useCallback } from 'react';
-import * as Crypto from 'expo-crypto';
+import { useState, useEffect } from 'react';
 import { useCustomers } from '../../contexts/CustomerContext';
 import { useJobs } from '../../contexts/JobContext';
 import { useEstimates } from '../../contexts/EstimateContext';
 import { useInvoices } from '../../contexts/InvoiceContext';
-import { Customer, CommunicationEntry, CommunicationType } from '../../lib/types';
-import * as comLogRepo from '../../lib/db/repositories/communicationLog';
+import CustomerTimeline from '../../components/CustomerTimeline';
 import { theme } from '../../lib/theme';
 
 type FormData = {
@@ -44,23 +42,6 @@ function validatePhone(phone: string): boolean {
   return /^[\d\s\-\+\(\)\.]{7,}$/.test(phone);
 }
 
-const COMM_TYPES: { value: CommunicationType; label: string; icon: string }[] = [
-  { value: 'call', label: 'Call', icon: '📞' },
-  { value: 'text', label: 'Text', icon: '💬' },
-  { value: 'email', label: 'Email', icon: '✉️' },
-  { value: 'note', label: 'Note', icon: '📝' },
-  { value: 'visit', label: 'Visit', icon: '🏠' },
-];
-
-const COMM_TYPE_ICONS: Record<string, string> = {
-  call: '📞', text: '💬', email: '✉️', note: '📝', visit: '🏠',
-};
-
-function formatEntryDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
-}
-
 export default function CustomerDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -73,52 +54,6 @@ export default function CustomerDetailScreen() {
   const [editing, setEditing] = useState(isNew);
   const [form, setForm] = useState<FormData>(emptyForm);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
-  const [comLog, setComLog] = useState<CommunicationEntry[]>([]);
-  const [showAddEntry, setShowAddEntry] = useState(false);
-  const [entryType, setEntryType] = useState<CommunicationType>('note');
-  const [entrySummary, setEntrySummary] = useState('');
-
-  const refreshComLog = useCallback(() => {
-    if (!isNew && id) {
-      setComLog(comLogRepo.getEntriesByCustomer(id));
-    }
-  }, [id, isNew]);
-
-  useEffect(() => {
-    refreshComLog();
-  }, [refreshComLog]);
-
-  const handleAddEntry = () => {
-    if (!entrySummary.trim()) {
-      Alert.alert('Required', 'Please enter a summary');
-      return;
-    }
-    const entry: CommunicationEntry = {
-      id: Crypto.randomUUID(),
-      customerId: id!,
-      type: entryType,
-      summary: entrySummary.trim(),
-      createdAt: new Date().toISOString(),
-    };
-    comLogRepo.addEntry(entry);
-    setComLog((prev) => [entry, ...prev]);
-    setEntrySummary('');
-    setShowAddEntry(false);
-  };
-
-  const handleDeleteEntry = (entryId: string) => {
-    Alert.alert('Delete Entry', 'Remove this log entry?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          comLogRepo.deleteEntry(entryId);
-          setComLog((prev) => prev.filter((e) => e.id !== entryId));
-        },
-      },
-    ]);
-  };
 
   useEffect(() => {
     if (!isNew && id) {
@@ -307,72 +242,7 @@ export default function CustomerDetailScreen() {
                 ))
               )}
 
-              <Text style={styles.sectionTitle}>Communication Log</Text>
-              {showAddEntry ? (
-                <View style={styles.addEntryForm}>
-                  <View style={styles.entryTypeRow}>
-                    {COMM_TYPES.map((t) => (
-                      <Pressable
-                        key={t.value}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Type: ${t.label}`}
-                        style={[styles.entryTypeBtn, entryType === t.value && styles.entryTypeBtnActive]}
-                        onPress={() => setEntryType(t.value)}
-                      >
-                        <Text style={styles.entryTypeIcon}>{t.icon}</Text>
-                        <Text style={[styles.entryTypeBtnText, entryType === t.value && styles.entryTypeBtnTextActive]}>{t.label}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                  <TextInput
-                    accessibilityRole="text"
-                    accessibilityLabel="Entry summary"
-                    style={[styles.input, { marginBottom: 10 }]}
-                    placeholder="What happened?"
-                    value={entrySummary}
-                    onChangeText={setEntrySummary}
-                    multiline
-                    autoFocus
-                  />
-                  <View style={{ flexDirection: 'row', gap: 10 }}>
-                    <Pressable accessibilityRole="button" accessibilityLabel="Cancel" style={[styles.addJobBtn, { backgroundColor: '#D1D5DB' }]} onPress={() => setShowAddEntry(false)}>
-                      <Text style={[styles.addJobBtnText, { color: '#374151' }]}>Cancel</Text>
-                    </Pressable>
-                    <Pressable accessibilityRole="button" accessibilityLabel="Save log entry" style={styles.addJobBtn} onPress={handleAddEntry}>
-                      <Text style={styles.addJobBtnText}>Save</Text>
-                    </Pressable>
-                  </View>
-                </View>
-              ) : (
-                <Pressable accessibilityRole="button" accessibilityLabel="Add communication entry" style={styles.addJobBtn} onPress={() => setShowAddEntry(true)}>
-                  <Text style={styles.addJobBtnText}>+ Log Communication</Text>
-                </Pressable>
-              )}
-              {comLog.length === 0 && !showAddEntry ? (
-                <View style={styles.emptySection}>
-                  <Text style={styles.emptySectionIcon}>💬</Text>
-                  <Text style={styles.emptySectionText}>No communication logged yet.</Text>
-                </View>
-              ) : (
-                comLog.map((entry) => (
-                  <Pressable
-                    key={entry.id}
-                    accessibilityRole="button"
-                    accessibilityLabel="Delete communication entry"
-                    style={styles.timelineEntry}
-                    onLongPress={() => handleDeleteEntry(entry.id)}
-                  >
-                    <View style={styles.timelineDot}>
-                      <Text style={styles.timelineIcon}>{COMM_TYPE_ICONS[entry.type] || '📝'}</Text>
-                    </View>
-                    <View style={styles.timelineContent}>
-                      <Text style={styles.timelineType}>{entry.type.charAt(0).toUpperCase() + entry.type.slice(1)}</Text>
-                      <Text style={styles.timelineSummary}>{entry.summary}</Text>
-                      <Text style={styles.timelineDate}>{formatEntryDate(entry.createdAt)}</Text>
-                    </View>
-                  </Pressable>
-                ))
-              )}
+              <CustomerTimeline customerId={id!} />
 
               <Pressable accessibilityRole="button" accessibilityLabel="Delete record" style={styles.deleteBtn} onPress={handleDelete}>
                 <Text style={styles.deleteBtnText}>Delete Customer</Text>
@@ -480,19 +350,4 @@ const styles = StyleSheet.create({
   jobRowDate: { fontSize: 14, color: '#666', marginTop: 2 },
   jobStatusDot: { width: 10, height: 10, borderRadius: 5, marginLeft: 12 },
 
-  // Communication log
-  addEntryForm: { backgroundColor: '#F9FAFB', borderRadius: 10, padding: 12, marginBottom: 12 },
-  entryTypeRow: { flexDirection: 'row', gap: 6, marginBottom: 10, flexWrap: 'wrap' },
-  entryTypeBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#D1D5DB', gap: 4 },
-  entryTypeBtnActive: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
-  entryTypeIcon: { fontSize: 14 },
-  entryTypeBtnText: { fontSize: 13, color: '#666' },
-  entryTypeBtnTextActive: { color: '#fff', fontWeight: '600' },
-  timelineEntry: { flexDirection: 'row', paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB' },
-  timelineDot: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center', marginRight: 10, marginTop: 2 },
-  timelineIcon: { fontSize: 16 },
-  timelineContent: { flex: 1 },
-  timelineType: { fontSize: 12, fontWeight: '700', color: theme.colors.gray400, textTransform: 'uppercase', letterSpacing: 0.5 },
-  timelineSummary: { fontSize: 15, color: '#111', marginTop: 2 },
-  timelineDate: { fontSize: 12, color: '#999', marginTop: 4 },
 });
