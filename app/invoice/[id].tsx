@@ -1,25 +1,28 @@
 import { View, Text, ScrollView, Pressable, Alert, KeyboardAvoidingView, Platform, Share } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useState, useEffect, useMemo } from 'react';
-import * as Crypto from 'expo-crypto';
 import * as Clipboard from 'expo-clipboard';
 import { useInvoices } from '../../contexts/InvoiceContext';
 import { useCustomers } from '../../contexts/CustomerContext';
 import { useJobs } from '../../contexts/JobContext';
 import { useEstimates } from '../../contexts/EstimateContext';
-import { usePriceBook } from '../../contexts/PriceBookContext';
-import { InvoiceStatus, LineItem } from '../../lib/types';
+import { InvoiceStatus } from '../../lib/types';
 import { isValidInvoiceStatusTransition, calculateInvoiceTotals } from '../../lib/db/repositories/invoices';
 import { buildInvoiceShareUrl, buildInvoiceShareMessage } from '../../lib/invoiceSharing';
 import { useSettings } from '../../contexts/SettingsContext';
 import {
-  InfoRow, Field, StatusBadge, ActionButton, SectionTitle,
-  SaveButton, CancelButton, DeleteButton, FormSectionHeader, detailStyles as styles,
+  StatusBadge, ActionButton, SectionTitle,
+  SaveButton, CancelButton, DeleteButton, FormSectionHeader,
 } from '../../components/DetailScreen';
+import { detailStyles as styles } from '../../styles/detailScreen';
+import { Field } from '../../components/shared/Field';
+import { InfoRow } from '../../components/shared/InfoRow';
+import { LineItemEditor, LineItemsView } from '../../components/shared/LineItemEditor';
+import { TotalsBox } from '../../components/shared/TotalsBox';
 import { CustomerPicker } from '../../components/CustomerPicker';
 import { ServicePicker } from '../../components/ServicePicker';
-import { LineItemEditor, TotalsView, LineItemsView } from '../../components/LineItemEditor';
 import { DatePickerField } from '../../components/DateTimePicker';
+import { useLineItems } from '../../hooks/useLineItems';
 import { theme } from '../../lib/theme';
 
 const STATUS_LABELS: Record<InvoiceStatus, string> = {
@@ -44,7 +47,6 @@ const PAYMENT_TERMS_OPTIONS = ['Due upon receipt', 'Net 15', 'Net 30', 'Net 60']
 type FormData = {
   customerId: string;
   status: InvoiceStatus;
-  lineItems: LineItem[];
   taxRate: string;
   notes: string;
   paymentTerms: string;
@@ -60,7 +62,6 @@ function defaultDueDate(): string {
 const emptyForm: FormData = {
   customerId: '',
   status: 'draft',
-  lineItems: [],
   taxRate: '0',
   notes: '',
   paymentTerms: 'Due upon receipt',
@@ -77,9 +78,6 @@ export default function InvoiceDetailScreen() {
   const { getJobById } = useJobs();
   const { settings: appSettings } = useSettings();
   const { getEstimateById } = useEstimates();
-  const { getActiveServices } = usePriceBook();
-  const [servicePickerVisible, setServicePickerVisible] = useState(false);
-  const [customerPickerVisible, setCustomerPickerVisible] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState('');
 
   const isNew = id === 'new';
@@ -88,6 +86,14 @@ export default function InvoiceDetailScreen() {
     ...emptyForm,
     customerId: preselectedCustomerId || '',
   }));
+  const [lineItems, setLineItemsRaw] = useState<import('../../lib/types').LineItem[]>([]);
+
+  const setLineItems = (updater: (items: import('../../lib/types').LineItem[]) => import('../../lib/types').LineItem[]) => {
+    setLineItemsRaw(updater);
+  };
+
+  const li = useLineItems(lineItems, setLineItems);
+  const customerName = useCustomerName(form.customerId);
 
   useEffect(() => {
     if (isNew && fromJob) {
@@ -97,12 +103,12 @@ export default function InvoiceDetailScreen() {
         setForm({
           customerId: data.customerId,
           status: 'draft',
-          lineItems: data.lineItems,
           taxRate: String(data.taxRate),
           notes: data.notes || '',
           paymentTerms: data.paymentTerms || 'Due upon receipt',
           dueDate: defaultDueDate(),
         });
+        setLineItemsRaw(data.lineItems);
       }
     } else if (isNew && fromEstimate) {
       const est = getEstimateById(fromEstimate);
@@ -111,12 +117,12 @@ export default function InvoiceDetailScreen() {
         setForm({
           customerId: data.customerId,
           status: 'draft',
-          lineItems: data.lineItems,
           taxRate: String(data.taxRate),
           notes: data.notes || '',
           paymentTerms: data.paymentTerms || 'Due upon receipt',
           dueDate: defaultDueDate(),
         });
+        setLineItemsRaw(data.lineItems);
       }
     } else if (!isNew && id) {
       const inv = getInvoiceById(id);
@@ -125,66 +131,28 @@ export default function InvoiceDetailScreen() {
         setForm({
           customerId: inv.customerId,
           status: inv.status,
-          lineItems: inv.lineItems,
           taxRate: String(inv.taxRate),
           notes: inv.notes || '',
           paymentTerms: inv.paymentTerms || 'Due upon receipt',
           dueDate: inv.dueDate?.split('T')[0] || defaultDueDate(),
         });
+        setLineItemsRaw(inv.lineItems);
       }
     }
   }, [id, isNew, fromJob, fromEstimate]);
 
-  const selectedCustomer = useMemo(
-    () => form.customerId ? getCustomerById(form.customerId) : undefined,
-    [form.customerId, getCustomerById]
-  );
-
   const taxRate = parseFloat(form.taxRate) || 0;
   const totals = useMemo(
-    () => calculateInvoiceTotals(form.lineItems, taxRate),
-    [form.lineItems, taxRate]
+    () => calculateInvoiceTotals(lineItems, taxRate),
+    [lineItems, taxRate]
   );
-
-  const activeServices = useMemo(() => getActiveServices(), [getActiveServices]);
-
-  const addLineItemFromService = (serviceId: string) => {
-    const svc = activeServices.find((s) => s.id === serviceId);
-    if (!svc) return;
-    const li: LineItem = {
-      id: Crypto.randomUUID(),
-      serviceId: svc.id,
-      name: svc.name,
-      description: svc.description,
-      quantity: 1,
-      unitPrice: svc.price,
-      total: svc.price,
-    };
-    setForm((f) => ({ ...f, lineItems: [...f.lineItems, li] }));
-  };
-
-  const updateLineItem = (liId: string, updates: Partial<LineItem>) => {
-    setForm((f) => ({
-      ...f,
-      lineItems: f.lineItems.map((li) => {
-        if (li.id !== liId) return li;
-        const updated = { ...li, ...updates };
-        updated.total = Math.round(updated.unitPrice * updated.quantity * 100) / 100;
-        return updated;
-      }),
-    }));
-  };
-
-  const removeLineItem = (liId: string) => {
-    setForm((f) => ({ ...f, lineItems: f.lineItems.filter((li) => li.id !== liId) }));
-  };
 
   const handleSave = async () => {
     if (!form.customerId) {
       Alert.alert('Error', 'Please select a customer');
       return;
     }
-    if (form.lineItems.length === 0) {
+    if (lineItems.length === 0) {
       Alert.alert('Error', 'Please add at least one line item');
       return;
     }
@@ -192,7 +160,7 @@ export default function InvoiceDetailScreen() {
     const data = {
       customerId: form.customerId,
       status: form.status,
-      lineItems: form.lineItems,
+      lineItems,
       subtotal: totals.subtotal,
       taxRate,
       taxAmount: totals.taxAmount,
@@ -242,7 +210,6 @@ export default function InvoiceDetailScreen() {
   };
 
   const setField = (key: keyof FormData) => (value: string) => setForm((f) => ({ ...f, [key]: value }));
-  const customerName = selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}`.trim() : 'Select Customer';
   const title = isNew ? 'New Invoice' : editing ? 'Edit Invoice' : `Invoice ${invoiceNumber}`;
 
   return (
@@ -271,21 +238,17 @@ export default function InvoiceDetailScreen() {
               ) : null}
 
               <FormSectionHeader title="Customer Info" />
-              <View style={styles.field}>
-                <Text style={styles.label}>Customer *</Text>
-                <Pressable accessibilityRole="button" accessibilityLabel="Open customer picker" style={styles.pickerBtn} onPress={() => setCustomerPickerVisible(true)}>
-                  <Text style={[styles.pickerText, !form.customerId && styles.pickerPlaceholder]}>
-                    {customerName}
-                  </Text>
-                </Pressable>
-              </View>
+              <CustomerPickerField
+                customerId={form.customerId}
+                onSelect={(cId) => setForm((f) => ({ ...f, customerId: cId }))}
+              />
 
               <FormSectionHeader title="Line Items" />
               <LineItemEditor
-                lineItems={form.lineItems}
-                onUpdateItem={updateLineItem}
-                onRemoveItem={removeLineItem}
-                onAddService={() => setServicePickerVisible(true)}
+                lineItems={lineItems}
+                onUpdateItem={li.updateItem}
+                onRemoveItem={li.removeItem}
+                onAddService={li.openServicePicker}
                 required
               />
 
@@ -293,7 +256,7 @@ export default function InvoiceDetailScreen() {
               <Field label="Tax Rate (%)" value={form.taxRate} onChange={setField('taxRate')} keyboardType="numeric" placeholder="0" />
 
               {form.lineItems.length > 0 && (
-                <TotalsView subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
+                <TotalsBox subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
               )}
 
               <FormSectionHeader title="Payment" />
@@ -333,11 +296,11 @@ export default function InvoiceDetailScreen() {
               <InfoRow label="Payment Terms" value={form.paymentTerms} />
               <InfoRow label="Due Date" value={form.dueDate} />
 
-              {form.lineItems.length > 0 && (
+              {lineItems.length > 0 && (
                 <View style={styles.field}>
                   <SectionTitle title="Line Items" />
                   <LineItemsView lineItems={form.lineItems} />
-                  <TotalsView subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
+                  <TotalsBox subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
                 </View>
               )}
 
@@ -414,25 +377,11 @@ export default function InvoiceDetailScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <CustomerPicker
-        visible={customerPickerVisible}
-        customers={customers}
-        onSelect={(c) => {
-          setForm((f) => ({ ...f, customerId: c.id }));
-          setCustomerPickerVisible(false);
-        }}
-        onClose={() => setCustomerPickerVisible(false)}
-        onAddCustomer={async (data) => addCustomer(data)}
-      />
-
-      <ServicePicker
-        visible={servicePickerVisible}
-        services={activeServices}
-        onSelect={(svc) => {
-          addLineItemFromService(svc.id);
-          setServicePickerVisible(false);
-        }}
-        onClose={() => setServicePickerVisible(false)}
+      <ServicePickerModal
+        visible={li.servicePickerVisible}
+        services={li.activeServices}
+        onSelect={li.handleServiceSelect}
+        onClose={li.closeServicePicker}
       />
     </>
   );

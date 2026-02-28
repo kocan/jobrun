@@ -1,30 +1,10 @@
 import { Estimate, LineItem } from './types';
+import type { ShareableEstimateData } from '../shared/types';
+import { encodeEstimateData } from '../shared/estimateEncoding';
 
-/** Compact estimate payload for URL sharing (no backend needed) */
-export interface ShareableEstimateData {
-  /** estimate number (id prefix) */
-  n: string;
-  /** customer name */
-  c: string;
-  /** line items: [name, qty, unitPrice][] */
-  li: [string, number, number][];
-  /** subtotal */
-  st: number;
-  /** tax rate */
-  tr: number;
-  /** tax amount */
-  ta: number;
-  /** total */
-  t: number;
-  /** notes */
-  no?: string;
-  /** expires at (YYYY-MM-DD) */
-  ex: string;
-  /** created at (YYYY-MM-DD) */
-  dt: string;
-  /** business name */
-  bn?: string;
-}
+// Re-export shared types and encoding functions
+export type { ShareableEstimateData } from '../shared/types';
+export { encodeEstimateData, decodeEstimateData } from '../shared/estimateEncoding';
 
 export const SHARE_BASE_URL = 'https://jobrun.app';
 
@@ -46,23 +26,6 @@ export function buildShareableData(
     dt: estimate.createdAt.split('T')[0],
     bn: businessName || undefined,
   };
-}
-
-export function encodeEstimateData(data: ShareableEstimateData): string {
-  const json = JSON.stringify(data);
-  // Use btoa-compatible encoding (works in RN and web)
-  const base64 = btoa(unescape(encodeURIComponent(json)));
-  return encodeURIComponent(base64);
-}
-
-export function decodeEstimateData(encoded: string): ShareableEstimateData | null {
-  try {
-    const base64 = decodeURIComponent(encoded);
-    const json = decodeURIComponent(escape(atob(base64)));
-    return JSON.parse(json) as ShareableEstimateData;
-  } catch {
-    return null;
-  }
 }
 
 export function buildShareUrl(estimate: Estimate, customerName: string, businessName?: string): string {

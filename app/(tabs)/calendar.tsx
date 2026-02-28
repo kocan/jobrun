@@ -235,7 +235,8 @@ export default function CalendarScreen() {
                 <EmptyState
                   icon="📅"
                   title="No jobs scheduled"
-                  subtitle="This day is free — tap + to add a job."
+                  subtitle="This day is free — schedule a job to fill it up."
+                  ctaLabel="+ Schedule a Job"
                 />
               )
             ) : (
