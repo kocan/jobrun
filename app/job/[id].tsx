@@ -8,12 +8,15 @@ import { Job, JobStatus } from '../../lib/types';
 import { isValidStatusTransition } from '../../lib/db/repositories/jobs';
 import { calculateTotal } from '../../lib/db/repositories/priceBook';
 import {
-  InfoRow, Field, StatusBadge, ActionButton, SectionTitle,
-  SaveButton, CancelButton, DeleteButton, FormSectionHeader, detailStyles as styles,
+  StatusBadge, ActionButton, SectionTitle,
+  SaveButton, CancelButton, DeleteButton, FormSectionHeader,
 } from '../../components/DetailScreen';
-import { CustomerPickerField, useCustomerName } from '../../components/CustomerPickerField';
-import { ServicePickerModal } from '../../components/ServicePickerModal';
-import { LineItemEditor } from '../../components/LineItemEditor';
+import { detailStyles as styles } from '../../styles/detailScreen';
+import { Field } from '../../components/shared/Field';
+import { InfoRow } from '../../components/shared/InfoRow';
+import { LineItemEditor } from '../../components/shared/LineItemEditor';
+import { CustomerPicker } from '../../components/CustomerPicker';
+import { ServicePicker } from '../../components/ServicePicker';
 import { DatePickerField, TimePickerField } from '../../components/DateTimePicker';
 import { useLineItems } from '../../hooks/useLineItems';
 

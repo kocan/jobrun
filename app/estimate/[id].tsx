@@ -10,12 +10,16 @@ import { isValidEstimateStatusTransition, calculateEstimateTotals } from '../../
 import { buildShareUrl, buildShareMessage } from '../../lib/estimateSharing';
 import { useSettings } from '../../contexts/SettingsContext';
 import {
-  InfoRow, Field, StatusBadge, ActionButton, SectionTitle,
-  SaveButton, CancelButton, DeleteButton, FormSectionHeader, detailStyles as styles,
+  StatusBadge, ActionButton, SectionTitle,
+  SaveButton, CancelButton, DeleteButton, FormSectionHeader,
 } from '../../components/DetailScreen';
-import { CustomerPickerField, useCustomerName } from '../../components/CustomerPickerField';
-import { ServicePickerModal } from '../../components/ServicePickerModal';
-import { LineItemEditor, TotalsView, LineItemsView } from '../../components/LineItemEditor';
+import { detailStyles as styles } from '../../styles/detailScreen';
+import { Field } from '../../components/shared/Field';
+import { InfoRow } from '../../components/shared/InfoRow';
+import { LineItemEditor, LineItemsView } from '../../components/shared/LineItemEditor';
+import { TotalsBox } from '../../components/shared/TotalsBox';
+import { CustomerPicker } from '../../components/CustomerPicker';
+import { ServicePicker } from '../../components/ServicePicker';
 import { DatePickerField } from '../../components/DateTimePicker';
 import { useLineItems } from '../../hooks/useLineItems';
 
@@ -220,8 +224,8 @@ export default function EstimateDetailScreen() {
               {/* Tax Rate */}
               <Field label="Tax Rate (%)" value={form.taxRate} onChange={setField('taxRate')} keyboardType="numeric" placeholder="0" />
 
-              {lineItems.length > 0 && (
-                <TotalsView subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
+              {form.lineItems.length > 0 && (
+                <TotalsBox subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
               )}
 
               <FormSectionHeader title="Notes" />
@@ -240,8 +244,8 @@ export default function EstimateDetailScreen() {
               {lineItems.length > 0 && (
                 <View style={styles.field}>
                   <SectionTitle title="Line Items" />
-                  <LineItemsView lineItems={lineItems} />
-                  <TotalsView subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
+                  <LineItemsView lineItems={form.lineItems} />
+                  <TotalsBox subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
                 </View>
               )}
 
