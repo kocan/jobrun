@@ -6,6 +6,7 @@ import { useJobs } from '../../contexts/JobContext';
 import { useInvoices } from '../../contexts/InvoiceContext';
 import { verticals } from '../../constants/verticals';
 import { theme } from '../../lib/theme';
+import { SyncStatusBadge } from '../../components/SyncStatusBadge';
 import { customersToCSV, jobsToCSV, invoicesToCSV, shareCSV } from '../../lib/csvExport';
 
 const menuItems = [
@@ -46,6 +47,9 @@ export default function MoreScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>More</Text>
+
+      {/* Sync status */}
+      <SyncStatusBadge />
 
       {/* Business summary */}
       {settings.businessName ? (
