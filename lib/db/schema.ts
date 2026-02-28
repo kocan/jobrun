@@ -1,6 +1,6 @@
 // SQL schema for JobRun local-first database
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export const MIGRATION_001 = `
 -- Customers
@@ -192,4 +192,13 @@ CREATE TABLE IF NOT EXISTS communication_log (
   FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS idx_comlog_customer ON communication_log(customer_id);
+`;
+
+export const MIGRATION_003 = `
+-- Add sync_retry_count to all syncable tables for exponential backoff tracking
+ALTER TABLE customers ADD COLUMN sync_retry_count INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE jobs ADD COLUMN sync_retry_count INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE estimates ADD COLUMN sync_retry_count INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE invoices ADD COLUMN sync_retry_count INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE price_book_services ADD COLUMN sync_retry_count INTEGER NOT NULL DEFAULT 0;
 `;
