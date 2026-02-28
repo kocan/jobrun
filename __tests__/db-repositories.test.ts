@@ -91,6 +91,11 @@ vi.mock('expo-sqlite', () => ({
   openDatabaseSync: vi.fn(() => mockDb),
 }));
 
+vi.mock('../lib/supabase', () => ({
+  isSupabaseConfigured: false,
+  getSupabase: () => null,
+}));
+
 import * as customerRepo from '../lib/db/repositories/customers';
 import * as jobRepo from '../lib/db/repositories/jobs';
 import * as invoiceRepo from '../lib/db/repositories/invoices';
@@ -262,9 +267,9 @@ describe('Sync queue', () => {
     );
   });
 
-  it('processSyncQueue returns pending count', async () => {
+  it('processSyncQueue returns zero when Supabase is not configured', async () => {
     const result = await syncQueue.processSyncQueue();
     expect(result.synced).toBe(0);
-    expect(result.failed).toBe(15);
+    expect(result.failed).toBe(0);
   });
 });

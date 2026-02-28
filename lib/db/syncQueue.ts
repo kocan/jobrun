@@ -35,12 +35,11 @@ export function markAllAsSynced(table: SyncableTable): void {
 }
 
 /**
- * Placeholder for future Supabase sync.
- * When online, this would process all pending records and push them to the server.
+ * Process the sync queue: push pending local changes to Supabase and pull server updates.
+ * Requires Supabase to be configured; otherwise returns zero counts.
  */
 export async function processSyncQueue(): Promise<{ synced: number; failed: number }> {
-  // TODO: Implement actual Supabase sync
-  // For now, just return counts
-  const pending = getPendingSyncCount();
-  return { synced: 0, failed: pending };
+  const { processSync } = await import('./syncManager');
+  const result = await processSync();
+  return { synced: result.pushed + result.pulled, failed: result.failed };
 }
