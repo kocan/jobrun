@@ -8,6 +8,7 @@ export interface AppSettings {
   businessPhone: string;
   businessEmail: string;
   onboardingComplete: boolean;
+  smsRemindersEnabled: boolean;
 }
 
 export const defaultSettings: AppSettings = {
@@ -16,6 +17,7 @@ export const defaultSettings: AppSettings = {
   businessPhone: '',
   businessEmail: '',
   onboardingComplete: false,
+  smsRemindersEnabled: false,
 };
 
 export function getSettings(): AppSettings {
@@ -28,6 +30,7 @@ export function getSettings(): AppSettings {
     businessPhone: map.get('app_businessPhone') ?? defaultSettings.businessPhone,
     businessEmail: map.get('app_businessEmail') ?? defaultSettings.businessEmail,
     onboardingComplete: map.get('app_onboardingComplete') === 'true',
+    smsRemindersEnabled: map.get('app_smsRemindersEnabled') === 'true',
   };
 }
 
@@ -39,6 +42,7 @@ export function saveSettings(settings: AppSettings): void {
     ['app_businessPhone', settings.businessPhone],
     ['app_businessEmail', settings.businessEmail],
     ['app_onboardingComplete', String(settings.onboardingComplete)],
+    ['app_smsRemindersEnabled', String(settings.smsRemindersEnabled)],
   ];
   db.withTransactionSync(() => {
     for (const [key, value] of entries) {

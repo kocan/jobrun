@@ -51,6 +51,7 @@ export interface Job {
   photos: Photo[];
   estimateId?: string;
   invoiceId?: string;
+  reminderSent: boolean;
   createdAt: string;
   updatedAt: string;
 }
