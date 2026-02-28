@@ -8,6 +8,7 @@ import { EstimateProvider } from '../contexts/EstimateContext';
 import { InvoiceProvider } from '../contexts/InvoiceContext';
 import { SettingsProvider, useSettings } from '../contexts/SettingsContext';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
+import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { NetworkProvider } from '../lib/network';
 import { OfflineBanner } from '../components/OfflineBanner';
 import { initializeDatabase } from '../lib/db/database';
@@ -16,6 +17,7 @@ import { migrateFromAsyncStorage } from '../lib/db/migration';
 function RootNavigator() {
   const { isOnboardingComplete, loading } = useSettings();
   const { user, loading: authLoading, skippedAuth, isConfigured } = useAuth();
+  const { colors, isDark } = useTheme();
   const segments = useSegments();
   const router = useRouter();
 
@@ -40,10 +42,17 @@ function RootNavigator() {
 
   if (loading || authLoading) return null;
 
+  const screenOptions = {
+    headerStyle: { backgroundColor: colors.surface },
+    headerTintColor: colors.text,
+    headerTitleStyle: { color: colors.text },
+    contentStyle: { backgroundColor: colors.background },
+  };
+
   return (
     <>
       <OfflineBanner />
-      <Stack>
+      <Stack screenOptions={screenOptions}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="auth" options={{ headerShown: false }} />
@@ -85,21 +94,23 @@ export default function RootLayout() {
   return (
     <DatabaseInitializer>
       <NetworkProvider>
-        <SettingsProvider>
-          <AuthProvider>
-            <CustomerProvider>
-              <JobProvider>
-                <PriceBookProvider>
-                  <EstimateProvider>
-                    <InvoiceProvider>
-                      <RootNavigator />
-                    </InvoiceProvider>
-                  </EstimateProvider>
-                </PriceBookProvider>
-              </JobProvider>
-            </CustomerProvider>
-          </AuthProvider>
-        </SettingsProvider>
+        <ThemeProvider>
+          <SettingsProvider>
+            <AuthProvider>
+              <CustomerProvider>
+                <JobProvider>
+                  <PriceBookProvider>
+                    <EstimateProvider>
+                      <InvoiceProvider>
+                        <RootNavigator />
+                      </InvoiceProvider>
+                    </EstimateProvider>
+                  </PriceBookProvider>
+                </JobProvider>
+              </CustomerProvider>
+            </AuthProvider>
+          </SettingsProvider>
+        </ThemeProvider>
       </NetworkProvider>
     </DatabaseInitializer>
   );
