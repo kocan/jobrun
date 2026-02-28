@@ -1,6 +1,7 @@
-import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, Pressable, Switch, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
+import { registerForPushNotifications } from '../lib/notifications';
 import { useSettings } from '../contexts/SettingsContext';
 import { usePriceBook } from '../contexts/PriceBookContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -172,6 +173,62 @@ export default function SettingsScreen() {
           </Pressable>
         </View>
       </View>
+      {/* Notifications Section */}
+      <Text style={styles.sectionTitle}>Notifications</Text>
+      <View style={styles.card}>
+        <View style={styles.toggleRow}>
+          <View style={styles.toggleInfo}>
+            <Text style={styles.toggleLabel}>Payment Received</Text>
+            <Text style={styles.toggleDesc}>When a customer pays an invoice</Text>
+          </View>
+          <Switch
+            accessibilityRole="switch"
+            accessibilityLabel="Toggle payment received notifications"
+            value={settings.notifyPaymentReceived}
+            onValueChange={async (value) => {
+              if (value) await registerForPushNotifications();
+              await updateSettings({ notifyPaymentReceived: value });
+            }}
+            trackColor={{ false: '#D1D5DB', true: '#FDBA74' }}
+            thumbColor={settings.notifyPaymentReceived ? '#EA580C' : '#f4f3f4'}
+          />
+        </View>
+        <View style={styles.toggleRow}>
+          <View style={styles.toggleInfo}>
+            <Text style={styles.toggleLabel}>Estimate Accepted</Text>
+            <Text style={styles.toggleDesc}>When a customer accepts an estimate</Text>
+          </View>
+          <Switch
+            accessibilityRole="switch"
+            accessibilityLabel="Toggle estimate accepted notifications"
+            value={settings.notifyEstimateAccepted}
+            onValueChange={async (value) => {
+              if (value) await registerForPushNotifications();
+              await updateSettings({ notifyEstimateAccepted: value });
+            }}
+            trackColor={{ false: '#D1D5DB', true: '#FDBA74' }}
+            thumbColor={settings.notifyEstimateAccepted ? '#EA580C' : '#f4f3f4'}
+          />
+        </View>
+        <View style={styles.toggleRow}>
+          <View style={styles.toggleInfo}>
+            <Text style={styles.toggleLabel}>Appointment Reminders</Text>
+            <Text style={styles.toggleDesc}>Day-before reminder for scheduled jobs</Text>
+          </View>
+          <Switch
+            accessibilityRole="switch"
+            accessibilityLabel="Toggle appointment reminder notifications"
+            value={settings.notifyAppointmentReminder}
+            onValueChange={async (value) => {
+              if (value) await registerForPushNotifications();
+              await updateSettings({ notifyAppointmentReminder: value });
+            }}
+            trackColor={{ false: '#D1D5DB', true: '#FDBA74' }}
+            thumbColor={settings.notifyAppointmentReminder ? '#EA580C' : '#f4f3f4'}
+          />
+        </View>
+      </View>
+
       {/* Sync Status Section */}
       <Text style={styles.sectionTitle}>Sync Status</Text>
       <View style={styles.card}>
@@ -283,4 +340,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12, alignItems: 'center' as const,
   },
   signOutText: { color: '#DC2626', fontSize: 16, fontWeight: '600' },
+  toggleRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#E5E7EB',
+  },
+  toggleInfo: { flex: 1, marginRight: 12 },
+  toggleLabel: { fontSize: 15, fontWeight: '600', color: '#333' },
+  toggleDesc: { fontSize: 13, color: '#6B7280', marginTop: 2 },
 });

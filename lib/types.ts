@@ -150,6 +150,12 @@ export interface Photo {
   createdAt: string;
 }
 
+export type NotificationType = 'payment_received' | 'estimate_accepted' | 'appointment_reminder';
+
+export interface NotificationPreferences {
+  paymentReceived: boolean;
+  estimateAccepted: boolean;
+  appointmentReminder: boolean;
 export interface CustomerNote {
   id: string;
   customerId: string;

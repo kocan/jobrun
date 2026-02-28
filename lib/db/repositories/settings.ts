@@ -8,6 +8,9 @@ export interface AppSettings {
   businessPhone: string;
   businessEmail: string;
   onboardingComplete: boolean;
+  notifyPaymentReceived: boolean;
+  notifyEstimateAccepted: boolean;
+  notifyAppointmentReminder: boolean;
   smsRemindersEnabled: boolean;
 }
 
@@ -17,6 +20,9 @@ export const defaultSettings: AppSettings = {
   businessPhone: '',
   businessEmail: '',
   onboardingComplete: false,
+  notifyPaymentReceived: true,
+  notifyEstimateAccepted: true,
+  notifyAppointmentReminder: true,
   smsRemindersEnabled: false,
 };
 
@@ -30,6 +36,9 @@ export function getSettings(): AppSettings {
     businessPhone: map.get('app_businessPhone') ?? defaultSettings.businessPhone,
     businessEmail: map.get('app_businessEmail') ?? defaultSettings.businessEmail,
     onboardingComplete: map.get('app_onboardingComplete') === 'true',
+    notifyPaymentReceived: map.get('app_notifyPaymentReceived') !== 'false',
+    notifyEstimateAccepted: map.get('app_notifyEstimateAccepted') !== 'false',
+    notifyAppointmentReminder: map.get('app_notifyAppointmentReminder') !== 'false',
     smsRemindersEnabled: map.get('app_smsRemindersEnabled') === 'true',
   };
 }
@@ -42,6 +51,9 @@ export function saveSettings(settings: AppSettings): void {
     ['app_businessPhone', settings.businessPhone],
     ['app_businessEmail', settings.businessEmail],
     ['app_onboardingComplete', String(settings.onboardingComplete)],
+    ['app_notifyPaymentReceived', String(settings.notifyPaymentReceived)],
+    ['app_notifyEstimateAccepted', String(settings.notifyEstimateAccepted)],
+    ['app_notifyAppointmentReminder', String(settings.notifyAppointmentReminder)],
     ['app_smsRemindersEnabled', String(settings.smsRemindersEnabled)],
   ];
   db.withTransactionSync(() => {

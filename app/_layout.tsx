@@ -1,6 +1,8 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
+import { type EventSubscription } from 'expo-modules-core';
+import * as Notifications from 'expo-notifications';
 import { CustomerProvider } from '../contexts/CustomerContext';
 import { JobProvider } from '../contexts/JobContext';
 import { PriceBookProvider } from '../contexts/PriceBookContext';
@@ -14,6 +16,8 @@ import { OfflineBanner } from '../components/OfflineBanner';
 import { initializeDatabase } from '../lib/db/database';
 import { initSentry } from '../lib/sentry';
 import { migrateFromAsyncStorage } from '../lib/db/migration';
+import { registerForPushNotifications } from '../lib/notifications';
+import { NotificationType } from '../lib/types';
 
 function RootNavigator() {
   const { isOnboardingComplete, loading } = useSettings();
@@ -21,6 +25,37 @@ function RootNavigator() {
   const { colors, isDark } = useTheme();
   const segments = useSegments();
   const router = useRouter();
+  const responseListener = useRef<EventSubscription | undefined>(undefined);
+
+  // Register for push notifications once onboarding is complete
+  useEffect(() => {
+    if (!isOnboardingComplete) return;
+    registerForPushNotifications();
+  }, [isOnboardingComplete]);
+
+  // Handle notification taps — navigate to the relevant screen
+  useEffect(() => {
+    responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data as
+        | Record<string, string>
+        | undefined;
+      if (!data) return;
+
+      const type = data.type as NotificationType | undefined;
+
+      if (type === 'payment_received' && data.invoiceId) {
+        router.push(`/invoice/${data.invoiceId}`);
+      } else if (type === 'estimate_accepted' && data.estimateId) {
+        router.push(`/estimate/${data.estimateId}`);
+      } else if (type === 'appointment_reminder' && data.jobId) {
+        router.push(`/job/${data.jobId}`);
+      }
+    });
+
+    return () => {
+      responseListener.current?.remove();
+    };
+  }, [router]);
 
   useEffect(() => {
     if (loading || authLoading) return;
