@@ -1,34 +1,10 @@
 import { Invoice, LineItem } from './types';
+import type { ShareableInvoiceData } from '../shared/types';
+import { encodeInvoiceData } from '../shared/invoiceEncoding';
 
-/** Compact invoice payload for URL sharing (no backend needed) */
-export interface ShareableInvoiceData {
-  /** invoice number */
-  n: string;
-  /** customer name */
-  c: string;
-  /** line items: [name, qty, unitPrice][] */
-  li: [string, number, number][];
-  /** subtotal */
-  st: number;
-  /** tax rate */
-  tr: number;
-  /** tax amount */
-  ta: number;
-  /** total */
-  t: number;
-  /** notes */
-  no?: string;
-  /** payment terms */
-  pt?: string;
-  /** due date (YYYY-MM-DD) */
-  dd?: string;
-  /** created at (YYYY-MM-DD) */
-  dt: string;
-  /** status */
-  s: string;
-  /** business name */
-  bn?: string;
-}
+// Re-export shared types and encoding functions
+export type { ShareableInvoiceData } from '../shared/types';
+export { encodeInvoiceData, decodeInvoiceData } from '../shared/invoiceEncoding';
 
 export const SHARE_BASE_URL = 'https://jobrun.app';
 
@@ -52,22 +28,6 @@ export function buildShareableInvoiceData(
     s: invoice.status,
     bn: businessName || undefined,
   };
-}
-
-export function encodeInvoiceData(data: ShareableInvoiceData): string {
-  const json = JSON.stringify(data);
-  const base64 = btoa(unescape(encodeURIComponent(json)));
-  return encodeURIComponent(base64);
-}
-
-export function decodeInvoiceData(encoded: string): ShareableInvoiceData | null {
-  try {
-    const base64 = decodeURIComponent(encoded);
-    const json = decodeURIComponent(escape(atob(base64)));
-    return JSON.parse(json) as ShareableInvoiceData;
-  } catch {
-    return null;
-  }
 }
 
 export function buildInvoiceShareUrl(invoice: Invoice, customerName: string, businessName?: string): string {
