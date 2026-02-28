@@ -4,10 +4,14 @@ import { useState, useEffect } from 'react';
 import { useSettings } from '../contexts/SettingsContext';
 import { usePriceBook } from '../contexts/PriceBookContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useCustomers } from '../contexts/CustomerContext';
+import { useJobs } from '../contexts/JobContext';
+import { useInvoices } from '../contexts/InvoiceContext';
 import { useNetwork } from '../lib/network';
 import { getPendingSyncCount } from '../lib/db/syncQueue';
 import { verticals } from '../constants/verticals';
 import { VerticalId } from '../lib/types';
+import { customersToCSV, jobsToCSV, invoicesToCSV, shareCSV } from '../lib/csvExport';
 
 type SelectableVertical = VerticalId | 'custom';
 
@@ -16,6 +20,9 @@ export default function SettingsScreen() {
   const { settings, updateSettings } = useSettings();
   const { resetToDefaults } = usePriceBook();
   const { user, signOut, isConfigured } = useAuth();
+  const { customers } = useCustomers();
+  const { jobs } = useJobs();
+  const { invoices } = useInvoices();
   const { isOnline } = useNetwork();
   const [pendingSync, setPendingSync] = useState(0);
 
@@ -40,6 +47,26 @@ export default function SettingsScreen() {
       businessEmail: email.trim(),
     });
     setDirty(false);
+  };
+
+  const customerMap: Record<string, string> = {};
+  for (const c of customers) {
+    customerMap[c.id] = `${c.firstName} ${c.lastName}`.trim();
+  }
+
+  const handleExport = async (type: 'customers' | 'jobs' | 'invoices') => {
+    try {
+      const date = new Date().toISOString().split('T')[0];
+      if (type === 'customers') {
+        await shareCSV(customersToCSV(customers), `customers-${date}.csv`);
+      } else if (type === 'jobs') {
+        await shareCSV(jobsToCSV(jobs, customerMap), `jobs-${date}.csv`);
+      } else {
+        await shareCSV(invoicesToCSV(invoices, customerMap), `invoices-${date}.csv`);
+      }
+    } catch {
+      Alert.alert('Export Failed', 'Unable to export data. Please try again.');
+    }
   };
 
   const handleChangeVertical = (verticalId: SelectableVertical) => {
@@ -157,6 +184,23 @@ export default function SettingsScreen() {
         </Text>
       </View>
 
+      {/* Export Data Section */}
+      <Text style={styles.sectionTitle}>Export Data</Text>
+      <View style={styles.card}>
+        <Text style={styles.exportHint}>Export your data as CSV files for use in spreadsheets or other apps.</Text>
+        <View style={styles.exportRow}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Export customers CSV" style={styles.exportBtn} onPress={() => handleExport('customers')}>
+            <Text style={styles.exportBtnText}>Customers ({customers.length})</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="Export jobs CSV" style={styles.exportBtn} onPress={() => handleExport('jobs')}>
+            <Text style={styles.exportBtnText}>Jobs ({jobs.length})</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="Export invoices CSV" style={styles.exportBtn} onPress={() => handleExport('invoices')}>
+            <Text style={styles.exportBtnText}>Invoices ({invoices.length})</Text>
+          </Pressable>
+        </View>
+      </View>
+
       {/* Account Section */}
       <Text style={styles.sectionTitle}>Account</Text>
       <View style={styles.card}>
@@ -224,6 +268,14 @@ const styles = StyleSheet.create({
   verticalItemIcon: { fontSize: 22, marginRight: 10 },
   verticalItemName: { fontSize: 15, fontWeight: '500', color: '#333' },
   verticalItemNameActive: { color: '#EA580C', fontWeight: '600' },
+  exportHint: { fontSize: 13, color: '#6B7280', marginBottom: 12 },
+  exportRow: { flexDirection: 'row', gap: 10 },
+  exportBtn: {
+    flex: 1, alignItems: 'center' as const, paddingVertical: 12,
+    backgroundColor: '#fff', borderRadius: 10,
+    borderWidth: 1.5, borderColor: '#D1D5DB',
+  },
+  exportBtnText: { fontSize: 14, fontWeight: '600', color: '#333' },
   accountEmail: { fontSize: 16, color: '#111', fontWeight: '500', marginTop: 4, marginBottom: 16 },
   accountOffline: { fontSize: 15, color: '#6B7280', marginBottom: 16 },
   signOutButton: {
