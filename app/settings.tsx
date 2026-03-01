@@ -103,7 +103,7 @@ export default function SettingsScreen() {
       <View style={styles.card}>
         <View style={styles.field}>
           <Text style={styles.label}>Business Name</Text>
-          <TextInput accessibilityRole="text" accessibilityLabel="Text input"
+          <TextInput accessibilityRole="text" accessibilityLabel="Business name"
             style={styles.input}
             value={name}
             onChangeText={(v) => { setName(v); setDirty(true); }}
@@ -113,7 +113,7 @@ export default function SettingsScreen() {
         </View>
         <View style={styles.field}>
           <Text style={styles.label}>Phone</Text>
-          <TextInput accessibilityRole="text" accessibilityLabel="Text input"
+          <TextInput accessibilityRole="text" accessibilityLabel="Phone number"
             style={styles.input}
             value={phone}
             onChangeText={(v) => { setPhone(v); setDirty(true); }}
@@ -124,7 +124,7 @@ export default function SettingsScreen() {
         </View>
         <View style={styles.field}>
           <Text style={styles.label}>Email</Text>
-          <TextInput accessibilityRole="text" accessibilityLabel="Text input"
+          <TextInput accessibilityRole="text" accessibilityLabel="Email address"
             style={styles.input}
             value={email}
             onChangeText={(v) => { setEmail(v); setDirty(true); }}

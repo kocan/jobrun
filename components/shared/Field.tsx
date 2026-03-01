@@ -28,7 +28,7 @@ export function Field({
       <Text style={detailStyles.label}>{label}</Text>
       <TextInput
         accessibilityRole="text"
-        accessibilityLabel="Text input"
+        accessibilityLabel={label}
         style={[detailStyles.input, multiline && detailStyles.inputMultiline, error && detailStyles.inputError]}
         value={value}
         onChangeText={onChange}

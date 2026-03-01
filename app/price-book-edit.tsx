@@ -128,7 +128,7 @@ function Field({
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput accessibilityRole="text" accessibilityLabel="Text input"
+      <TextInput accessibilityRole="text" accessibilityLabel={label}
         style={[styles.input, multiline && styles.inputMultiline]}
         value={value}
         onChangeText={onChange}
