@@ -237,6 +237,7 @@ export default function CalendarScreen() {
                   title="No jobs scheduled"
                   subtitle="This day is free — schedule a job to fill it up."
                   ctaLabel="+ Schedule a Job"
+                  onPressCta={() => handleAddJob(selectedDate)}
                 />
               )
             ) : (
