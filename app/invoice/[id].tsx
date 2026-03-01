@@ -255,7 +255,7 @@ export default function InvoiceDetailScreen() {
               {/* Tax Rate */}
               <Field label="Tax Rate (%)" value={form.taxRate} onChange={setField('taxRate')} keyboardType="numeric" placeholder="0" />
 
-              {form.lineItems.length > 0 && (
+              {lineItems.length > 0 && (
                 <TotalsBox subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
               )}
 
@@ -299,7 +299,7 @@ export default function InvoiceDetailScreen() {
               {lineItems.length > 0 && (
                 <View style={styles.field}>
                   <SectionTitle title="Line Items" />
-                  <LineItemsView lineItems={form.lineItems} />
+                  <LineItemsView lineItems={lineItems} />
                   <TotalsBox subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
                 </View>
               )}
