@@ -36,7 +36,7 @@ export default function CustomersScreen() {
 
   return (
     <View style={styles.container}>
-      <TextInput accessibilityRole="text" accessibilityLabel="Text input"
+      <TextInput accessibilityRole="text" accessibilityLabel="Search customers"
         style={styles.search}
         placeholder="Search customers..."
         placeholderTextColor={theme.colors.gray400}
