@@ -57,7 +57,11 @@ export const darkColors = {
   },
 } as const;
 
-export type ThemeColors = typeof lightColors;
+export type ThemeColors = {
+  [K in keyof typeof lightColors]: K extends 'status'
+    ? { [S in keyof typeof lightColors.status]: string }
+    : string;
+};
 
 export const theme = {
   colors: lightColors,

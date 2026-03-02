@@ -15,9 +15,9 @@ import { detailStyles as styles } from '../../styles/detailScreen';
 import { Field } from '../../components/shared/Field';
 import { InfoRow } from '../../components/shared/InfoRow';
 import { LineItemEditor } from '../../components/shared/LineItemEditor';
-import { CustomerPicker } from '../../components/CustomerPicker';
-import { ServicePicker } from '../../components/ServicePicker';
+import { CustomerPickerField, useCustomerName } from '../../components/CustomerPickerField';
 import { DatePickerField, TimePickerField } from '../../components/DateTimePicker';
+import { ServicePickerModal } from '../../components/ServicePickerModal';
 import { useLineItems } from '../../hooks/useLineItems';
 
 const STATUS_OPTIONS: JobStatus[] = ['scheduled', 'in-progress', 'completed', 'cancelled'];
@@ -199,7 +199,7 @@ export default function JobDetailScreen() {
               <FormSectionHeader title="Customer Info" />
               <CustomerPickerField
                 customerId={form.customerId}
-                onSelect={(cId) => {
+                onSelect={(cId: string) => {
                   setForm((f) => ({ ...f, customerId: cId }));
                   setErrors((prev) => ({ ...prev, customerId: undefined }));
                 }}

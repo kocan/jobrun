@@ -38,7 +38,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const isDark =
     themeMode === 'dark' || (themeMode === 'system' && systemScheme === 'dark');
 
-  const colors = isDark ? darkColors : lightColors;
+  const colors: ThemeColors = isDark ? darkColors : lightColors;
 
   if (!loaded) return null;
 

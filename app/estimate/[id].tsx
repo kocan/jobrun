@@ -18,9 +18,9 @@ import { Field } from '../../components/shared/Field';
 import { InfoRow } from '../../components/shared/InfoRow';
 import { LineItemEditor, LineItemsView } from '../../components/shared/LineItemEditor';
 import { TotalsBox } from '../../components/shared/TotalsBox';
-import { CustomerPicker } from '../../components/CustomerPicker';
-import { ServicePicker } from '../../components/ServicePicker';
+import { CustomerPickerField, useCustomerName } from '../../components/CustomerPickerField';
 import { DatePickerField } from '../../components/DateTimePicker';
+import { ServicePickerModal } from '../../components/ServicePickerModal';
 import { useLineItems } from '../../hooks/useLineItems';
 
 const STATUS_LABELS: Record<EstimateStatus, string> = {
@@ -209,7 +209,7 @@ export default function EstimateDetailScreen() {
               <FormSectionHeader title="Customer Info" />
               <CustomerPickerField
                 customerId={form.customerId}
-                onSelect={(cId) => setForm((f) => ({ ...f, customerId: cId }))}
+                onSelect={(cId: string) => setForm((f) => ({ ...f, customerId: cId }))}
               />
 
               <FormSectionHeader title="Line Items" />
@@ -224,7 +224,7 @@ export default function EstimateDetailScreen() {
               {/* Tax Rate */}
               <Field label="Tax Rate (%)" value={form.taxRate} onChange={setField('taxRate')} keyboardType="numeric" placeholder="0" />
 
-              {form.lineItems.length > 0 && (
+              {lineItems.length > 0 && (
                 <TotalsBox subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
               )}
 
@@ -244,7 +244,7 @@ export default function EstimateDetailScreen() {
               {lineItems.length > 0 && (
                 <View style={styles.field}>
                   <SectionTitle title="Line Items" />
-                  <LineItemsView lineItems={form.lineItems} />
+                  <LineItemsView lineItems={lineItems} />
                   <TotalsBox subtotal={totals.subtotal} taxRate={taxRate} taxAmount={totals.taxAmount} total={totals.total} />
                 </View>
               )}
