@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     color: theme.colors.text,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     minHeight: 60,
     textAlignVertical: 'top',
     marginBottom: 10,

@@ -128,9 +128,9 @@ export default function CustomerInvoiceView() {
                   <tbody className="divide-y divide-gray-100">
                     {data.li.map(([name, qty, price], i) => (
                       <tr key={i}>
-                        <td className="px-4 py-3 text-gray-900 font-medium">{name}</td>
-                        <td className="px-4 py-3 text-gray-600 text-center">{qty}</td>
-                        <td className="px-4 py-3 text-gray-600 text-right">{formatCurrency(price)}</td>
+                        <td className="px-4 py-3 text-gray-900 dark:text-gray-100 font-medium">{name}</td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-gray-300 text-center">{qty}</td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-gray-300 text-right">{formatCurrency(price)}</td>
                         <td className="px-4 py-3 text-gray-900 font-medium text-right">{formatCurrency(qty * price)}</td>
                       </tr>
                     ))}
@@ -161,7 +161,7 @@ export default function CustomerInvoiceView() {
             {data.no && (
               <div>
                 <h2 className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-2">Notes</h2>
-                <p className="text-gray-700 whitespace-pre-wrap text-sm leading-relaxed bg-gray-50 rounded-lg p-4">{data.no}</p>
+                <p className="text-gray-700 dark:text-gray-200 whitespace-pre-wrap text-sm leading-relaxed bg-gray-50 dark:bg-gray-700 rounded-lg p-4">{data.no}</p>
               </div>
             )}
 
