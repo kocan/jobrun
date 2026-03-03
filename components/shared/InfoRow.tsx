@@ -1,12 +1,13 @@
 import { View, Text } from 'react-native';
-import { detailStyles } from '../../styles/detailScreen';
+import { useDetailStyles } from '../../styles/detailScreen';
 
 export function InfoRow({ label, value }: { label: string; value?: string }) {
+  const styles = useDetailStyles();
   if (!value) return null;
   return (
-    <View style={detailStyles.infoRow}>
-      <Text style={detailStyles.infoLabel}>{label}</Text>
-      <Text style={detailStyles.infoValue}>{value}</Text>
+    <View style={styles.infoRow}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue}>{value}</Text>
     </View>
   );
 }

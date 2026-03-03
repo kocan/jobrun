@@ -1,6 +1,6 @@
 import { View, Text, TextInput, Pressable } from 'react-native';
 import { LineItem } from '../../lib/types';
-import { detailStyles } from '../../styles/detailScreen';
+import { useDetailStyles } from '../../styles/detailScreen';
 
 interface LineItemEditorProps {
   lineItems: LineItem[];
@@ -19,50 +19,51 @@ export function LineItemEditor({
   label = 'Line Items',
   required,
 }: LineItemEditorProps) {
+  const styles = useDetailStyles();
   return (
-    <View style={detailStyles.field}>
-      <Text style={detailStyles.label}>{label}{required ? ' *' : ''}</Text>
+    <View style={styles.field}>
+      <Text style={styles.label}>{label}{required ? ' *' : ''}</Text>
       {lineItems.map((li) => (
-        <View key={li.id} style={detailStyles.lineItemRow}>
-          <View style={detailStyles.lineItemInfo}>
-            <Text style={detailStyles.lineItemName}>{li.name}</Text>
-            <View style={detailStyles.lineItemControls}>
-              <Text style={detailStyles.lineItemLabel}>Qty:</Text>
+        <View key={li.id} style={styles.lineItemRow}>
+          <View style={styles.lineItemInfo}>
+            <Text style={styles.lineItemName}>{li.name}</Text>
+            <View style={styles.lineItemControls}>
+              <Text style={styles.lineItemLabel}>Qty:</Text>
               <TextInput
                 accessibilityRole="text"
                 accessibilityLabel="Quantity"
-                style={detailStyles.lineItemQtyInput}
+                style={styles.lineItemQtyInput}
                 value={String(li.quantity)}
                 onChangeText={(v) => onUpdateItem(li.id, { quantity: parseInt(v) || 1 })}
                 keyboardType="number-pad"
               />
-              <Text style={detailStyles.lineItemLabel}>@ $</Text>
+              <Text style={styles.lineItemLabel}>@ $</Text>
               <TextInput
                 accessibilityRole="text"
                 accessibilityLabel="Unit price"
-                style={detailStyles.lineItemPriceInput}
+                style={styles.lineItemPriceInput}
                 value={String(li.unitPrice)}
                 onChangeText={(v) => onUpdateItem(li.id, { unitPrice: parseFloat(v) || 0 })}
                 keyboardType="numeric"
               />
             </View>
           </View>
-          <View style={detailStyles.lineItemRight}>
-            <Text style={detailStyles.lineItemTotal}>${(li.unitPrice * li.quantity).toFixed(2)}</Text>
+          <View style={styles.lineItemRight}>
+            <Text style={styles.lineItemTotal}>${(li.unitPrice * li.quantity).toFixed(2)}</Text>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Remove line item"
-              style={detailStyles.lineItemRemoveButton}
+              style={styles.lineItemRemoveButton}
               hitSlop={8}
               onPress={() => onRemoveItem(li.id)}
             >
-              <Text style={detailStyles.lineItemRemove}>✕</Text>
+              <Text style={styles.lineItemRemove}>✕</Text>
             </Pressable>
           </View>
         </View>
       ))}
-      <Pressable accessibilityRole="button" accessibilityLabel="Add service line item" style={detailStyles.addServiceBtn} onPress={onAddService}>
-        <Text style={detailStyles.addServiceBtnText}>+ Add Service</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel="Add service line item" style={styles.addServiceBtn} onPress={onAddService}>
+        <Text style={styles.addServiceBtnText}>+ Add Service</Text>
       </Pressable>
     </View>
   );
@@ -70,15 +71,16 @@ export function LineItemEditor({
 
 /** Read-only line items view for detail screens */
 export function LineItemsView({ lineItems }: { lineItems: LineItem[] }) {
+  const styles = useDetailStyles();
   return (
     <>
       {lineItems.map((li) => (
-        <View key={li.id} style={detailStyles.viewLineItem}>
-          <View style={detailStyles.viewLineItemLeft}>
-            <Text style={detailStyles.viewLineItemName}>{li.name}</Text>
-            <Text style={detailStyles.viewLineItemDetail}>{li.quantity} × ${li.unitPrice.toFixed(2)}</Text>
+        <View key={li.id} style={styles.viewLineItem}>
+          <View style={styles.viewLineItemLeft}>
+            <Text style={styles.viewLineItemName}>{li.name}</Text>
+            <Text style={styles.viewLineItemDetail}>{li.quantity} × ${li.unitPrice.toFixed(2)}</Text>
           </View>
-          <Text style={detailStyles.viewLineItemTotal}>${(li.unitPrice * li.quantity).toFixed(2)}</Text>
+          <Text style={styles.viewLineItemTotal}>${(li.unitPrice * li.quantity).toFixed(2)}</Text>
         </View>
       ))}
     </>

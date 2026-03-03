@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { useCustomers } from '../contexts/CustomerContext';
 import { CustomerPicker } from './CustomerPicker';
-import { detailStyles as styles } from './DetailScreen';
+import { useDetailStyles } from './DetailScreen';
 
 interface CustomerPickerFieldProps {
   customerId: string;
@@ -15,6 +15,7 @@ interface CustomerPickerFieldProps {
  * Manages its own modal visibility and renders the picker button with label.
  */
 export function CustomerPickerField({ customerId, onSelect, error }: CustomerPickerFieldProps) {
+  const styles = useDetailStyles();
   const { customers, getCustomerById, addCustomer } = useCustomers();
   const [visible, setVisible] = useState(false);
 

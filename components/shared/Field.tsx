@@ -1,6 +1,6 @@
 import { View, Text, TextInput } from 'react-native';
 import { theme } from '../../lib/theme';
-import { detailStyles } from '../../styles/detailScreen';
+import { useDetailStyles } from '../../styles/detailScreen';
 
 export function Field({
   label,
@@ -23,13 +23,14 @@ export function Field({
   error?: string;
   placeholder?: string;
 }) {
+  const styles = useDetailStyles();
   return (
-    <View style={detailStyles.field}>
-      <Text style={detailStyles.label}>{label}</Text>
+    <View style={styles.field}>
+      <Text style={styles.label}>{label}</Text>
       <TextInput
         accessibilityRole="text"
         accessibilityLabel={label}
-        style={[detailStyles.input, multiline && detailStyles.inputMultiline, error && detailStyles.inputError]}
+        style={[styles.input, multiline && styles.inputMultiline, error && styles.inputError]}
         value={value}
         onChangeText={onChange}
         multiline={multiline}
@@ -40,7 +41,7 @@ export function Field({
         placeholder={placeholder}
         placeholderTextColor={theme.colors.gray400}
       />
-      {error ? <Text style={detailStyles.fieldError}>{error}</Text> : null}
+      {error ? <Text style={styles.fieldError}>{error}</Text> : null}
     </View>
   );
 }
