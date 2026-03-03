@@ -1,7 +1,7 @@
 import { View, Text, Pressable, Platform } from 'react-native';
 import { useState } from 'react';
 import RNDateTimePicker from '@react-native-community/datetimepicker';
-import { detailStyles as styles } from './DetailScreen';
+import { useDetailStyles } from './DetailScreen';
 import { theme } from '../lib/theme';
 
 interface DatePickerFieldProps {
@@ -57,6 +57,7 @@ function formatDisplayTime(timeStr: string): string {
 }
 
 export function DatePickerField({ label, value, onChange, error }: DatePickerFieldProps) {
+  const styles = useDetailStyles();
   const [show, setShow] = useState(false);
 
   return (
@@ -90,6 +91,7 @@ export function DatePickerField({ label, value, onChange, error }: DatePickerFie
 }
 
 export function TimePickerField({ label, value, onChange }: TimePickerFieldProps) {
+  const styles = useDetailStyles();
   const [show, setShow] = useState(false);
 
   return (

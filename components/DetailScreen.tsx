@@ -1,8 +1,8 @@
 import { View, Text, Pressable } from 'react-native';
-import { detailStyles } from '../styles/detailScreen';
+import { useDetailStyles } from '../styles/detailScreen';
 
 // Re-export shared components and styles so existing imports keep working
-export { detailStyles } from '../styles/detailScreen';
+export { useDetailStyles } from '../styles/detailScreen';
 export { Field } from './shared/Field';
 export { InfoRow } from './shared/InfoRow';
 
@@ -15,11 +15,12 @@ export { InfoRow } from './shared/InfoRow';
 /* ── FormSectionHeader (visual divider for long forms) ── */
 
 export function FormSectionHeader({ title }: { title: string }) {
+  const styles = useDetailStyles();
   return (
-    <View style={detailStyles.formSectionHeader}>
-      <View style={detailStyles.formSectionLine} />
-      <Text style={detailStyles.formSectionText}>{title}</Text>
-      <View style={detailStyles.formSectionLine} />
+    <View style={styles.formSectionHeader}>
+      <View style={styles.formSectionLine} />
+      <Text style={styles.formSectionText}>{title}</Text>
+      <View style={styles.formSectionLine} />
     </View>
   );
 }
@@ -27,9 +28,10 @@ export function FormSectionHeader({ title }: { title: string }) {
 /* ── StatusBadge ───────────────────────────────────────── */
 
 export function StatusBadge({ label, color }: { label: string; color: string }) {
+  const styles = useDetailStyles();
   return (
-    <View style={[detailStyles.statusBadge, { backgroundColor: color }]}>
-      <Text style={detailStyles.statusBadgeText}>{label}</Text>
+    <View style={[styles.statusBadge, { backgroundColor: color }]}>
+      <Text style={styles.statusBadgeText}>{label}</Text>
     </View>
   );
 }
@@ -45,9 +47,10 @@ export function ActionButton({
   color: string;
   onPress: () => void;
 }) {
+  const styles = useDetailStyles();
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={label} style={[detailStyles.actionBtn, { backgroundColor: color }]} onPress={onPress}>
-      <Text style={detailStyles.actionBtnText}>{label}</Text>
+    <Pressable accessibilityRole="button" accessibilityLabel={label} style={[styles.actionBtn, { backgroundColor: color }]} onPress={onPress}>
+      <Text style={styles.actionBtnText}>{label}</Text>
     </Pressable>
   );
 }
@@ -55,31 +58,35 @@ export function ActionButton({
 /* ── SectionTitle ──────────────────────────────────────── */
 
 export function SectionTitle({ title }: { title: string }) {
-  return <Text style={detailStyles.sectionTitle}>{title}</Text>;
+  const styles = useDetailStyles();
+  return <Text style={styles.sectionTitle}>{title}</Text>;
 }
 
 /* ── SaveButton / CancelButton ─────────────────────────── */
 
 export function SaveButton({ label, onPress }: { label: string; onPress: () => void }) {
+  const styles = useDetailStyles();
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel="Save changes" style={detailStyles.saveBtn} onPress={onPress}>
-      <Text style={detailStyles.saveBtnText}>{label}</Text>
+    <Pressable accessibilityRole="button" accessibilityLabel="Save changes" style={styles.saveBtn} onPress={onPress}>
+      <Text style={styles.saveBtnText}>{label}</Text>
     </Pressable>
   );
 }
 
 export function CancelButton({ onPress }: { onPress: () => void }) {
+  const styles = useDetailStyles();
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel="Cancel changes" style={detailStyles.cancelBtn} onPress={onPress}>
-      <Text style={detailStyles.cancelBtnText}>Cancel</Text>
+    <Pressable accessibilityRole="button" accessibilityLabel="Cancel changes" style={styles.cancelBtn} onPress={onPress}>
+      <Text style={styles.cancelBtnText}>Cancel</Text>
     </Pressable>
   );
 }
 
 export function DeleteButton({ label, onPress }: { label: string; onPress: () => void }) {
+  const styles = useDetailStyles();
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel="Delete record" style={detailStyles.deleteBtn} onPress={onPress}>
-      <Text style={detailStyles.deleteBtnText}>{label}</Text>
+    <Pressable accessibilityRole="button" accessibilityLabel="Delete record" style={styles.deleteBtn} onPress={onPress}>
+      <Text style={styles.deleteBtnText}>{label}</Text>
     </Pressable>
   );
 }

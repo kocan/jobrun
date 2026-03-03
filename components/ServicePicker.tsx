@@ -1,6 +1,6 @@
 import { View, Text, Pressable, Modal, FlatList, Platform } from 'react-native';
 import { PriceBookService } from '../lib/types';
-import { detailStyles as styles } from './DetailScreen';
+import { useDetailStyles } from './DetailScreen';
 
 interface ServicePickerProps {
   visible: boolean;
@@ -10,6 +10,7 @@ interface ServicePickerProps {
 }
 
 export function ServicePicker({ visible, services, onSelect, onClose }: ServicePickerProps) {
+  const styles = useDetailStyles();
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
       <View style={[styles.modalContainer, Platform.OS === 'android' && styles.modalContainerAndroid]}>

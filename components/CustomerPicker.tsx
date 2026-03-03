@@ -2,7 +2,7 @@ import { View, Text, TextInput, Pressable, Modal, FlatList, Platform, Alert, Key
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Customer } from '../lib/types';
-import { detailStyles as styles } from './DetailScreen';
+import { useDetailStyles } from './DetailScreen';
 import { theme } from '../lib/theme';
 
 const RECENT_KEY = 'customer_picker_recent';
@@ -32,6 +32,7 @@ interface CustomerPickerProps {
 }
 
 export function CustomerPicker({ visible, customers, onSelect, onClose, onAddCustomer }: CustomerPickerProps) {
+  const styles = useDetailStyles();
   const [search, setSearch] = useState('');
   const [recentIds, setRecentIds] = useState<string[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
