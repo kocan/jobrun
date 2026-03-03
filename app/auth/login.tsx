@@ -64,7 +64,7 @@ export default function LoginScreen() {
           </View>
         ) : (
           <>
-            <TextInput accessibilityRole="text" accessibilityLabel="Text input"
+            <TextInput accessibilityRole="text" accessibilityLabel="Email address"
               style={styles.input}
               placeholder="you@example.com"
               placeholderTextColor="#999"

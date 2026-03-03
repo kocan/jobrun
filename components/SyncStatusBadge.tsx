@@ -42,7 +42,7 @@ export function SyncStatusBadge() {
   return (
     <View
       style={styles.container}
-      accessibilityRole="status"
+      accessibilityRole="text"
       accessibilityLabel={`Sync status: ${config.label}`}
       accessibilityLiveRegion="polite"
     >

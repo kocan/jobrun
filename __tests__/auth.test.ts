@@ -1,4 +1,4 @@
-import { isSupabaseConfigured } from '../lib/supabase';
+import { isSupabaseConfigured, getSupabase } from '../lib/supabase';
 
 describe('Supabase configuration', () => {
   test('isSupabaseConfigured is false when env vars are not set', () => {
@@ -7,7 +7,6 @@ describe('Supabase configuration', () => {
   });
 
   test('getSupabase returns null when not configured', () => {
-    const { getSupabase } = require('../lib/supabase');
     expect(getSupabase()).toBeNull();
   });
 });

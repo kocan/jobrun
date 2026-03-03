@@ -19,7 +19,7 @@ export default function CustomersScreen() {
     ({ item }: { item: (typeof customers)[0] }) => (
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`View customer ${item.firstName} ${item.lastName}`}
+        accessibilityLabel={`View customer ${item.firstName} ${item.lastName}`.trim()}
         style={[styles.row, { borderBottomColor: colors.border }]}
         onPress={() => router.push(`/customer/${item.id}`)}
       >

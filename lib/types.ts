@@ -51,7 +51,7 @@ export interface Job {
   photos: Photo[];
   estimateId?: string;
   invoiceId?: string;
-  reminderSent: boolean;
+  reminderSent?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -125,7 +125,7 @@ export interface Invoice {
   dueDate?: string;
   paidAt?: string;
   shareToken?: string;
-  payments: Payment[];
+  payments?: Payment[];
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -156,6 +156,8 @@ export interface NotificationPreferences {
   paymentReceived: boolean;
   estimateAccepted: boolean;
   appointmentReminder: boolean;
+}
+
 export interface CustomerNote {
   id: string;
   customerId: string;
