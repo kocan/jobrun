@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { theme } from '../lib/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface EmptyStateProps {
   icon: string;
@@ -10,19 +10,21 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({ icon, title, subtitle, ctaLabel, onPressCta }: EmptyStateProps) {
+  const { colors } = useTheme();
+
   return (
     <View style={styles.container} accessibilityLabel={`${title}${subtitle ? `. ${subtitle}` : ''}`}>
       <Text style={styles.icon} accessibilityLabel={`${title} icon`}>{icon}</Text>
-      <Text style={styles.title}>{title}</Text>
-      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+      <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+      {subtitle ? <Text style={[styles.subtitle, { color: colors.textMuted }]}>{subtitle}</Text> : null}
       {ctaLabel && onPressCta ? (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={ctaLabel}
-          style={styles.ctaButton}
+          style={[styles.ctaButton, { backgroundColor: colors.primary }]}
           onPress={onPressCta}
         >
-          <Text style={styles.ctaText}>{ctaLabel}</Text>
+          <Text style={[styles.ctaText, { color: colors.white }]}>{ctaLabel}</Text>
         </Pressable>
       ) : null}
     </View>
@@ -43,24 +45,20 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '600',
-    color: theme.colors.text,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 15,
-    color: theme.colors.textMuted,
     marginTop: 6,
     textAlign: 'center',
   },
   ctaButton: {
     marginTop: 16,
-    backgroundColor: theme.colors.primary,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 10,
   },
   ctaText: {
-    color: theme.colors.white,
     fontSize: 15,
     fontWeight: '600',
   },
