@@ -14,7 +14,7 @@ import {
   StatusBadge, ActionButton, SectionTitle,
   SaveButton, CancelButton, DeleteButton, FormSectionHeader,
 } from '../../components/DetailScreen';
-import { detailStyles as styles } from '../../styles/detailScreen';
+import { useDetailStyles } from '../../styles/detailScreen';
 import { Field } from '../../components/shared/Field';
 import { InfoRow } from '../../components/shared/InfoRow';
 import { LineItemEditor, LineItemsView } from '../../components/shared/LineItemEditor';
@@ -69,6 +69,7 @@ const emptyForm: FormData = {
 };
 
 export default function InvoiceDetailScreen() {
+  const styles = useDetailStyles();
   const { id, fromJob, fromEstimate, customerId: preselectedCustomerId } = useLocalSearchParams<{
     id: string; fromJob?: string; fromEstimate?: string; customerId?: string;
   }>();
