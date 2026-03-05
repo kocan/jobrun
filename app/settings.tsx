@@ -1,6 +1,6 @@
 import { View, Text, TextInput, Pressable, Switch, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { registerForPushNotifications } from '../lib/notifications';
 import { useSettings } from '../contexts/SettingsContext';
 import { usePriceBook } from '../contexts/PriceBookContext';
@@ -13,6 +13,7 @@ import { getPendingSyncCount } from '../lib/db/syncQueue';
 import { verticals } from '../constants/verticals';
 import { VerticalId } from '../lib/types';
 import { customersToCSV, jobsToCSV, invoicesToCSV, shareCSV } from '../lib/csvExport';
+import { useTheme } from '../contexts/ThemeContext';
 
 type SelectableVertical = VerticalId | 'custom';
 
@@ -26,6 +27,16 @@ export default function SettingsScreen() {
   const { invoices } = useInvoices();
   const { isOnline } = useNetwork();
   const [pendingSync, setPendingSync] = useState(0);
+  const { colors } = useTheme();
+
+  const dynamicStyles = useMemo(() => ({
+    container: { flex: 1, backgroundColor: colors.surface },
+    card: {
+      backgroundColor: colors.gray50, borderRadius: 12, padding: 16,
+      borderWidth: 1, borderColor: colors.gray200, marginBottom: 24,
+    },
+    verticalItemActive: { borderColor: colors.primary, backgroundColor: colors.orange50 },
+  }), [colors]);
 
   useEffect(() => {
     setPendingSync(getPendingSyncCount());
@@ -97,10 +108,10 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={dynamicStyles.container} contentContainerStyle={styles.content}>
       {/* Business Info Section */}
       <Text style={styles.sectionTitle}>Business Info</Text>
-      <View style={styles.card}>
+      <View style={dynamicStyles.card}>
         <View style={styles.field}>
           <Text style={styles.label}>Business Name</Text>
           <TextInput accessibilityRole="text" accessibilityLabel="Business name"
@@ -143,7 +154,7 @@ export default function SettingsScreen() {
 
       {/* Industry Vertical Section */}
       <Text style={styles.sectionTitle}>Industry</Text>
-      <View style={styles.card}>
+      <View style={dynamicStyles.card}>
         <View style={styles.currentVertical}>
           <Text style={styles.currentVerticalIcon}>{currentVerticalIcon}</Text>
           <Text style={styles.currentVerticalName}>{currentVerticalName}</Text>
@@ -153,7 +164,7 @@ export default function SettingsScreen() {
           {verticals.map((v) => (
             <Pressable accessibilityRole="button" accessibilityLabel={`Select ${v.name} industry`}
               key={v.id}
-              style={[styles.verticalItem, settings.selectedVertical === v.id && styles.verticalItemActive]}
+              style={[styles.verticalItem, settings.selectedVertical === v.id && dynamicStyles.verticalItemActive]}
               onPress={() => handleChangeVertical(v.id)}
             >
               <Text style={styles.verticalItemIcon}>{v.icon}</Text>
@@ -163,7 +174,7 @@ export default function SettingsScreen() {
             </Pressable>
           ))}
           <Pressable accessibilityRole="button" accessibilityLabel="Select Other or Custom industry"
-            style={[styles.verticalItem, settings.selectedVertical === 'custom' && styles.verticalItemActive]}
+            style={[styles.verticalItem, settings.selectedVertical === 'custom' && dynamicStyles.verticalItemActive]}
             onPress={() => handleChangeVertical('custom')}
           >
             <Text style={styles.verticalItemIcon}>⚙️</Text>
@@ -175,7 +186,7 @@ export default function SettingsScreen() {
       </View>
       {/* Notifications Section */}
       <Text style={styles.sectionTitle}>Notifications</Text>
-      <View style={styles.card}>
+      <View style={dynamicStyles.card}>
         <View style={styles.toggleRow}>
           <View style={styles.toggleInfo}>
             <Text style={styles.toggleLabel}>Payment Received</Text>
@@ -231,7 +242,7 @@ export default function SettingsScreen() {
 
       {/* Sync Status Section */}
       <Text style={styles.sectionTitle}>Sync Status</Text>
-      <View style={styles.card}>
+      <View style={dynamicStyles.card}>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
           <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: isOnline ? '#22C55E' : '#EAB308', marginRight: 8 }} />
           <Text style={{ fontSize: 15, color: '#333', fontWeight: '500' }}>{isOnline ? 'Online' : 'Offline'}</Text>
@@ -243,7 +254,7 @@ export default function SettingsScreen() {
 
       {/* Export Data Section */}
       <Text style={styles.sectionTitle}>Export Data</Text>
-      <View style={styles.card}>
+      <View style={dynamicStyles.card}>
         <Text style={styles.exportHint}>Export your data as CSV files for use in spreadsheets or other apps.</Text>
         <View style={styles.exportRow}>
           <Pressable accessibilityRole="button" accessibilityLabel="Export customers CSV" style={styles.exportBtn} onPress={() => handleExport('customers')}>
@@ -260,7 +271,7 @@ export default function SettingsScreen() {
 
       {/* Account Section */}
       <Text style={styles.sectionTitle}>Account</Text>
-      <View style={styles.card}>
+      <View style={dynamicStyles.card}>
         {user ? (
           <>
             <Text style={styles.label}>Signed in as</Text>
@@ -294,13 +305,8 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
   content: { padding: 16, paddingBottom: 40 },
   sectionTitle: { fontSize: 20, fontWeight: 'bold', color: '#111', marginBottom: 12, marginTop: 8 },
-  card: {
-    backgroundColor: '#F9FAFB', borderRadius: 12, padding: 16,
-    borderWidth: 1, borderColor: '#E5E7EB', marginBottom: 24,
-  },
   field: { marginBottom: 16 },
   label: { fontSize: 14, fontWeight: '600', color: '#555', marginBottom: 6 },
   input: {
@@ -321,8 +327,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', padding: 12,
     borderRadius: 10, borderWidth: 1.5, borderColor: '#E5E7EB', backgroundColor: '#fff',
   },
-  verticalItemActive: { borderColor: '#EA580C', backgroundColor: '#FFF7ED' },
-  verticalItemIcon: { fontSize: 22, marginRight: 10 },
+    verticalItemIcon: { fontSize: 22, marginRight: 10 },
   verticalItemName: { fontSize: 15, fontWeight: '500', color: '#333' },
   verticalItemNameActive: { color: '#EA580C', fontWeight: '600' },
   exportHint: { fontSize: 13, color: '#6B7280', marginBottom: 12 },

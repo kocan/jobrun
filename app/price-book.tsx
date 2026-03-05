@@ -4,10 +4,17 @@ import { useMemo } from 'react';
 import { usePriceBook } from '../contexts/PriceBookContext';
 import { verticals } from '../constants/verticals';
 import { PriceBookService } from '../lib/types';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function PriceBookScreen() {
   const router = useRouter();
   const { services, updateService, deleteService, resetToDefaults, loading } = usePriceBook();
+  const { colors } = useTheme();
+
+  const dynamicStyles = useMemo(() => ({
+    container: { flex: 1, backgroundColor: colors.surface },
+    sectionHeader: { backgroundColor: colors.gray100, paddingHorizontal: 16, paddingVertical: 8 },
+  }), [colors]);
 
   const sections = useMemo(() => {
     const grouped: Record<string, PriceBookService[]> = {};
@@ -49,12 +56,12 @@ export default function PriceBookScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Price Book' }} />
-      <View style={styles.container}>
+      <View style={dynamicStyles.container}>
         <SectionList
           sections={sections}
           keyExtractor={(item) => item.id}
           renderSectionHeader={({ section }) => (
-            <View style={styles.sectionHeader}>
+            <View style={dynamicStyles.sectionHeader}>
               <Text style={styles.sectionTitle}>{section.title}</Text>
             </View>
           )}
@@ -102,8 +109,6 @@ export default function PriceBookScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  sectionHeader: { backgroundColor: '#F3F4F6', paddingHorizontal: 16, paddingVertical: 8 },
   sectionTitle: { fontSize: 14, fontWeight: '700', color: '#666', textTransform: 'uppercase' },
   row: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

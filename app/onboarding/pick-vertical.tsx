@@ -1,10 +1,11 @@
 import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { verticals } from '../../constants/verticals';
 import { useSettings } from '../../contexts/SettingsContext';
 import { VerticalId } from '../../lib/types';
+import { useTheme } from '../../contexts/ThemeContext';
 
 type SelectableVertical = VerticalId | 'custom';
 
@@ -13,9 +14,20 @@ const customOption = { id: 'custom' as const, name: 'Other / Custom', icon: '⚙
 export default function PickVerticalScreen() {
   const router = useRouter();
   const { settings, updateSettings } = useSettings();
+  const { colors } = useTheme();
   const [selected, setSelected] = useState<SelectableVertical | null>(
     settings.selectedVertical as SelectableVertical | null
   );
+
+  const dynamicStyles = useMemo(() => ({
+    container: { flex: 1, backgroundColor: colors.surface },
+    card: {
+      flexDirection: 'row' as const, alignItems: 'center' as const, padding: 16,
+      backgroundColor: colors.gray50, borderRadius: 12,
+      borderWidth: 2, borderColor: colors.gray200,
+    },
+    cardSelected: { borderColor: colors.primary, backgroundColor: colors.orange50 },
+  }), [colors]);
 
   const handleNext = async () => {
     if (!selected) return;
@@ -24,7 +36,7 @@ export default function PickVerticalScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={dynamicStyles.container}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
         <Text style={styles.step}>Step 2 of 3</Text>
         <Text style={styles.title}>Pick Your Industry</Text>
@@ -34,7 +46,7 @@ export default function PickVerticalScreen() {
           {verticals.map((v) => (
             <Pressable accessibilityRole="button" accessibilityLabel={`Select ${v.name}`}
               key={v.id}
-              style={[styles.card, selected === v.id && styles.cardSelected]}
+              style={[dynamicStyles.card, selected === v.id && dynamicStyles.cardSelected]}
               onPress={() => setSelected(v.id)}
             >
               <Text style={styles.cardIcon}>{v.icon}</Text>
@@ -43,7 +55,7 @@ export default function PickVerticalScreen() {
             </Pressable>
           ))}
           <Pressable accessibilityRole="button" accessibilityLabel="Select Other or Custom"
-            style={[styles.card, selected === 'custom' && styles.cardSelected]}
+            style={[dynamicStyles.card, selected === 'custom' && dynamicStyles.cardSelected]}
             onPress={() => setSelected('custom')}
           >
             <Text style={styles.cardIcon}>{customOption.icon}</Text>
@@ -72,19 +84,12 @@ export default function PickVerticalScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
   scroll: { flex: 1 },
   scrollContent: { padding: 24 },
   step: { fontSize: 14, color: '#EA580C', fontWeight: '600', marginBottom: 8 },
   title: { fontSize: 28, fontWeight: 'bold', color: '#111', marginBottom: 8 },
   subtitle: { fontSize: 16, color: '#666', marginBottom: 24, lineHeight: 22 },
   grid: { gap: 12 },
-  card: {
-    flexDirection: 'row', alignItems: 'center', padding: 16,
-    backgroundColor: '#F9FAFB', borderRadius: 12,
-    borderWidth: 2, borderColor: '#E5E7EB',
-  },
-  cardSelected: { borderColor: '#EA580C', backgroundColor: '#FFF7ED' },
   cardIcon: { fontSize: 32, marginRight: 14 },
   cardName: { fontSize: 17, fontWeight: '600', color: '#111', flex: 1 },
   cardNameSelected: { color: '#EA580C' },

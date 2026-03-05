@@ -1,7 +1,8 @@
 import { View, Text, TextInput, ScrollView, Pressable, Switch, Alert, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { usePriceBook } from '../contexts/PriceBookContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 type FormData = {
   name: string;
@@ -25,7 +26,16 @@ export default function PriceBookEditScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { services, addService, updateService, deleteService } = usePriceBook();
+  const { colors } = useTheme();
   const isNew = id === 'new';
+
+  const dynamicStyles = useMemo(() => ({
+    container: { flex: 1, backgroundColor: colors.surface },
+    input: {
+      borderWidth: 1, borderColor: colors.gray300, borderRadius: 8,
+      padding: 12, fontSize: 16, color: colors.text, backgroundColor: colors.gray50,
+    },
+  }), [colors]);
 
   const [form, setForm] = useState<FormData>(emptyForm);
 
@@ -89,7 +99,7 @@ export default function PriceBookEditScreen() {
     <>
       <Stack.Screen options={{ title: isNew ? 'New Service' : 'Edit Service' }} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <ScrollView style={dynamicStyles.container} contentContainerStyle={styles.content}>
           <Field label="Name *" value={form.name} onChange={setField('name')} autoFocus={isNew} />
           <Field label="Description" value={form.description} onChange={setField('description')} multiline />
           <Field label="Price ($) *" value={form.price} onChange={setField('price')} keyboardType="numeric" />
@@ -125,11 +135,17 @@ function Field({
   multiline?: boolean; autoFocus?: boolean;
   keyboardType?: 'default' | 'number-pad' | 'numeric';
 }) {
+  const { colors } = useTheme();
+  const inputStyle = useMemo(() => ({
+    borderWidth: 1, borderColor: colors.gray300, borderRadius: 8,
+    padding: 12, fontSize: 16, color: colors.text, backgroundColor: colors.gray50,
+  }), [colors]);
+
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
       <TextInput accessibilityRole="text" accessibilityLabel={label}
-        style={[styles.input, multiline && styles.inputMultiline]}
+        style={[inputStyle, multiline && styles.inputMultiline]}
         value={value}
         onChangeText={onChange}
         multiline={multiline}
@@ -142,14 +158,9 @@ function Field({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
   content: { padding: 16, paddingBottom: 40 },
   field: { marginBottom: 16 },
   label: { fontSize: 13, fontWeight: '600', color: '#666', marginBottom: 6, textTransform: 'uppercase' },
-  input: {
-    borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8,
-    padding: 12, fontSize: 16, color: '#111', backgroundColor: '#F9FAFB',
-  },
   inputMultiline: { minHeight: 80, textAlignVertical: 'top' },
   switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
   saveBtn: { backgroundColor: '#EA580C', padding: 16, borderRadius: 10, alignItems: 'center', marginTop: 8 },

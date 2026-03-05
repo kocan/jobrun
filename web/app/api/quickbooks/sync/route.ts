@@ -9,9 +9,14 @@ import {
   type InvoiceData,
   type PaymentData,
 } from '../../../../lib/quickbooks';
+import { requireAuth } from '../../../../lib/supabase-server';
 
 export async function POST(req: NextRequest) {
   try {
+    // Require authentication
+    const { error: authError } = await requireAuth();
+    if (authError) return authError;
+
     const body = await req.json();
     const { type } = body;
 
