@@ -12,7 +12,7 @@ import {
   SaveButton, CancelButton, DeleteButton, FormSectionHeader,
 } from '../../components/DetailScreen';
 import { useTheme } from '../../contexts/ThemeContext';
-import { detailStyles as styles } from '../../styles/detailScreen';
+import { useDetailStyles } from '../../styles/detailScreen';
 import { Field } from '../../components/shared/Field';
 import { InfoRow } from '../../components/shared/InfoRow';
 import { LineItemEditor } from '../../components/shared/LineItemEditor';
@@ -60,6 +60,7 @@ const emptyForm: FormData = {
 };
 
 export default function JobDetailScreen() {
+  const styles = useDetailStyles();
   const { id, customerId: preselectedCustomerId, scheduledDate: preselectedDate, date: preselectedDate2 } = useLocalSearchParams<{ id: string; customerId?: string; scheduledDate?: string; date?: string }>();
   const router = useRouter();
   const { getJobById, addJob, updateJob, deleteJob } = useJobs();
