@@ -13,7 +13,7 @@ import {
   StatusBadge, ActionButton, SectionTitle,
   SaveButton, CancelButton, DeleteButton, FormSectionHeader,
 } from '../../components/DetailScreen';
-import { detailStyles as styles } from '../../styles/detailScreen';
+import { useDetailStyles } from '../../styles/detailScreen';
 import { Field } from '../../components/shared/Field';
 import { InfoRow } from '../../components/shared/InfoRow';
 import { LineItemEditor, LineItemsView } from '../../components/shared/LineItemEditor';
@@ -63,6 +63,7 @@ const emptyForm: FormData = {
 };
 
 export default function EstimateDetailScreen() {
+  const styles = useDetailStyles();
   const { id, customerId: preselectedCustomerId } = useLocalSearchParams<{ id: string; customerId?: string }>();
   const router = useRouter();
   const { getEstimateById, addEstimate, updateEstimate, deleteEstimate } = useEstimates();
