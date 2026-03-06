@@ -1,6 +1,7 @@
 import { View, Text, TextInput, Pressable, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -8,10 +9,20 @@ function isValidEmail(email: string): boolean {
 
 export default function LoginScreen() {
   const { signInWithMagicLink, skipAuth, isConfigured } = useAuth();
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const dynamicStyles = useMemo(() => ({
+    container: { flex: 1, backgroundColor: colors.surface },
+    input: {
+      borderWidth: 1, borderColor: colors.gray300, borderRadius: 12, paddingHorizontal: 16,
+      paddingVertical: 14, fontSize: 16, color: colors.text, backgroundColor: colors.gray50, marginBottom: 16,
+    },
+    successBox: { alignItems: 'center' as const, padding: 24, backgroundColor: colors.orange50, borderRadius: 16, marginBottom: 16 },
+  }), [colors]);
 
   const handleSend = async () => {
     setError(null);
@@ -41,7 +52,7 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={dynamicStyles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.inner}>
@@ -52,7 +63,7 @@ export default function LoginScreen() {
         </Text>
 
         {sent ? (
-          <View style={styles.successBox}>
+          <View style={dynamicStyles.successBox}>
             <Text style={styles.successIcon}>✉️</Text>
             <Text style={styles.successTitle}>Check your email!</Text>
             <Text style={styles.successText}>
@@ -65,7 +76,7 @@ export default function LoginScreen() {
         ) : (
           <>
             <TextInput accessibilityRole="text" accessibilityLabel="Email address"
-              style={styles.input}
+              style={dynamicStyles.input}
               placeholder="you@example.com"
               placeholderTextColor="#999"
               value={email}
@@ -99,15 +110,10 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
   inner: { flex: 1, justifyContent: 'center', padding: 24 },
   logo: { fontSize: 40, textAlign: 'center', marginBottom: 8 },
   title: { fontSize: 28, fontWeight: 'bold', color: '#111', textAlign: 'center', marginBottom: 8 },
   subtitle: { fontSize: 15, color: '#666', textAlign: 'center', marginBottom: 32, lineHeight: 22 },
-  input: {
-    borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 12, paddingHorizontal: 16,
-    paddingVertical: 14, fontSize: 16, color: '#111', backgroundColor: '#F9FAFB', marginBottom: 16,
-  },
   error: { color: '#DC2626', fontSize: 14, marginBottom: 12, textAlign: 'center' },
   button: {
     backgroundColor: '#EA580C', borderRadius: 12, paddingVertical: 16,
@@ -117,7 +123,6 @@ const styles = StyleSheet.create({
   buttonText: { color: '#fff', fontSize: 17, fontWeight: '700' },
   skipButton: { alignItems: 'center', paddingVertical: 12 },
   skipText: { color: '#6B7280', fontSize: 15 },
-  successBox: { alignItems: 'center', padding: 24, backgroundColor: '#FFF7ED', borderRadius: 16, marginBottom: 16 },
   successIcon: { fontSize: 48, marginBottom: 12 },
   successTitle: { fontSize: 20, fontWeight: '700', color: '#111', marginBottom: 8 },
   successText: { fontSize: 15, color: '#666', textAlign: 'center', lineHeight: 22 },

@@ -34,8 +34,8 @@
       [
         "@sentry/react-native/expo",
         {
-          "organization": "",
-          "project": ""
+          "organization": "jobrun-org",
+          "project": "jobrun-mobile"
         }
       ]
     ]

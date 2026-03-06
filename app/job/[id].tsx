@@ -11,8 +11,8 @@ import {
   StatusBadge, ActionButton, SectionTitle,
   SaveButton, CancelButton, DeleteButton, FormSectionHeader,
 } from '../../components/DetailScreen';
-import { useTheme } from '../../contexts/ThemeContext';
 import { useDetailStyles } from '../../styles/detailScreen';
+import { useTheme } from '../../contexts/ThemeContext';
 import { Field } from '../../components/shared/Field';
 import { InfoRow } from '../../components/shared/InfoRow';
 import { LineItemEditor } from '../../components/shared/LineItemEditor';
@@ -67,7 +67,6 @@ export default function JobDetailScreen() {
   const router = useRouter();
   const { getJobById, addJob, updateJob, deleteJob } = useJobs();
   const { getInvoiceByJobId } = useInvoices();
-
   const { colors } = useTheme();
   const statusColors = getStatusColors(colors);
   const isNew = id === 'new';
@@ -228,7 +227,7 @@ export default function JobDetailScreen() {
                       style={[{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: colors.gray100, borderWidth: 1, borderColor: colors.gray300 }, form.status === s && { backgroundColor: statusColors[s] }]}
                       onPress={() => setForm((f) => ({ ...f, status: s }))}
                     >
-                      <Text style={[{ fontSize: 14, color: colors.textMuted }, form.status === s && { color: '#fff', fontWeight: '600' }]}>
+                      <Text style={[{ fontSize: 14, color: '#666' }, form.status === s && { color: '#fff', fontWeight: '600' }]}>
                         {STATUS_LABELS[s]}
                       </Text>
                     </Pressable>
