@@ -2,12 +2,13 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, AppState } from 'react-native';
 import { getPendingSyncCount } from '../lib/db/syncQueue';
 import { useNetwork } from '../lib/network';
-import { theme } from '../lib/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 type SyncState = 'synced' | 'pending' | 'offline';
 
 export function SyncStatusBadge() {
   const { isOffline } = useNetwork();
+  const { colors } = useTheme();
   const [pendingCount, setPendingCount] = useState(0);
 
   const refresh = useCallback(() => {
@@ -34,9 +35,9 @@ export function SyncStatusBadge() {
   const state: SyncState = isOffline ? 'offline' : pendingCount > 0 ? 'pending' : 'synced';
 
   const config = {
-    synced: { label: 'All synced', color: theme.colors.status.completed },
-    pending: { label: `${pendingCount} pending`, color: theme.colors.status.inProgress },
-    offline: { label: 'Offline', color: theme.colors.status.cancelled },
+    synced: { label: 'All synced', color: colors.status.completed },
+    pending: { label: `${pendingCount} pending`, color: colors.status.inProgress },
+    offline: { label: 'Offline', color: colors.status.cancelled },
   }[state];
 
   return (
