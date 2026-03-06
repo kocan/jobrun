@@ -1,5 +1,5 @@
 import { getDatabase } from '../database';
-import { VerticalId } from '../../types';
+import { VerticalId, StripeAccountStatus } from '../../types';
 import { SettingsRow } from '../types';
 
 export interface AppSettings {
@@ -12,6 +12,9 @@ export interface AppSettings {
   notifyEstimateAccepted: boolean;
   notifyAppointmentReminder: boolean;
   smsRemindersEnabled: boolean;
+  // Stripe Connect
+  stripeAccountId: string | null;
+  stripeAccountStatus: StripeAccountStatus;
 }
 
 export const defaultSettings: AppSettings = {
@@ -24,6 +27,8 @@ export const defaultSettings: AppSettings = {
   notifyEstimateAccepted: true,
   notifyAppointmentReminder: true,
   smsRemindersEnabled: false,
+  stripeAccountId: null,
+  stripeAccountStatus: 'not_connected',
 };
 
 export function getSettings(): AppSettings {
@@ -40,6 +45,8 @@ export function getSettings(): AppSettings {
     notifyEstimateAccepted: map.get('app_notifyEstimateAccepted') !== 'false',
     notifyAppointmentReminder: map.get('app_notifyAppointmentReminder') !== 'false',
     smsRemindersEnabled: map.get('app_smsRemindersEnabled') === 'true',
+    stripeAccountId: map.get('app_stripeAccountId') || null,
+    stripeAccountStatus: (map.get('app_stripeAccountStatus') as StripeAccountStatus) ?? defaultSettings.stripeAccountStatus,
   };
 }
 
@@ -55,6 +62,8 @@ export function saveSettings(settings: AppSettings): void {
     ['app_notifyEstimateAccepted', String(settings.notifyEstimateAccepted)],
     ['app_notifyAppointmentReminder', String(settings.notifyAppointmentReminder)],
     ['app_smsRemindersEnabled', String(settings.smsRemindersEnabled)],
+    ['app_stripeAccountId', settings.stripeAccountId ?? ''],
+    ['app_stripeAccountStatus', settings.stripeAccountStatus],
   ];
   db.withTransactionSync(() => {
     for (const [key, value] of entries) {

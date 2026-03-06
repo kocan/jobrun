@@ -187,3 +187,16 @@ export interface CommunicationEntry {
   notes?: string;
   createdAt: string;
 }
+
+// Stripe Connect types
+export type StripeAccountStatus = 'not_connected' | 'pending' | 'connected' | 'restricted';
+
+export interface StripeConnectAccount {
+  stripeAccountId: string;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  detailsSubmitted: boolean;
+  status: StripeAccountStatus;
+  createdAt: string;
+  updatedAt: string;
+}
