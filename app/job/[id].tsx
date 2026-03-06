@@ -65,7 +65,6 @@ export default function JobDetailScreen() {
   const router = useRouter();
   const { getJobById, addJob, updateJob, deleteJob } = useJobs();
   const { getInvoiceByJobId } = useInvoices();
-  const styles = useDetailStyles();
   const { colors } = useTheme();
 
   const isNew = id === 'new';
