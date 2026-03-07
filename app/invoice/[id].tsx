@@ -23,7 +23,7 @@ import { CustomerPickerField, useCustomerName } from '../../components/CustomerP
 import { DatePickerField } from '../../components/DateTimePicker';
 import { ServicePickerModal } from '../../components/ServicePickerModal';
 import { useLineItems } from '../../hooks/useLineItems';
-import { theme } from '../../lib/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const STATUS_LABELS: Record<InvoiceStatus, string> = {
   'draft': 'Draft',
@@ -70,6 +70,7 @@ const emptyForm: FormData = {
 
 export default function InvoiceDetailScreen() {
   const styles = useDetailStyles();
+  const { colors } = useTheme();
   const { id, fromJob, fromEstimate, customerId: preselectedCustomerId } = useLocalSearchParams<{
     id: string; fromJob?: string; fromEstimate?: string; customerId?: string;
   }>();
@@ -234,7 +235,7 @@ export default function InvoiceDetailScreen() {
               {!isNew && invoiceNumber ? (
                 <View style={styles.field}>
                   <Text style={styles.label}>Invoice Number</Text>
-                  <Text style={{ fontSize: 18, fontWeight: '700', color: theme.colors.primary }}>{invoiceNumber}</Text>
+                  <Text style={{ fontSize: 18, fontWeight: '700', color: colors.primary }}>{invoiceNumber}</Text>
                 </View>
               ) : null}
 
@@ -270,10 +271,10 @@ export default function InvoiceDetailScreen() {
                       accessibilityRole="radio"
                       accessibilityLabel={term}
                       accessibilityState={{ selected: form.paymentTerms === term }}
-                      style={[{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#D1D5DB' }, form.paymentTerms === term && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
+                      style={[{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: colors.gray100, borderWidth: 1, borderColor: colors.gray300 }, form.paymentTerms === term && { backgroundColor: colors.primary, borderColor: colors.primary }]}
                       onPress={() => setForm((f) => ({ ...f, paymentTerms: term }))}
                     >
-                      <Text style={[{ fontSize: 14, color: '#666' }, form.paymentTerms === term && { color: '#fff', fontWeight: '600' }]}>
+                      <Text style={[{ fontSize: 14, color: colors.textMuted }, form.paymentTerms === term && { color: colors.white, fontWeight: '600' }]}>
                         {term}
                       </Text>
                     </Pressable>
@@ -367,8 +368,8 @@ export default function InvoiceDetailScreen() {
               )}
 
               {form.status === 'paid' && (
-                <View style={{ backgroundColor: '#D1FAE5', padding: 16, borderRadius: 10, alignItems: 'center', marginBottom: 10 }}>
-                  <Text style={{ color: '#065F46', fontSize: 16, fontWeight: '600' }}>✓ Paid {getInvoiceById(id!)?.paidAt?.split('T')[0]}</Text>
+                <View style={{ backgroundColor: colors.status.completed + '20', padding: 16, borderRadius: 10, alignItems: 'center', marginBottom: 10 }}>
+                  <Text style={{ color: colors.status.completed, fontSize: 16, fontWeight: '600' }}>✓ Paid {getInvoiceById(id!)?.paidAt?.split('T')[0]}</Text>
                 </View>
               )}
 

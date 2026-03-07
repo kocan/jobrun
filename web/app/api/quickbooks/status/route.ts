@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server';
 import { readTokens, readSyncLog } from '../../../../lib/quickbooks';
+import { requireAuth } from '../../../../lib/supabase-server';
 
 export async function GET() {
   try {
+    // Require authentication
+    const { error: authError } = await requireAuth();
+    if (authError) return authError;
+
     const tokens = await readTokens();
 
     if (!tokens) {

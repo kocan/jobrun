@@ -1,41 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
-
-const DATA_DIR = path.join(process.cwd(), 'data');
-const BOOKINGS_FILE = path.join(DATA_DIR, 'bookings.json');
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 interface BookingEntry {
   id: string;
-  operatorId: string;
-  businessName: string;
-  customerName: string;
-  customerPhone: string;
-  customerEmail: string;
-  serviceType: string;
-  preferredDate: string;
-  preferredTime: string;
+  operator_id: string;
+  business_name: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_email: string;
+  service_type: string;
+  preferred_date: string;
+  preferred_time: string;
   notes: string;
   status: 'pending';
-  createdAt: string;
+  created_at: string;
 }
 
-async function readBookings(): Promise<BookingEntry[]> {
-  try {
-    const data = await fs.readFile(BOOKINGS_FILE, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
-}
-
-async function writeBookings(entries: BookingEntry[]) {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(BOOKINGS_FILE, JSON.stringify(entries, null, 2));
-}
-
-function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+async function getSupabaseClient() {
+  const cookieStore = await cookies();
+  return createServerClient(
+    process.env.EXPO_PUBLIC_SUPABASE_URL!,
+    process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // Called from Server Component
+          }
+        },
+      },
+    }
+  );
 }
 
 export async function POST(req: NextRequest) {
@@ -66,26 +69,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Preferred date is required.' }, { status: 400 });
     }
 
-    const entry: BookingEntry = {
-      id: generateId(),
-      operatorId: operatorId.trim(),
-      businessName: typeof businessName === 'string' ? businessName.trim() : '',
-      customerName: customerName.trim(),
-      customerPhone: customerPhone.trim(),
-      customerEmail: trimmedEmail,
-      serviceType: serviceType.trim(),
-      preferredDate: preferredDate.trim(),
-      preferredTime: typeof preferredTime === 'string' ? preferredTime.trim() : '',
-      notes: typeof notes === 'string' ? notes.trim() : '',
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-    };
+    const supabase = await getSupabaseClient();
 
-    const entries = await readBookings();
-    entries.push(entry);
-    await writeBookings(entries);
+    const { data, error } = await supabase
+      .from('bookings')
+      .insert({
+        operator_id: operatorId.trim(),
+        business_name: typeof businessName === 'string' ? businessName.trim() : '',
+        customer_name: customerName.trim(),
+        customer_phone: customerPhone.trim(),
+        customer_email: trimmedEmail,
+        service_type: serviceType.trim(),
+        preferred_date: preferredDate.trim(),
+        preferred_time: typeof preferredTime === 'string' ? preferredTime.trim() : '',
+        notes: typeof notes === 'string' ? notes.trim() : '',
+        status: 'pending',
+      })
+      .select('id')
+      .single();
 
-    return NextResponse.json({ message: 'Booking request submitted!', id: entry.id });
+    if (error) {
+      console.error('Failed to create booking:', error);
+      return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 });
+    }
+
+    return NextResponse.json({ message: 'Booking request submitted!', id: data.id });
   } catch {
     return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 });
   }
