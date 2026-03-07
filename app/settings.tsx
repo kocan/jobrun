@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Pressable, Switch, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, Pressable, Switch, StyleSheet, ScrollView, Alert, Linking, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState, useEffect, useMemo } from 'react';
 import { registerForPushNotifications } from '../lib/notifications';
@@ -11,15 +11,17 @@ import { useInvoices } from '../contexts/InvoiceContext';
 import { useNetwork } from '../lib/network';
 import { getPendingSyncCount } from '../lib/db/syncQueue';
 import { verticals } from '../constants/verticals';
-import { VerticalId } from '../lib/types';
+import { VerticalId, StripeAccountStatus } from '../lib/types';
 import { customersToCSV, jobsToCSV, invoicesToCSV, shareCSV } from '../lib/csvExport';
 import { useTheme } from '../contexts/ThemeContext';
 
 type SelectableVertical = VerticalId | 'custom';
 
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+
 export default function SettingsScreen() {
   const router = useRouter();
-  const { settings, updateSettings } = useSettings();
+  const { settings, updateSettings, refreshSettings } = useSettings();
   const { resetToDefaults } = usePriceBook();
   const { user, signOut, isConfigured } = useAuth();
   const { customers } = useCustomers();
@@ -27,6 +29,7 @@ export default function SettingsScreen() {
   const { invoices } = useInvoices();
   const { isOnline } = useNetwork();
   const [pendingSync, setPendingSync] = useState(0);
+  const [stripeLoading, setStripeLoading] = useState(false);
   const { colors } = useTheme();
 
   const dynamicStyles = useMemo(() => ({
@@ -41,6 +44,107 @@ export default function SettingsScreen() {
   useEffect(() => {
     setPendingSync(getPendingSyncCount());
   }, []);
+
+  const handleConnectStripe = async () => {
+    if (!user) {
+      Alert.alert('Sign In Required', 'Please sign in to connect your Stripe account.');
+      return;
+    }
+
+    setStripeLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/stripe/connect`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          email: user.email,
+          returnUrl: `${API_BASE_URL}/api/stripe/connect/callback?userId=${user.id}`,
+          refreshUrl: `${API_BASE_URL}/api/stripe/connect/callback?userId=${user.id}`,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to start Stripe onboarding');
+      }
+
+      // Save the account ID locally
+      await updateSettings({
+        stripeAccountId: data.stripeAccountId,
+        stripeAccountStatus: 'pending',
+      });
+
+      // Open Stripe onboarding in browser
+      await Linking.openURL(data.url);
+    } catch (error) {
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to connect Stripe');
+    } finally {
+      setStripeLoading(false);
+    }
+  };
+
+  const handleRefreshStripeStatus = async () => {
+    if (!user || !settings.stripeAccountId) return;
+
+    setStripeLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/stripe/connect/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          stripeAccountId: settings.stripeAccountId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        await updateSettings({
+          stripeAccountStatus: data.status as StripeAccountStatus,
+        });
+      }
+    } catch {
+      // Silently fail on status refresh
+    } finally {
+      setStripeLoading(false);
+    }
+  };
+
+  const handleDisconnectStripe = () => {
+    Alert.alert(
+      'Disconnect Stripe',
+      'Are you sure you want to disconnect your Stripe account? You will no longer be able to accept card payments.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Disconnect',
+          style: 'destructive',
+          onPress: async () => {
+            await updateSettings({
+              stripeAccountId: null,
+              stripeAccountStatus: 'not_connected',
+            });
+          },
+        },
+      ],
+    );
+  };
+
+  const getStripeStatusDisplay = () => {
+    switch (settings.stripeAccountStatus) {
+      case 'connected':
+        return { text: 'Connected', color: '#22C55E' };
+      case 'pending':
+        return { text: 'Pending Verification', color: '#EAB308' };
+      case 'restricted':
+        return { text: 'Restricted', color: '#F97316' };
+      default:
+        return { text: 'Not Connected', color: '#6B7280' };
+    }
+  };
 
   const [name, setName] = useState(settings.businessName);
   const [phone, setPhone] = useState(settings.businessPhone);
@@ -240,6 +344,88 @@ export default function SettingsScreen() {
         </View>
       </View>
 
+      {/* Payment Setup Section */}
+      <Text style={styles.sectionTitle}>Payment Setup</Text>
+      <View style={styles.card}>
+        <View style={styles.stripeHeader}>
+          <Text style={styles.stripeTitle}>Stripe Connect</Text>
+          <View style={[styles.statusBadge, { backgroundColor: getStripeStatusDisplay().color + '20' }]}>
+            <View style={[styles.statusDot, { backgroundColor: getStripeStatusDisplay().color }]} />
+            <Text style={[styles.statusText, { color: getStripeStatusDisplay().color }]}>
+              {getStripeStatusDisplay().text}
+            </Text>
+          </View>
+        </View>
+        <Text style={styles.stripeDesc}>
+          Accept credit card payments directly from your customers. Funds are deposited to your bank account.
+        </Text>
+        {settings.stripeAccountStatus === 'not_connected' ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Connect Stripe account"
+            style={[styles.saveButton, stripeLoading && styles.buttonDisabled]}
+            onPress={handleConnectStripe}
+            disabled={stripeLoading}
+          >
+            {stripeLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.saveButtonText}>Connect Stripe Account</Text>
+            )}
+          </Pressable>
+        ) : settings.stripeAccountStatus === 'pending' ? (
+          <View style={styles.stripeActions}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Continue Stripe setup"
+              style={styles.saveButton}
+              onPress={handleConnectStripe}
+            >
+              <Text style={styles.saveButtonText}>Continue Setup</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Refresh Stripe status"
+              style={styles.secondaryButton}
+              onPress={handleRefreshStripeStatus}
+            >
+              {stripeLoading ? (
+                <ActivityIndicator color="#EA580C" />
+              ) : (
+                <Text style={styles.secondaryButtonText}>Refresh Status</Text>
+              )}
+            </Pressable>
+          </View>
+        ) : (
+          <View style={styles.stripeConnected}>
+            <Text style={styles.stripeAccountLabel}>Account ID</Text>
+            <Text style={styles.stripeAccountId}>{settings.stripeAccountId}</Text>
+            <View style={styles.stripeActions}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Refresh Stripe status"
+                style={styles.secondaryButton}
+                onPress={handleRefreshStripeStatus}
+              >
+                {stripeLoading ? (
+                  <ActivityIndicator color="#EA580C" />
+                ) : (
+                  <Text style={styles.secondaryButtonText}>Refresh Status</Text>
+                )}
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Disconnect Stripe account"
+                style={styles.disconnectButton}
+                onPress={handleDisconnectStripe}
+              >
+                <Text style={styles.disconnectButtonText}>Disconnect</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+      </View>
+
       {/* Sync Status Section */}
       <Text style={styles.sectionTitle}>Sync Status</Text>
       <View style={dynamicStyles.card}>
@@ -352,4 +538,28 @@ const styles = StyleSheet.create({
   toggleInfo: { flex: 1, marginRight: 12 },
   toggleLabel: { fontSize: 15, fontWeight: '600', color: '#333' },
   toggleDesc: { fontSize: 13, color: '#6B7280', marginTop: 2 },
+  // Stripe styles
+  stripeHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  stripeTitle: { fontSize: 16, fontWeight: '600', color: '#111' },
+  statusBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  statusDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
+  statusText: { fontSize: 12, fontWeight: '600' },
+  stripeDesc: { fontSize: 14, color: '#6B7280', marginBottom: 16, lineHeight: 20 },
+  stripeActions: { flexDirection: 'row', gap: 10, marginTop: 12 },
+  secondaryButton: {
+    flex: 1, alignItems: 'center' as const, paddingVertical: 12,
+    backgroundColor: '#fff', borderRadius: 10,
+    borderWidth: 1.5, borderColor: '#EA580C',
+  },
+  secondaryButtonText: { color: '#EA580C', fontSize: 14, fontWeight: '600' },
+  disconnectButton: {
+    flex: 1, alignItems: 'center' as const, paddingVertical: 12,
+    backgroundColor: '#fff', borderRadius: 10,
+    borderWidth: 1.5, borderColor: '#DC2626',
+  },
+  disconnectButtonText: { color: '#DC2626', fontSize: 14, fontWeight: '600' },
+  buttonDisabled: { opacity: 0.6 },
+  stripeConnected: { marginTop: 4 },
+  stripeAccountLabel: { fontSize: 12, color: '#6B7280', marginBottom: 4 },
+  stripeAccountId: { fontSize: 14, fontFamily: 'monospace', color: '#333', marginBottom: 8 },
 });
