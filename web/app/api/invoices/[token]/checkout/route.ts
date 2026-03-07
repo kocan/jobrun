@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { supabaseAdmin } from '../../../../../lib/supabase';
-import { stripe, calculateApplicationFee } from '../../../../../lib/stripe';
+import { getStripe, calculateApplicationFee } from '../../../../../lib/stripe';
 import type { InvoiceToken } from '../../../../../lib/types';
 
 interface RouteParams {
@@ -138,7 +138,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
           },
     };
 
-    const session = await stripe.checkout.sessions.create(sessionParams);
+    const session = await getStripe().checkout.sessions.create(sessionParams);
 
     // Update the token with the session ID
     await supabaseAdmin

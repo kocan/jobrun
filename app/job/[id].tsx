@@ -11,8 +11,8 @@ import {
   StatusBadge, ActionButton, SectionTitle,
   SaveButton, CancelButton, DeleteButton, FormSectionHeader,
 } from '../../components/DetailScreen';
-import { useTheme } from '../../contexts/ThemeContext';
 import { useDetailStyles } from '../../styles/detailScreen';
+import { useTheme } from '../../contexts/ThemeContext';
 import { Field } from '../../components/shared/Field';
 import { InfoRow } from '../../components/shared/InfoRow';
 import { LineItemEditor } from '../../components/shared/LineItemEditor';
@@ -28,12 +28,14 @@ const STATUS_LABELS: Record<JobStatus, string> = {
   'completed': 'Completed',
   'cancelled': 'Cancelled',
 };
-const STATUS_COLORS: Record<JobStatus, string> = {
-  'scheduled': '#3B82F6',
-  'in-progress': '#F59E0B',
-  'completed': '#10B981',
-  'cancelled': '#EF4444',
-};
+function getStatusColors(colors: import('../../lib/theme').ThemeColors): Record<JobStatus, string> {
+  return {
+    'scheduled': colors.status.scheduled,
+    'in-progress': colors.status.inProgress,
+    'completed': colors.status.completed,
+    'cancelled': colors.status.cancelled,
+  };
+}
 
 type FormData = {
   customerId: string;
@@ -65,8 +67,8 @@ export default function JobDetailScreen() {
   const router = useRouter();
   const { getJobById, addJob, updateJob, deleteJob } = useJobs();
   const { getInvoiceByJobId } = useInvoices();
-
   const { colors } = useTheme();
+  const statusColors = getStatusColors(colors);
   const isNew = id === 'new';
   const [editing, setEditing] = useState(isNew);
   const [form, setForm] = useState<FormData>(() => ({
@@ -222,10 +224,10 @@ export default function JobDetailScreen() {
                       accessibilityRole="radio"
                       accessibilityLabel={STATUS_LABELS[s]}
                       accessibilityState={{ selected: form.status === s }}
-                      style={[{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: colors.gray100, borderWidth: 1, borderColor: colors.gray300 }, form.status === s && { backgroundColor: STATUS_COLORS[s] }]}
+                      style={[{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: colors.gray100, borderWidth: 1, borderColor: colors.gray300 }, form.status === s && { backgroundColor: statusColors[s] }]}
                       onPress={() => setForm((f) => ({ ...f, status: s }))}
                     >
-                      <Text style={[{ fontSize: 14, color: colors.textMuted }, form.status === s && { color: '#fff', fontWeight: '600' }]}>
+                      <Text style={[{ fontSize: 14, color: '#666' }, form.status === s && { color: '#fff', fontWeight: '600' }]}>
                         {STATUS_LABELS[s]}
                       </Text>
                     </Pressable>
@@ -263,7 +265,7 @@ export default function JobDetailScreen() {
             </>
           ) : (
             <>
-              <StatusBadge label={STATUS_LABELS[form.status]} color={STATUS_COLORS[form.status]} />
+              <StatusBadge label={STATUS_LABELS[form.status]} color={statusColors[form.status]} />
 
               <InfoRow label="Customer" value={customerName} />
               <InfoRow label="Date" value={form.scheduledDate} />

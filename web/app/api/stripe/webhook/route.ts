@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe, getStripeWebhookSecret } from '../../../../lib/stripe';
+import { getStripe } from '../../../../lib/stripe';
 import { supabaseAdmin } from '../../../../lib/supabase';
 import Stripe from 'stripe';
 
@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 });
     }
 
-    const webhookSecret = getStripeWebhookSecret();
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
     if (!webhookSecret) {
       console.error('STRIPE_WEBHOOK_SECRET is not configured');
       return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 });
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     // Verify webhook signature
     let event: Stripe.Event;
     try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      event = getStripe().webhooks.constructEvent(body, signature, webhookSecret);
     } catch (err) {
       console.error('Webhook signature verification failed:', err);
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });

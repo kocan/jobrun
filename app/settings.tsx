@@ -1,6 +1,6 @@
-import { View, Text, TextInput, Pressable, Switch, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, Pressable, Switch, StyleSheet, ScrollView, Alert, Linking, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { registerForPushNotifications } from '../lib/notifications';
 import { useSettings } from '../contexts/SettingsContext';
 import { usePriceBook } from '../contexts/PriceBookContext';
@@ -11,14 +11,17 @@ import { useInvoices } from '../contexts/InvoiceContext';
 import { useNetwork } from '../lib/network';
 import { getPendingSyncCount } from '../lib/db/syncQueue';
 import { verticals } from '../constants/verticals';
-import { VerticalId } from '../lib/types';
+import { VerticalId, StripeAccountStatus } from '../lib/types';
 import { customersToCSV, jobsToCSV, invoicesToCSV, shareCSV } from '../lib/csvExport';
+import { useTheme } from '../contexts/ThemeContext';
 
 type SelectableVertical = VerticalId | 'custom';
 
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+
 export default function SettingsScreen() {
   const router = useRouter();
-  const { settings, updateSettings } = useSettings();
+  const { settings, updateSettings, refreshSettings } = useSettings();
   const { resetToDefaults } = usePriceBook();
   const { user, signOut, isConfigured } = useAuth();
   const { customers } = useCustomers();
@@ -26,10 +29,122 @@ export default function SettingsScreen() {
   const { invoices } = useInvoices();
   const { isOnline } = useNetwork();
   const [pendingSync, setPendingSync] = useState(0);
+  const [stripeLoading, setStripeLoading] = useState(false);
+  const { colors } = useTheme();
+
+  const dynamicStyles = useMemo(() => ({
+    container: { flex: 1, backgroundColor: colors.surface },
+    card: {
+      backgroundColor: colors.gray50, borderRadius: 12, padding: 16,
+      borderWidth: 1, borderColor: colors.gray200, marginBottom: 24,
+    },
+    verticalItemActive: { borderColor: colors.primary, backgroundColor: colors.orange50 },
+  }), [colors]);
 
   useEffect(() => {
     setPendingSync(getPendingSyncCount());
   }, []);
+
+  const handleConnectStripe = async () => {
+    if (!user) {
+      Alert.alert('Sign In Required', 'Please sign in to connect your Stripe account.');
+      return;
+    }
+
+    setStripeLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/stripe/connect`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          email: user.email,
+          returnUrl: `${API_BASE_URL}/api/stripe/connect/callback?userId=${user.id}`,
+          refreshUrl: `${API_BASE_URL}/api/stripe/connect/callback?userId=${user.id}`,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to start Stripe onboarding');
+      }
+
+      // Save the account ID locally
+      await updateSettings({
+        stripeAccountId: data.stripeAccountId,
+        stripeAccountStatus: 'pending',
+      });
+
+      // Open Stripe onboarding in browser
+      await Linking.openURL(data.url);
+    } catch (error) {
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to connect Stripe');
+    } finally {
+      setStripeLoading(false);
+    }
+  };
+
+  const handleRefreshStripeStatus = async () => {
+    if (!user || !settings.stripeAccountId) return;
+
+    setStripeLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/stripe/connect/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          stripeAccountId: settings.stripeAccountId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        await updateSettings({
+          stripeAccountStatus: data.status as StripeAccountStatus,
+        });
+      }
+    } catch {
+      // Silently fail on status refresh
+    } finally {
+      setStripeLoading(false);
+    }
+  };
+
+  const handleDisconnectStripe = () => {
+    Alert.alert(
+      'Disconnect Stripe',
+      'Are you sure you want to disconnect your Stripe account? You will no longer be able to accept card payments.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Disconnect',
+          style: 'destructive',
+          onPress: async () => {
+            await updateSettings({
+              stripeAccountId: null,
+              stripeAccountStatus: 'not_connected',
+            });
+          },
+        },
+      ],
+    );
+  };
+
+  const getStripeStatusDisplay = () => {
+    switch (settings.stripeAccountStatus) {
+      case 'connected':
+        return { text: 'Connected', color: '#22C55E' };
+      case 'pending':
+        return { text: 'Pending Verification', color: '#EAB308' };
+      case 'restricted':
+        return { text: 'Restricted', color: '#F97316' };
+      default:
+        return { text: 'Not Connected', color: '#6B7280' };
+    }
+  };
 
   const [name, setName] = useState(settings.businessName);
   const [phone, setPhone] = useState(settings.businessPhone);
@@ -97,10 +212,10 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={dynamicStyles.container} contentContainerStyle={styles.content}>
       {/* Business Info Section */}
       <Text style={styles.sectionTitle}>Business Info</Text>
-      <View style={styles.card}>
+      <View style={dynamicStyles.card}>
         <View style={styles.field}>
           <Text style={styles.label}>Business Name</Text>
           <TextInput accessibilityRole="text" accessibilityLabel="Business name"
@@ -143,7 +258,7 @@ export default function SettingsScreen() {
 
       {/* Industry Vertical Section */}
       <Text style={styles.sectionTitle}>Industry</Text>
-      <View style={styles.card}>
+      <View style={dynamicStyles.card}>
         <View style={styles.currentVertical}>
           <Text style={styles.currentVerticalIcon}>{currentVerticalIcon}</Text>
           <Text style={styles.currentVerticalName}>{currentVerticalName}</Text>
@@ -153,7 +268,7 @@ export default function SettingsScreen() {
           {verticals.map((v) => (
             <Pressable accessibilityRole="button" accessibilityLabel={`Select ${v.name} industry`}
               key={v.id}
-              style={[styles.verticalItem, settings.selectedVertical === v.id && styles.verticalItemActive]}
+              style={[styles.verticalItem, settings.selectedVertical === v.id && dynamicStyles.verticalItemActive]}
               onPress={() => handleChangeVertical(v.id)}
             >
               <Text style={styles.verticalItemIcon}>{v.icon}</Text>
@@ -163,7 +278,7 @@ export default function SettingsScreen() {
             </Pressable>
           ))}
           <Pressable accessibilityRole="button" accessibilityLabel="Select Other or Custom industry"
-            style={[styles.verticalItem, settings.selectedVertical === 'custom' && styles.verticalItemActive]}
+            style={[styles.verticalItem, settings.selectedVertical === 'custom' && dynamicStyles.verticalItemActive]}
             onPress={() => handleChangeVertical('custom')}
           >
             <Text style={styles.verticalItemIcon}>⚙️</Text>
@@ -175,7 +290,7 @@ export default function SettingsScreen() {
       </View>
       {/* Notifications Section */}
       <Text style={styles.sectionTitle}>Notifications</Text>
-      <View style={styles.card}>
+      <View style={dynamicStyles.card}>
         <View style={styles.toggleRow}>
           <View style={styles.toggleInfo}>
             <Text style={styles.toggleLabel}>Payment Received</Text>
@@ -229,9 +344,91 @@ export default function SettingsScreen() {
         </View>
       </View>
 
+      {/* Payment Setup Section */}
+      <Text style={styles.sectionTitle}>Payment Setup</Text>
+      <View style={styles.card}>
+        <View style={styles.stripeHeader}>
+          <Text style={styles.stripeTitle}>Stripe Connect</Text>
+          <View style={[styles.statusBadge, { backgroundColor: getStripeStatusDisplay().color + '20' }]}>
+            <View style={[styles.statusDot, { backgroundColor: getStripeStatusDisplay().color }]} />
+            <Text style={[styles.statusText, { color: getStripeStatusDisplay().color }]}>
+              {getStripeStatusDisplay().text}
+            </Text>
+          </View>
+        </View>
+        <Text style={styles.stripeDesc}>
+          Accept credit card payments directly from your customers. Funds are deposited to your bank account.
+        </Text>
+        {settings.stripeAccountStatus === 'not_connected' ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Connect Stripe account"
+            style={[styles.saveButton, stripeLoading && styles.buttonDisabled]}
+            onPress={handleConnectStripe}
+            disabled={stripeLoading}
+          >
+            {stripeLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.saveButtonText}>Connect Stripe Account</Text>
+            )}
+          </Pressable>
+        ) : settings.stripeAccountStatus === 'pending' ? (
+          <View style={styles.stripeActions}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Continue Stripe setup"
+              style={styles.saveButton}
+              onPress={handleConnectStripe}
+            >
+              <Text style={styles.saveButtonText}>Continue Setup</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Refresh Stripe status"
+              style={styles.secondaryButton}
+              onPress={handleRefreshStripeStatus}
+            >
+              {stripeLoading ? (
+                <ActivityIndicator color="#EA580C" />
+              ) : (
+                <Text style={styles.secondaryButtonText}>Refresh Status</Text>
+              )}
+            </Pressable>
+          </View>
+        ) : (
+          <View style={styles.stripeConnected}>
+            <Text style={styles.stripeAccountLabel}>Account ID</Text>
+            <Text style={styles.stripeAccountId}>{settings.stripeAccountId}</Text>
+            <View style={styles.stripeActions}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Refresh Stripe status"
+                style={styles.secondaryButton}
+                onPress={handleRefreshStripeStatus}
+              >
+                {stripeLoading ? (
+                  <ActivityIndicator color="#EA580C" />
+                ) : (
+                  <Text style={styles.secondaryButtonText}>Refresh Status</Text>
+                )}
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Disconnect Stripe account"
+                style={styles.disconnectButton}
+                onPress={handleDisconnectStripe}
+              >
+                <Text style={styles.disconnectButtonText}>Disconnect</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+      </View>
+
       {/* Sync Status Section */}
       <Text style={styles.sectionTitle}>Sync Status</Text>
-      <View style={styles.card}>
+      <View style={dynamicStyles.card}>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
           <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: isOnline ? '#22C55E' : '#EAB308', marginRight: 8 }} />
           <Text style={{ fontSize: 15, color: '#333', fontWeight: '500' }}>{isOnline ? 'Online' : 'Offline'}</Text>
@@ -243,7 +440,7 @@ export default function SettingsScreen() {
 
       {/* Export Data Section */}
       <Text style={styles.sectionTitle}>Export Data</Text>
-      <View style={styles.card}>
+      <View style={dynamicStyles.card}>
         <Text style={styles.exportHint}>Export your data as CSV files for use in spreadsheets or other apps.</Text>
         <View style={styles.exportRow}>
           <Pressable accessibilityRole="button" accessibilityLabel="Export customers CSV" style={styles.exportBtn} onPress={() => handleExport('customers')}>
@@ -260,7 +457,7 @@ export default function SettingsScreen() {
 
       {/* Account Section */}
       <Text style={styles.sectionTitle}>Account</Text>
-      <View style={styles.card}>
+      <View style={dynamicStyles.card}>
         {user ? (
           <>
             <Text style={styles.label}>Signed in as</Text>
@@ -294,13 +491,8 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
   content: { padding: 16, paddingBottom: 40 },
   sectionTitle: { fontSize: 20, fontWeight: 'bold', color: '#111', marginBottom: 12, marginTop: 8 },
-  card: {
-    backgroundColor: '#F9FAFB', borderRadius: 12, padding: 16,
-    borderWidth: 1, borderColor: '#E5E7EB', marginBottom: 24,
-  },
   field: { marginBottom: 16 },
   label: { fontSize: 14, fontWeight: '600', color: '#555', marginBottom: 6 },
   input: {
@@ -321,8 +513,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', padding: 12,
     borderRadius: 10, borderWidth: 1.5, borderColor: '#E5E7EB', backgroundColor: '#fff',
   },
-  verticalItemActive: { borderColor: '#EA580C', backgroundColor: '#FFF7ED' },
-  verticalItemIcon: { fontSize: 22, marginRight: 10 },
+    verticalItemIcon: { fontSize: 22, marginRight: 10 },
   verticalItemName: { fontSize: 15, fontWeight: '500', color: '#333' },
   verticalItemNameActive: { color: '#EA580C', fontWeight: '600' },
   exportHint: { fontSize: 13, color: '#6B7280', marginBottom: 12 },
@@ -347,4 +538,28 @@ const styles = StyleSheet.create({
   toggleInfo: { flex: 1, marginRight: 12 },
   toggleLabel: { fontSize: 15, fontWeight: '600', color: '#333' },
   toggleDesc: { fontSize: 13, color: '#6B7280', marginTop: 2 },
+  // Stripe styles
+  stripeHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  stripeTitle: { fontSize: 16, fontWeight: '600', color: '#111' },
+  statusBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  statusDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
+  statusText: { fontSize: 12, fontWeight: '600' },
+  stripeDesc: { fontSize: 14, color: '#6B7280', marginBottom: 16, lineHeight: 20 },
+  stripeActions: { flexDirection: 'row', gap: 10, marginTop: 12 },
+  secondaryButton: {
+    flex: 1, alignItems: 'center' as const, paddingVertical: 12,
+    backgroundColor: '#fff', borderRadius: 10,
+    borderWidth: 1.5, borderColor: '#EA580C',
+  },
+  secondaryButtonText: { color: '#EA580C', fontSize: 14, fontWeight: '600' },
+  disconnectButton: {
+    flex: 1, alignItems: 'center' as const, paddingVertical: 12,
+    backgroundColor: '#fff', borderRadius: 10,
+    borderWidth: 1.5, borderColor: '#DC2626',
+  },
+  disconnectButtonText: { color: '#DC2626', fontSize: 14, fontWeight: '600' },
+  buttonDisabled: { opacity: 0.6 },
+  stripeConnected: { marginTop: 4 },
+  stripeAccountLabel: { fontSize: 12, color: '#6B7280', marginBottom: 4 },
+  stripeAccountId: { fontSize: 14, fontFamily: 'monospace', color: '#333', marginBottom: 8 },
 });

@@ -1,15 +1,25 @@
 import { View, Text, TextInput, Pressable, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useSettings } from '../../contexts/SettingsContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function BusinessInfoScreen() {
   const router = useRouter();
   const { settings, updateSettings } = useSettings();
+  const { colors } = useTheme();
   const [name, setName] = useState(settings.businessName);
   const [phone, setPhone] = useState(settings.businessPhone);
   const [email, setEmail] = useState(settings.businessEmail);
+
+  const dynamicStyles = useMemo(() => ({
+    container: { flex: 1, backgroundColor: colors.surface },
+    input: {
+      borderWidth: 1, borderColor: colors.gray300, borderRadius: 10, paddingHorizontal: 14,
+      paddingVertical: 12, fontSize: 16, color: colors.text, backgroundColor: colors.gray50,
+    },
+  }), [colors]);
 
   const canContinue = name.trim().length > 0;
 
@@ -23,7 +33,7 @@ export default function BusinessInfoScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={dynamicStyles.container}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <Text style={styles.step}>Step 1 of 3</Text>
@@ -33,7 +43,7 @@ export default function BusinessInfoScreen() {
           <View style={styles.field}>
             <Text style={styles.label}>Business Name *</Text>
             <TextInput accessibilityRole="text" accessibilityLabel="Business name"
-              style={styles.input}
+              style={dynamicStyles.input}
               value={name}
               onChangeText={setName}
               placeholder="e.g. Sparkle Pressure Washing"
@@ -44,7 +54,7 @@ export default function BusinessInfoScreen() {
           <View style={styles.field}>
             <Text style={styles.label}>Phone (optional)</Text>
             <TextInput accessibilityRole="text" accessibilityLabel="Phone number"
-              style={styles.input}
+              style={dynamicStyles.input}
               value={phone}
               onChangeText={setPhone}
               placeholder="(555) 123-4567"
@@ -55,7 +65,7 @@ export default function BusinessInfoScreen() {
           <View style={styles.field}>
             <Text style={styles.label}>Email (optional)</Text>
             <TextInput accessibilityRole="text" accessibilityLabel="Email address"
-              style={styles.input}
+              style={dynamicStyles.input}
               value={email}
               onChangeText={setEmail}
               placeholder="you@business.com"
@@ -86,7 +96,6 @@ export default function BusinessInfoScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
   scroll: { flex: 1 },
   scrollContent: { padding: 24 },
   step: { fontSize: 14, color: '#EA580C', fontWeight: '600', marginBottom: 8 },
@@ -94,10 +103,6 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 16, color: '#666', marginBottom: 32, lineHeight: 22 },
   field: { marginBottom: 20 },
   label: { fontSize: 15, fontWeight: '600', color: '#333', marginBottom: 8 },
-  input: {
-    borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 10, paddingHorizontal: 14,
-    paddingVertical: 12, fontSize: 16, color: '#111', backgroundColor: '#F9FAFB',
-  },
   footer: { paddingHorizontal: 24, paddingBottom: 24 },
   dots: { flexDirection: 'row', justifyContent: 'center', marginBottom: 20, gap: 8 },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#E5E7EB' },
