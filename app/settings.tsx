@@ -346,7 +346,7 @@ export default function SettingsScreen() {
 
       {/* Payment Setup Section */}
       <Text style={styles.sectionTitle}>Payment Setup</Text>
-      <View style={styles.card}>
+      <View style={dynamicStyles.card}>
         <View style={styles.stripeHeader}>
           <Text style={styles.stripeTitle}>Stripe Connect</Text>
           <View style={[styles.statusBadge, { backgroundColor: getStripeStatusDisplay().color + '20' }]}>

@@ -82,7 +82,7 @@ function WaitlistForm({ className = '' }: { className?: string }) {
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+    <main id="main-content" className="min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
       {/* Nav */}
       <nav className="px-6 py-4 flex items-center justify-between max-w-6xl mx-auto">
         <span className="text-xl font-bold text-gray-900 dark:text-gray-100">
@@ -161,7 +161,7 @@ export default function Home() {
       </section>
 
       {/* Features */}
-      <section className="px-6 py-20 bg-orange-50 dark:bg-gray-900">
+      <section className="px-6 py-20 bg-orange-50 dark:bg-orange-950/20">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-gray-100 mb-4">
             Everything you need to run your business
@@ -283,7 +283,7 @@ export default function Home() {
               },
             ].map((faq) => (
               <details key={faq.q} className="group border-b border-gray-200 dark:border-gray-700 pb-4">
-                <summary className="flex items-center justify-between cursor-pointer py-2 text-lg font-medium text-gray-900 dark:text-gray-100 hover:text-orange-600 transition-colors">
+                <summary className="flex items-center justify-between cursor-pointer py-2 text-lg font-medium text-gray-900 dark:text-gray-100 hover:text-orange-600 dark:hover:text-orange-400 transition-colors">
                   {faq.q}
                   <span className="text-gray-400 dark:text-gray-400 group-open:rotate-45 transition-transform text-xl">+</span>
                 </summary>
